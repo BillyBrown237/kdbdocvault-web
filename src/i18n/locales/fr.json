@@ -1,0 +1,37 @@
+{
+  "app": {
+    "name": "KDB Vault",
+    "tagline": "Coffre-fort documentaire intelligent",
+    "loading": "Chargement…",
+    "offline": "Vous êtes hors ligne — données en cache affichées"
+  },
+  "auth": {
+    "login": {
+      "title": "Connexion",
+      "identifier": "E-mail ou téléphone",
+      "password": "Mot de passe",
+      "submit": "Se connecter",
+      "forgot": "Mot de passe oublié ?",
+      "error": "Identifiants invalides",
+      "mfaRequired": "Code de vérification requis"
+    },
+    "logout": "Se déconnecter"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "welcome": "Bienvenue, {{name}}"
+  },
+  "sign": {
+    "title": "Signature de document"
+  },
+  "shared": {
+    "title": "Document partagé"
+  },
+  "verify": {
+    "title": "Vérification de document"
+  },
+  "errors": {
+    "network": "Connexion impossible — vérifiez votre réseau",
+    "unknown": "Une erreur est survenue"
+  }
+}

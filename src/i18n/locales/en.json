@@ -1,0 +1,37 @@
+{
+  "app": {
+    "name": "KDB Vault",
+    "tagline": "Intelligent document vault",
+    "loading": "Loading…",
+    "offline": "You are offline — showing cached data"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in",
+      "identifier": "Email or phone",
+      "password": "Password",
+      "submit": "Sign in",
+      "forgot": "Forgot password?",
+      "error": "Invalid credentials",
+      "mfaRequired": "Verification code required"
+    },
+    "logout": "Sign out"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome, {{name}}"
+  },
+  "sign": {
+    "title": "Document signing"
+  },
+  "shared": {
+    "title": "Shared document"
+  },
+  "verify": {
+    "title": "Document verification"
+  },
+  "errors": {
+    "network": "Cannot connect — check your network",
+    "unknown": "Something went wrong"
+  }
+}
