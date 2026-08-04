@@ -13,13 +13,88 @@
       "submit": "Se connecter",
       "forgot": "Mot de passe oublié ?",
       "error": "Identifiants invalides",
-      "mfaRequired": "Code de vérification requis"
+      "mfaRequired": "Code de vérification requis",
+      "noAccount": "Pas encore de compte ?"
+    },
+    "register": {
+      "title": "Créer un compte",
+      "email": "E-mail",
+      "passwordHint": "10 caractères minimum",
+      "submit": "Créer le compte",
+      "verifyTitle": "Vérifiez votre e-mail",
+      "codeSent": "Un code a été envoyé à {{email}}",
+      "code": "Code de vérification",
+      "verify": "Vérifier",
+      "haveAccount": "Déjà un compte ?"
     },
     "logout": "Se déconnecter"
   },
+  "onboarding": {
+    "title": "Créez votre organisation",
+    "subtitle": "Votre coffre-fort documentaire commence ici",
+    "orgName": "Nom de l'organisation",
+    "orgNamePlaceholder": "Ex. : Cabinet Ngo & Associés",
+    "plan": "Formule",
+    "trialNote": "Aucun paiement maintenant — vous démarrez en essai gratuit",
+    "submit": "Créer l'organisation",
+    "interval": {
+      "month": "mois",
+      "year": "an"
+    }
+  },
+  "nav": {
+    "dashboard": "Accueil",
+    "vault": "Coffre",
+    "profile": "Profil",
+    "organizations": "Organisations"
+  },
+  "common": {
+    "back": "Retour",
+    "loadMore": "Afficher plus",
+    "retry": "Réessayer"
+  },
   "dashboard": {
     "title": "Tableau de bord",
-    "welcome": "Bienvenue, {{name}}"
+    "welcome": "Bienvenue, {{name}}",
+    "recent": "Documents récents",
+    "favorites": "Favoris",
+    "noRecent": "Aucun document consulté récemment",
+    "noFavorites": "Aucun favori pour l'instant"
+  },
+  "usage": {
+    "storage": "Stockage",
+    "seats": "Utilisateurs",
+    "aiCredits": "Crédits IA",
+    "envelopes": "Signatures"
+  },
+  "vault": {
+    "title": "Coffre",
+    "empty": "Votre coffre est vide — importez votre premier document",
+    "emptyFolder": "Ce dossier est vide"
+  },
+  "upload": {
+    "button": "Importer",
+    "retry": "Réessayer"
+  },
+  "document": {
+    "details": "Détails",
+    "detailStatus": "Statut",
+    "size": "Taille",
+    "mime": "Type de fichier",
+    "updated": "Modifié le",
+    "created": "Créé le",
+    "tags": "Étiquettes",
+    "versions": "Versions",
+    "download": "Télécharger",
+    "favorite": "Favori",
+    "status": {
+      "draft": "Brouillon",
+      "active": "Actif",
+      "expiring": "Expire bientôt",
+      "expired": "Expiré",
+      "renewed": "Renouvelé",
+      "archived": "Archivé"
+    }
   },
   "sign": {
     "title": "Signature de document"

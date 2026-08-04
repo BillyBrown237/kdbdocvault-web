@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
+import { Link, createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
@@ -45,7 +45,9 @@ function LoginPage() {
         setServerError(t('auth.login.mfaRequired'))
         return
       }
-      if (search.redirect) {
+      if (!result.tenantId) {
+        await navigate({ to: '/onboarding' })
+      } else if (search.redirect) {
         router.history.push(search.redirect)
       } else {
         await navigate({ to: '/' })
@@ -54,6 +56,7 @@ function LoginPage() {
       if (err instanceof NetworkError) setServerError(t('errors.network'))
       else if (err instanceof ApiProblem) setServerError(t('auth.login.error'))
       else setServerError(t('errors.unknown'))
+      console.log(err)
     }
   })
 
@@ -98,6 +101,12 @@ function LoginPage() {
           >
             {form.formState.isSubmitting ? t('app.loading') : t('auth.login.submit')}
           </button>
+          <p className="text-center text-sm text-slate-500">
+            {t('auth.login.noAccount')}{' '}
+            <Link to="/register" className="font-medium text-slate-900 underline">
+              {t('auth.register.submit')}
+            </Link>
+          </p>
         </form>
       </div>
     </div>

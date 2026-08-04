@@ -11,8 +11,13 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as DocumentsDocumentIdRouteImport } from './routes/documents.$documentId'
 import { Route as SharedTokenRouteImport } from './routes/shared.$token'
 import { Route as SignSignTokenRouteImport } from './routes/sign.$signToken'
+import { Route as VaultIndexRouteImport } from './routes/vault.index'
+import { Route as VaultFolderIdRouteImport } from './routes/vault.$folderId'
 import { Route as VerifyDocumentHashRouteImport } from './routes/verify.$documentHash'
 
 const IndexRoute = IndexRouteImport.update({
@@ -25,6 +30,21 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocumentsDocumentIdRoute = DocumentsDocumentIdRouteImport.update({
+  id: '/documents/$documentId',
+  path: '/documents/$documentId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SharedTokenRoute = SharedTokenRouteImport.update({
   id: '/shared/$token',
   path: '/shared/$token',
@@ -33,6 +53,16 @@ const SharedTokenRoute = SharedTokenRouteImport.update({
 const SignSignTokenRoute = SignSignTokenRouteImport.update({
   id: '/sign/$signToken',
   path: '/sign/$signToken',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VaultIndexRoute = VaultIndexRouteImport.update({
+  id: '/vault/',
+  path: '/vault/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VaultFolderIdRoute = VaultFolderIdRouteImport.update({
+  id: '/vault/$folderId',
+  path: '/vault/$folderId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VerifyDocumentHashRoute = VerifyDocumentHashRouteImport.update({
@@ -44,55 +74,90 @@ const VerifyDocumentHashRoute = VerifyDocumentHashRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
+  '/register': typeof RegisterRoute
+  '/documents/$documentId': typeof DocumentsDocumentIdRoute
   '/shared/$token': typeof SharedTokenRoute
   '/sign/$signToken': typeof SignSignTokenRoute
+  '/vault/$folderId': typeof VaultFolderIdRoute
   '/verify/$documentHash': typeof VerifyDocumentHashRoute
+  '/vault/': typeof VaultIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
+  '/register': typeof RegisterRoute
+  '/documents/$documentId': typeof DocumentsDocumentIdRoute
   '/shared/$token': typeof SharedTokenRoute
   '/sign/$signToken': typeof SignSignTokenRoute
+  '/vault/$folderId': typeof VaultFolderIdRoute
   '/verify/$documentHash': typeof VerifyDocumentHashRoute
+  '/vault': typeof VaultIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
+  '/register': typeof RegisterRoute
+  '/documents/$documentId': typeof DocumentsDocumentIdRoute
   '/shared/$token': typeof SharedTokenRoute
   '/sign/$signToken': typeof SignSignTokenRoute
+  '/vault/$folderId': typeof VaultFolderIdRoute
   '/verify/$documentHash': typeof VerifyDocumentHashRoute
+  '/vault/': typeof VaultIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/login'
+    | '/onboarding'
+    | '/register'
+    | '/documents/$documentId'
     | '/shared/$token'
     | '/sign/$signToken'
+    | '/vault/$folderId'
     | '/verify/$documentHash'
+    | '/vault/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
+    | '/onboarding'
+    | '/register'
+    | '/documents/$documentId'
     | '/shared/$token'
     | '/sign/$signToken'
+    | '/vault/$folderId'
     | '/verify/$documentHash'
+    | '/vault'
   id:
     | '__root__'
     | '/'
     | '/login'
+    | '/onboarding'
+    | '/register'
+    | '/documents/$documentId'
     | '/shared/$token'
     | '/sign/$signToken'
+    | '/vault/$folderId'
     | '/verify/$documentHash'
+    | '/vault/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  OnboardingRoute: typeof OnboardingRoute
+  RegisterRoute: typeof RegisterRoute
+  DocumentsDocumentIdRoute: typeof DocumentsDocumentIdRoute
   SharedTokenRoute: typeof SharedTokenRoute
   SignSignTokenRoute: typeof SignSignTokenRoute
+  VaultFolderIdRoute: typeof VaultFolderIdRoute
   VerifyDocumentHashRoute: typeof VerifyDocumentHashRoute
+  VaultIndexRoute: typeof VaultIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -111,6 +176,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/documents/$documentId': {
+      id: '/documents/$documentId'
+      path: '/documents/$documentId'
+      fullPath: '/documents/$documentId'
+      preLoaderRoute: typeof DocumentsDocumentIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/shared/$token': {
       id: '/shared/$token'
       path: '/shared/$token'
@@ -123,6 +209,20 @@ declare module '@tanstack/react-router' {
       path: '/sign/$signToken'
       fullPath: '/sign/$signToken'
       preLoaderRoute: typeof SignSignTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vault/': {
+      id: '/vault/'
+      path: '/vault'
+      fullPath: '/vault/'
+      preLoaderRoute: typeof VaultIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vault/$folderId': {
+      id: '/vault/$folderId'
+      path: '/vault/$folderId'
+      fullPath: '/vault/$folderId'
+      preLoaderRoute: typeof VaultFolderIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/verify/$documentHash': {
@@ -138,9 +238,14 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  OnboardingRoute: OnboardingRoute,
+  RegisterRoute: RegisterRoute,
+  DocumentsDocumentIdRoute: DocumentsDocumentIdRoute,
   SharedTokenRoute: SharedTokenRoute,
   SignSignTokenRoute: SignSignTokenRoute,
+  VaultFolderIdRoute: VaultFolderIdRoute,
   VerifyDocumentHashRoute: VerifyDocumentHashRoute,
+  VaultIndexRoute: VaultIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

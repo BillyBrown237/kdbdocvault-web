@@ -1,54 +1,88 @@
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 
-import { apiFetch } from '@/lib/api/http'
-import { bootstrapSession, logout } from '@/lib/auth'
-
-interface Me {
-  id?: string
-  display_name?: string
-  email?: string
-  locale?: string
-}
+import { AppShell } from '@/components/app-shell'
+import { DocumentRow, EmptyState } from '@/components/vault-list'
+import { favoritesQuery, recentQuery, tenantUsageQuery } from '@/lib/api/queries'
+import { requireTenant } from '@/lib/route-guards'
+import { formatBytes } from '@/lib/format'
 
 export const Route = createFileRoute('/')({
-  beforeLoad: async ({ location }) => {
-    const authenticated = await bootstrapSession()
-    if (!authenticated) {
-      throw redirect({ to: '/login', search: { redirect: location.href } })
-    }
-  },
+  beforeLoad: ({ location }) => requireTenant(location),
   component: Dashboard,
 })
 
 function Dashboard() {
-  const { t } = useTranslation()
-  const navigate = useNavigate()
-  const me = useQuery({
-    queryKey: ['me'],
-    queryFn: () => apiFetch<Me>('/me'),
-  })
+  const { t, i18n } = useTranslation()
+  const recent = useQuery(recentQuery)
+  const favorites = useQuery(favoritesQuery)
+  const usage = useQuery(tenantUsageQuery)
 
   return (
-    <div className="mx-auto max-w-4xl p-6">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{t('dashboard.title')}</h1>
-        <button
-          type="button"
-          className="text-sm text-slate-500 hover:text-slate-900"
-          onClick={() => {
-            void logout().then(() => navigate({ to: '/login', search: { redirect: undefined } }))
-          }}
-        >
-          {t('auth.logout')}
-        </button>
-      </header>
-      <p className="mt-4 text-lg">
-        {me.isPending
-          ? t('app.loading')
-          : t('dashboard.welcome', { name: me.data?.display_name ?? me.data?.email ?? '' })}
-      </p>
+    <AppShell>
+      <h1 className="text-2xl font-bold">{t('dashboard.title')}</h1>
+
+      {usage.data && (
+        <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+          <UsageCard
+            label={t('usage.storage')}
+            value={`${formatBytes(usage.data.storage_bytes_used, i18n.language)} / ${formatBytes(usage.data.storage_bytes_included, i18n.language)}`}
+          />
+          <UsageCard
+            label={t('usage.seats')}
+            value={`${usage.data.seats_used} / ${usage.data.seats_included}`}
+          />
+          <UsageCard label={t('usage.aiCredits')} value={String(usage.data.ai_credits_used)} />
+          <UsageCard
+            label={t('usage.envelopes')}
+            value={String(usage.data.signature_envelopes_used)}
+          />
+        </div>
+      )}
+
+      <section className="mt-8">
+        <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
+          {t('dashboard.recent')}
+        </h2>
+        {recent.isPending ? (
+          <p className="text-sm text-muted-foreground">{t('app.loading')}</p>
+        ) : recent.data?.data.length ? (
+          <div className="space-y-2">
+            {recent.data.data.map((doc) => (
+              <DocumentRow key={doc.id} document={doc} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState label={t('dashboard.noRecent')} />
+        )}
+      </section>
+
+      <section className="mt-8">
+        <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
+          {t('dashboard.favorites')}
+        </h2>
+        {favorites.isPending ? (
+          <p className="text-sm text-muted-foreground">{t('app.loading')}</p>
+        ) : favorites.data?.data.length ? (
+          <div className="space-y-2">
+            {favorites.data.data.map((doc) => (
+              <DocumentRow key={doc.id} document={doc} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState label={t('dashboard.noFavorites')} />
+        )}
+      </section>
+    </AppShell>
+  )
+}
+
+function UsageCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-4">
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="mt-1 truncate text-sm font-semibold">{value}</div>
     </div>
   )
 }

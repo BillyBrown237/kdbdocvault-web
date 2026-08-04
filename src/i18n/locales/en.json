@@ -13,13 +13,88 @@
       "submit": "Sign in",
       "forgot": "Forgot password?",
       "error": "Invalid credentials",
-      "mfaRequired": "Verification code required"
+      "mfaRequired": "Verification code required",
+      "noAccount": "No account yet?"
+    },
+    "register": {
+      "title": "Create an account",
+      "email": "Email",
+      "passwordHint": "At least 10 characters",
+      "submit": "Create account",
+      "verifyTitle": "Check your email",
+      "codeSent": "A code was sent to {{email}}",
+      "code": "Verification code",
+      "verify": "Verify",
+      "haveAccount": "Already have an account?"
     },
     "logout": "Sign out"
   },
+  "onboarding": {
+    "title": "Create your organization",
+    "subtitle": "Your document vault starts here",
+    "orgName": "Organization name",
+    "orgNamePlaceholder": "E.g. Ngo & Partners Law Firm",
+    "plan": "Plan",
+    "trialNote": "No payment now — you start on a free trial",
+    "submit": "Create organization",
+    "interval": {
+      "month": "month",
+      "year": "year"
+    }
+  },
+  "nav": {
+    "dashboard": "Home",
+    "vault": "Vault",
+    "profile": "Profile",
+    "organizations": "Organizations"
+  },
+  "common": {
+    "back": "Back",
+    "loadMore": "Load more",
+    "retry": "Retry"
+  },
   "dashboard": {
     "title": "Dashboard",
-    "welcome": "Welcome, {{name}}"
+    "welcome": "Welcome, {{name}}",
+    "recent": "Recent documents",
+    "favorites": "Favorites",
+    "noRecent": "No recently viewed documents",
+    "noFavorites": "No favorites yet"
+  },
+  "usage": {
+    "storage": "Storage",
+    "seats": "Seats",
+    "aiCredits": "AI credits",
+    "envelopes": "Signatures"
+  },
+  "vault": {
+    "title": "Vault",
+    "empty": "Your vault is empty — upload your first document",
+    "emptyFolder": "This folder is empty"
+  },
+  "upload": {
+    "button": "Upload",
+    "retry": "Retry"
+  },
+  "document": {
+    "details": "Details",
+    "detailStatus": "Status",
+    "size": "Size",
+    "mime": "File type",
+    "updated": "Updated",
+    "created": "Created",
+    "tags": "Tags",
+    "versions": "Versions",
+    "download": "Download",
+    "favorite": "Favorite",
+    "status": {
+      "draft": "Draft",
+      "active": "Active",
+      "expiring": "Expiring soon",
+      "expired": "Expired",
+      "renewed": "Renewed",
+      "archived": "Archived"
+    }
   },
   "sign": {
     "title": "Document signing"

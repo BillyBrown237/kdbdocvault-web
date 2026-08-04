@@ -37,14 +37,24 @@ const config = defineConfig({
         // App shell only. API calls are never intercepted — TanStack Query's
         // IndexedDB persistence handles offline data, not the service worker.
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/v1\//],
+        navigateFallbackDenylist: [/^\/v1\//, /^\/pub\//],
       },
     }),
   ],
   server: {
     port: 3000,
-    // KdbVault.Api dev profile (launchSettings.json)
-    proxy: { '/v1': { target: 'http://localhost:5057' } },
+    // KdbVault.Api dev profile (launchSettings.json).
+    // /pub is the alias for the UNVERSIONED public API surfaces (/sign,
+    // /shared, /verify): same paths exist as SPA routes, so the alias avoids
+    // the collision and is stripped before forwarding. Caddy mirrors this
+    // with handle_path /pub/* in production.
+    proxy: {
+      '/v1': { target: 'http://localhost:5057' },
+      '/pub': {
+        target: 'http://localhost:5057',
+        rewrite: (path) => path.replace(/^\/pub/, ''),
+      },
+    },
   },
 })
 
