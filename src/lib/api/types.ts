@@ -224,6 +224,90 @@ export interface Obligation {
   status: 'open' | 'done' | 'overdue'
 }
 
+export type SubscriptionStatus = 'active' | 'past_due' | 'cancelled' | 'trial'
+
+export interface Subscription {
+  plan_id: string | null
+  seats: number
+  status: SubscriptionStatus
+  renews_at: string | null
+  payment_method: string | null
+}
+
+export type PaymentStatus =
+  | 'pending'
+  | 'awaiting_confirmation'
+  | 'succeeded'
+  | 'failed'
+  | 'refunded'
+
+export interface Payment {
+  id: string
+  provider: string
+  amount_minor_units: number
+  currency: string
+  status: PaymentStatus
+  purpose?: { plan_id?: string; ussd_hint?: string | null }
+  created_at: string
+}
+
+export interface Invoice {
+  id: string
+  number: string
+  amount_minor_units: number
+  currency: string
+  status: 'paid' | 'open' | 'void'
+  issued_at: string
+}
+
+export interface Member {
+  id: string
+  user_id: string
+  name: string | null
+  email: string
+  role_id: string
+  role_name: string
+  department_id: string | null
+  status: string
+  joined_at: string
+}
+
+export interface Invitation {
+  id: string
+  email: string
+  role_id: string
+  department_id: string | null
+  status: 'pending' | 'accepted' | 'revoked' | 'expired'
+  expires_at: string
+  created_at: string
+}
+
+export interface Role {
+  id: string
+  name: string
+  is_system: boolean
+}
+
+export interface AuditEvent {
+  id: string
+  seq: number
+  actor_id: string | null
+  actor_type: string
+  action: string
+  resource_type: string | null
+  resource_id: string | null
+  ip_address: string | null
+  device: string | null
+  detail?: Record<string, unknown>
+  created_at: string
+}
+
+export interface PublicVerifyResult {
+  valid: boolean
+  sealed_at: string | null
+  issuer: string | null
+}
+
 export interface SearchHit {
   document: Document
   score?: number

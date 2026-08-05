@@ -5,17 +5,31 @@
  */
 import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query'
 
-import { apiFetch, publicApiFetch, setAccessToken, setCurrentTenantId } from './http'
+import {
+  API_V1,
+  ApiProblem,
+  apiFetch,
+  publicApiFetch,
+  setAccessToken,
+  setCurrentTenantId,
+} from './http'
 import type {
+  AuditEvent,
   Document,
   DocumentVersion,
   Envelope,
+  Invitation,
+  Member,
+  PublicVerifyResult,
+  Role,
   Folder,
   FolderContentItem,
   GuestSignView,
+  Invoice,
   LifecycleRule,
   Obligation,
   Page,
+  Payment,
   Reminder,
   ReminderChannel,
   RuleType,
@@ -23,6 +37,7 @@ import type {
   SearchHit,
   ShareLink,
   SharedMeta,
+  Subscription,
   Tag,
   Tenant,
   TenantUsage,
@@ -80,9 +95,12 @@ export async function switchTenant(queryClient: QueryClient, tenantId: string): 
 
 // --- onboarding -----------------------------------------------------------------
 
+// /plans is mapped on the PUBLIC (unversioned) surface — MapPublicEndpoints,
+// not the /v1 group — so it goes through publicApiFetch (the /pub alias),
+// not apiFetch. Same for onboarding, which reads it before any tenant exists.
 export const plansQuery = queryOptions({
   queryKey: ['plans'],
-  queryFn: () => apiFetch<Page<Plan>>('/plans'),
+  queryFn: () => publicApiFetch<Page<Plan>>('/plans'),
   staleTime: 60 * 60_000,
 })
 
@@ -496,6 +514,135 @@ export function updateObligation(
     method: 'PATCH',
     body: JSON.stringify(input),
   })
+}
+
+// --- billing (W9) --------------------------------------------------------------------
+
+/** No subscription = trial, and the backend says so with a 404. That's a
+ * legitimate state, not an error — map it to null so the UI can render the
+ * trial copy without an error path. */
+export const subscriptionQuery = queryOptions({
+  queryKey: ['subscription'],
+  queryFn: async (): Promise<Subscription | null> => {
+    try {
+      return await apiFetch<Subscription>('/subscription')
+    } catch (err) {
+      if (err instanceof ApiProblem && err.status === 404) return null
+      throw err
+    }
+  },
+  retry: false,
+})
+
+export const invoicesQuery = infiniteQueryOptions({
+  queryKey: ['invoices'],
+  queryFn: ({ pageParam }) =>
+    apiFetch<Page<Invoice>>(`/invoices${qs({ cursor: pageParam || undefined, limit: PAGE_SIZE })}`),
+  initialPageParam: '',
+  getNextPageParam: (last) =>
+    last.pagination?.has_more ? (last.pagination.next_cursor ?? undefined) : undefined,
+})
+
+export function changeSubscription(
+  planId: string,
+  opts: { preview?: boolean; seats?: number } = {},
+): Promise<{ subscription: Subscription; amount_due_minor_units: number; applied: boolean }> {
+  return apiFetch(`/subscription/change${qs({ preview: opts.preview ? 'true' : undefined })}`, {
+    method: 'POST',
+    body: JSON.stringify({ plan_id: planId, seats: opts.seats }),
+  })
+}
+
+export function initiateMobileMoney(input: {
+  provider: 'mtn_momo' | 'orange_money'
+  phone: string
+  plan_id: string
+}): Promise<Payment> {
+  return apiFetch<Payment>('/payments/mobile-money/initiate', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export function getPayment(paymentId: string): Promise<Payment> {
+  return apiFetch<Payment>(`/payments/${paymentId}`)
+}
+
+export function invoicePdfUrl(invoiceId: string): string {
+  return `${API_V1}/invoices/${invoiceId}/pdf`
+}
+
+// --- team & admin (W10) --------------------------------------------------------------
+
+export const membersQuery = queryOptions({
+  queryKey: ['members'],
+  queryFn: () => apiFetch<Page<Member>>('/members'),
+})
+
+export const invitationsQuery = queryOptions({
+  queryKey: ['invitations'],
+  queryFn: () => apiFetch<Page<Invitation>>('/invitations'),
+})
+
+export const rolesQuery = queryOptions({
+  queryKey: ['roles'],
+  queryFn: () => apiFetch<Page<Role>>('/roles'),
+})
+
+export function createInvitation(input: {
+  email: string
+  role_id: string
+}): Promise<{ invitation: Invitation; invite_url: string }> {
+  return apiFetch('/invitations', { method: 'POST', body: JSON.stringify(input) })
+}
+
+export function revokeInvitation(invitationId: string): Promise<void> {
+  return apiFetch<void>(`/invitations/${invitationId}`, { method: 'DELETE' })
+}
+
+export function updateMember(
+  memberId: string,
+  input: { role_id?: string; status?: string },
+): Promise<Member> {
+  return apiFetch<Member>(`/members/${memberId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
+}
+
+export function removeMember(memberId: string): Promise<void> {
+  return apiFetch<void>(`/members/${memberId}`, { method: 'DELETE' })
+}
+
+export function updateTenantName(name: string): Promise<Tenant> {
+  return apiFetch<Tenant>('/tenant', { method: 'PATCH', body: JSON.stringify({ name }) })
+}
+
+export const auditEventsQuery = (filters: { action?: string; resource_type?: string } = {}) =>
+  infiniteQueryOptions({
+    queryKey: ['audit', filters],
+    queryFn: ({ pageParam }) =>
+      apiFetch<Page<AuditEvent>>(
+        `/audit/events${qs({ ...filters, cursor: pageParam || undefined, limit: PAGE_SIZE })}`,
+      ),
+    initialPageParam: '',
+    getNextPageParam: (last) =>
+      last.pagination?.has_more ? (last.pagination.next_cursor ?? undefined) : undefined,
+  })
+
+// Public: invitation accept + document verification (unversioned surfaces).
+export function acceptInvitation(
+  token: string,
+  input: { name?: string; password?: string },
+): Promise<{ access_token?: string; tenant_id?: string | null }> {
+  return publicApiFetch(`/invitations/${token}/accept`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export function verifyDocumentHash(hash: string): Promise<PublicVerifyResult> {
+  return publicApiFetch<PublicVerifyResult>(`/verify/${hash}`)
 }
 
 // --- dashboard -------------------------------------------------------------------

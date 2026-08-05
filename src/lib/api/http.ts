@@ -153,6 +153,11 @@ async function run<T>(target: string, url: string, options: RequestInit): Promis
   }
 
   if (!res.ok) {
+    // Subscription cancelled → read-only mode. Broadcast so the shell can
+    // show a banner; the request still throws as an ApiProblem.
+    if (res.status === 402 && typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('kdb:read-only'))
+    }
     throw await toProblem(res)
   }
   if (res.status === 204) {

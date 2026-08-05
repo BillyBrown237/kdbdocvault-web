@@ -47,6 +47,9 @@
     "vault": "Coffre",
     "search": "Recherche",
     "lifecycle": "Échéances",
+    "billing": "Facturation",
+    "team": "Équipe",
+    "audit": "Journal d'audit",
     "trash": "Corbeille",
     "settings": "Paramètres",
     "profile": "Profil",
@@ -110,7 +113,40 @@
     "back": "Retour",
     "loadMore": "Afficher plus",
     "retry": "Réessayer",
-    "create": "Créer"
+    "create": "Créer",
+    "done": "Terminé"
+  },
+  "billing": {
+    "title": "Facturation",
+    "current": "Abonnement actuel",
+    "trialNote": "Vous êtes en essai gratuit — aucun abonnement actif.",
+    "renews": "Renouvellement le {{date}}",
+    "plans": "Formules",
+    "currentBadge": "Formule actuelle",
+    "choose": "Choisir",
+    "invoices": "Factures",
+    "noInvoices": "Aucune facture",
+    "mobileMoney": "Paiement Mobile Money",
+    "provider": "Opérateur",
+    "phone": "Numéro de téléphone",
+    "payNow": "Payer maintenant",
+    "confirmOnPhone": "Confirmez le paiement sur votre téléphone",
+    "dialCode": "Composez ce code si aucune invite n'apparaît :",
+    "waiting": "En attente de confirmation…",
+    "paymentSucceeded": "Paiement réussi",
+    "paymentFailed": "Le paiement a échoué",
+    "readOnly": "Abonnement inactif — votre compte est en lecture seule. Réglez pour réactiver.",
+    "status": {
+      "active": "Actif",
+      "trial": "Essai",
+      "past_due": "En retard",
+      "cancelled": "Annulé"
+    },
+    "invoiceStatus": {
+      "paid": "Payée",
+      "open": "Ouverte",
+      "void": "Annulée"
+    }
   },
   "search": {
     "title": "Recherche",
@@ -301,7 +337,52 @@
     "revoke": "Révoquer"
   },
   "verify": {
-    "title": "Vérification de document"
+    "title": "Vérification de document",
+    "valid": "Document authentique",
+    "invalid": "Document non vérifié",
+    "invalidHint": "Cette empreinte ne correspond à aucun document scellé par KDB Vault.",
+    "issuer": "Émis par",
+    "sealedAt": "Scellé le"
+  },
+  "team": {
+    "title": "Équipe",
+    "members": "Membres",
+    "invitations": "Invitations",
+    "organization": "Organisation",
+    "joined": "Membre depuis le {{date}}",
+    "role": "Rôle",
+    "remove": "Retirer",
+    "memberRemoved": "Membre retiré",
+    "roleChanged": "Rôle modifié",
+    "invite": "Inviter",
+    "inviteTitle": "Inviter un membre",
+    "sendInvite": "Envoyer l'invitation",
+    "inviteUrlNote": "Copiez ce lien et envoyez-le (WhatsApp, SMS) — l'e-mail part aussi automatiquement.",
+    "noInvitations": "Aucune invitation en attente",
+    "expires": "Expire le {{date}}",
+    "revokeInvite": "Révoquer",
+    "inviteRevoked": "Invitation révoquée",
+    "orgSaved": "Organisation mise à jour",
+    "plan": "Formule",
+    "region": "Région"
+  },
+  "invite": {
+    "title": "Rejoindre l'organisation",
+    "subtitle": "Vous avez été invité sur KDB Vault",
+    "passwordHint": "Requis uniquement si vous n'avez pas encore de compte",
+    "accept": "Accepter l'invitation",
+    "accepted": "Invitation acceptée",
+    "invalid": "Invitation invalide ou expirée"
+  },
+  "audit": {
+    "title": "Journal d'audit",
+    "subtitle": "Chaîne d'événements infalsifiable — chaque action est enregistrée.",
+    "filterAction": "Filtrer par action…",
+    "noEvents": "Aucun événement",
+    "when": "Date",
+    "action": "Action",
+    "resource": "Ressource",
+    "actor": "Acteur"
   },
   "errors": {
     "network": "Connexion impossible — vérifiez votre réseau",

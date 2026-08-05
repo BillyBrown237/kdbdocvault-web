@@ -47,6 +47,9 @@
     "vault": "Vault",
     "search": "Search",
     "lifecycle": "Lifecycle",
+    "billing": "Billing",
+    "team": "Team",
+    "audit": "Audit log",
     "trash": "Trash",
     "settings": "Settings",
     "profile": "Profile",
@@ -110,7 +113,40 @@
     "back": "Back",
     "loadMore": "Load more",
     "retry": "Retry",
-    "create": "Create"
+    "create": "Create",
+    "done": "Done"
+  },
+  "billing": {
+    "title": "Billing",
+    "current": "Current subscription",
+    "trialNote": "You're on a free trial — no active subscription.",
+    "renews": "Renews on {{date}}",
+    "plans": "Plans",
+    "currentBadge": "Current plan",
+    "choose": "Choose",
+    "invoices": "Invoices",
+    "noInvoices": "No invoices",
+    "mobileMoney": "Mobile Money payment",
+    "provider": "Provider",
+    "phone": "Phone number",
+    "payNow": "Pay now",
+    "confirmOnPhone": "Confirm the payment on your phone",
+    "dialCode": "Dial this code if no prompt appears:",
+    "waiting": "Waiting for confirmation…",
+    "paymentSucceeded": "Payment successful",
+    "paymentFailed": "Payment failed",
+    "readOnly": "Subscription inactive — your account is read-only. Pay to reactivate.",
+    "status": {
+      "active": "Active",
+      "trial": "Trial",
+      "past_due": "Past due",
+      "cancelled": "Cancelled"
+    },
+    "invoiceStatus": {
+      "paid": "Paid",
+      "open": "Open",
+      "void": "Void"
+    }
   },
   "search": {
     "title": "Search",
@@ -300,7 +336,52 @@
     "revoke": "Revoke"
   },
   "verify": {
-    "title": "Document verification"
+    "title": "Document verification",
+    "valid": "Authentic document",
+    "invalid": "Not verified",
+    "invalidHint": "This fingerprint doesn't match any document sealed by KDB Vault.",
+    "issuer": "Issued by",
+    "sealedAt": "Sealed on"
+  },
+  "team": {
+    "title": "Team",
+    "members": "Members",
+    "invitations": "Invitations",
+    "organization": "Organization",
+    "joined": "Member since {{date}}",
+    "role": "Role",
+    "remove": "Remove",
+    "memberRemoved": "Member removed",
+    "roleChanged": "Role changed",
+    "invite": "Invite",
+    "inviteTitle": "Invite a member",
+    "sendInvite": "Send invitation",
+    "inviteUrlNote": "Copy this link and send it (WhatsApp, SMS) — the email also goes out automatically.",
+    "noInvitations": "No pending invitations",
+    "expires": "Expires {{date}}",
+    "revokeInvite": "Revoke",
+    "inviteRevoked": "Invitation revoked",
+    "orgSaved": "Organization updated",
+    "plan": "Plan",
+    "region": "Region"
+  },
+  "invite": {
+    "title": "Join the organization",
+    "subtitle": "You've been invited to KDB Vault",
+    "passwordHint": "Only required if you don't have an account yet",
+    "accept": "Accept invitation",
+    "accepted": "Invitation accepted",
+    "invalid": "Invalid or expired invitation"
+  },
+  "audit": {
+    "title": "Audit log",
+    "subtitle": "Tamper-evident event chain — every action is recorded.",
+    "filterAction": "Filter by action…",
+    "noEvents": "No events",
+    "when": "When",
+    "action": "Action",
+    "resource": "Resource",
+    "actor": "Actor"
   },
   "errors": {
     "network": "Cannot connect — check your network",

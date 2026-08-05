@@ -33,6 +33,91 @@ Revoke a link → the private window now gets "link doesn't exist". View counts 
 
 ---
 
+# Slice W10 — Team & admin (members, invitations, audit, public verify)
+
+Final pilot-critical slice.
+
+## New files
+
+- `src/routes/team.tsx` — Tabs: Members (role change via Select, remove), Invitations
+  (invite dialog → **invite URL surfaced for WhatsApp/SMS**, revoke), Organization
+  (rename, plan/region/isolation tier)
+- `src/routes/audit.tsx` — audit event table (shadcn Table), debounced action filter,
+  cursor pagination
+- `src/routes/verify.$documentHash.tsx` — PUBLIC integrity page (QR target on sealed
+  PDFs): authentic/not-verified verdict, issuer, sealed date. Replaces the W1 placeholder.
+- `src/routes/invitations.$token.accept.tsx` — PUBLIC invite acceptance; adopts returned
+  tokens and lands in the app
+
+## Modified
+
+- `src/lib/api/types.ts` — Member, Invitation, Role, AuditEvent, PublicVerifyResult
+- `src/lib/api/queries.ts` — members/invitations/roles, invite create+revoke, member
+  update/remove, tenant rename, audit events, acceptInvitation, verifyDocumentHash
+- `src/components/app-shell.tsx` — Team + Audit log in profile menu
+- i18n `team.*`, `invite.*`, `audit.*`, `verify.*`, nav entries (FR + EN)
+
+## Backend companion (B34, rebuild)
+
+GET /roles, GET|POST /departments, PATCH /tenant implemented (were spec-only).
+
+## Verify
+
+Rebuild backend. Team → Invitations → invite an address you can read in Mailpit → copy the
+invite URL → open in a private window → accept (name + password) → lands in the vault as a
+member. Team → Members shows them; change role; remove. Audit log lists events (upload a
+file, watch `document.created` appear). Open `/verify/<hash>` for a sealed doc → authentic.
+
+---
+
+# Slice W9 — Billing (mobile money, plans, invoices, read-only gate)
+
+Pure web slice — the Billing module was already fully mapped.
+
+## New files
+
+- `src/routes/billing.tsx` — current subscription + usage, plan cards (current highlighted),
+  invoice list with PDF download. In profile menu.
+- `src/components/mobile-money-dialog.tsx` — CamPay flow: provider (MTN/Orange) + phone →
+  initiate → **USSD dial code surfaced prominently** → polls `GET /payments/{id}` every 3s
+  until succeeded/failed → invalidates subscription/usage/invoices
+
+## Modified
+
+- `src/lib/api/types.ts` — Subscription, Payment (purpose.ussd_hint), Invoice
+- `src/lib/api/queries.ts` — subscription, invoices, changeSubscription, initiateMobileMoney,
+  getPayment, invoicePdfUrl
+- `src/lib/api/http.ts` — 402 → dispatches `kdb:read-only` window event
+- `src/components/app-shell.tsx` — Billing menu item + **read-only banner** (listens for the
+  402 event; links to billing)
+- i18n `billing.*`, `nav.billing`, `common.done` (FR + EN)
+
+## Notes
+
+- USSD code comes from `payment.purpose.ussd_hint` (backend serializes it into purpose),
+  not a top-level field — matches the CamPay adapter.
+- Dev provider is `DevMobileMoneyProvider`; payments may auto-settle or need the
+  reconciliation poller — if status stays `pending`, that's the dev provider, not the UI.
+
+## Fix W9.1 (same slice)
+
+- `/plans` is mapped on the backend's PUBLIC (unversioned) surface — `MapPublicEndpoints`,
+  not the `/v1` group. The client was calling it via `apiFetch` (which prefixes `/v1`) →
+  404. Now uses `publicApiFetch`. This also fixes the plan picker in **onboarding**, which
+  reads the catalogue before a tenant exists.
+- `GET /subscription` answers **404 when there's no subscription** (trial) — a legitimate
+  state, not an error. `subscriptionQuery` maps 404 → `null` so the page renders the trial
+  copy without an error path or retry noise.
+
+## Verify
+
+Rebuild not required (web-only). Billing page shows plans + current subscription + usage.
+Choose a plan → Mobile Money dialog → enter phone → USSD code shows, polling spinner →
+on settle, subscription updates. Invoices list + PDF. (Read-only banner appears if any
+mutation 402s (cancelled subscription).)
+
+---
+
 # Slice W8 — Lifecycle (expiring, rules, reminders, obligations)
 
 Core differentiator for the legal/business market.

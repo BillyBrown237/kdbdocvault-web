@@ -1,7 +1,20 @@
 import { Link, useNavigate, useRouter } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CalendarClock, FolderClosed, Home, LogOut, Search, Settings, Trash2 } from 'lucide-react'
+import { AlertTriangle } from 'lucide-react'
+import {
+  CalendarClock,
+  CreditCard,
+  FolderClosed,
+  Home,
+  LogOut,
+  ScrollText,
+  Search,
+  Settings,
+  Trash2,
+  Users,
+} from 'lucide-react'
 
 import { queryClient } from '@/lib/query'
 import { meQuery, switchTenant, tenantQuery } from '@/lib/api/queries'
@@ -31,6 +44,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const me = useQuery(meQuery)
   const tenant = useQuery(tenantQuery)
+  const [readOnly, setReadOnly] = useState(false)
+
+  useEffect(() => {
+    const handler = () => setReadOnly(true)
+    window.addEventListener('kdb:read-only', handler)
+    return () => window.removeEventListener('kdb:read-only', handler)
+  }, [])
 
   async function onSwitchTenant(tenantId: string) {
     await switchTenant(queryClient, tenantId)
@@ -123,6 +143,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
+                <Link to="/team">
+                  <Users className="h-4 w-4" />
+                  {t('nav.team')}
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/audit">
+                  <ScrollText className="h-4 w-4" />
+                  {t('nav.audit')}
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/billing">
+                  <CreditCard className="h-4 w-4" />
+                  {t('nav.billing')}
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
                 <Link to="/trash">
                   <Trash2 className="h-4 w-4" />
                   {t('nav.trash')}
@@ -142,6 +180,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
+
+        {readOnly && (
+          <div className="flex items-center gap-2 border-b border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-900">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <span className="flex-1">{t('billing.readOnly')}</span>
+            <Link to="/billing" className="font-medium underline">
+              {t('nav.billing')}
+            </Link>
+          </div>
+        )}
 
         <main className="flex-1 p-4 pb-20 md:p-6 md:pb-6">{children}</main>
 

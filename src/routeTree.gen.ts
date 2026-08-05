@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuditRouteImport } from './routes/audit'
+import { Route as BillingRouteImport } from './routes/billing'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as LifecycleRouteImport } from './routes/lifecycle'
 import { Route as LoginRouteImport } from './routes/login'
@@ -19,6 +21,7 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as TeamRouteImport } from './routes/team'
 import { Route as TrashRouteImport } from './routes/trash'
 import { Route as DocumentsDocumentIdRouteImport } from './routes/documents.$documentId'
 import { Route as SharedTokenRouteImport } from './routes/shared.$token'
@@ -26,10 +29,21 @@ import { Route as SignSignTokenRouteImport } from './routes/sign.$signToken'
 import { Route as VaultIndexRouteImport } from './routes/vault.index'
 import { Route as VaultFolderIdRouteImport } from './routes/vault.$folderId'
 import { Route as VerifyDocumentHashRouteImport } from './routes/verify.$documentHash'
+import { Route as InvitationsTokenAcceptRouteImport } from './routes/invitations.$token.accept'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuditRoute = AuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BillingRoute = BillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -77,6 +91,11 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TeamRoute = TeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TrashRoute = TrashRouteImport.update({
   id: '/trash',
   path: '/trash',
@@ -112,9 +131,16 @@ const VerifyDocumentHashRoute = VerifyDocumentHashRouteImport.update({
   path: '/verify/$documentHash',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InvitationsTokenAcceptRoute = InvitationsTokenAcceptRouteImport.update({
+  id: '/invitations/$token/accept',
+  path: '/invitations/$token/accept',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/audit': typeof AuditRoute
+  '/billing': typeof BillingRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/lifecycle': typeof LifecycleRoute
   '/login': typeof LoginRoute
@@ -124,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/team': typeof TeamRoute
   '/trash': typeof TrashRoute
   '/documents/$documentId': typeof DocumentsDocumentIdRoute
   '/shared/$token': typeof SharedTokenRoute
@@ -131,9 +158,12 @@ export interface FileRoutesByFullPath {
   '/vault/$folderId': typeof VaultFolderIdRoute
   '/verify/$documentHash': typeof VerifyDocumentHashRoute
   '/vault/': typeof VaultIndexRoute
+  '/invitations/$token/accept': typeof InvitationsTokenAcceptRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/audit': typeof AuditRoute
+  '/billing': typeof BillingRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/lifecycle': typeof LifecycleRoute
   '/login': typeof LoginRoute
@@ -143,6 +173,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/team': typeof TeamRoute
   '/trash': typeof TrashRoute
   '/documents/$documentId': typeof DocumentsDocumentIdRoute
   '/shared/$token': typeof SharedTokenRoute
@@ -150,10 +181,13 @@ export interface FileRoutesByTo {
   '/vault/$folderId': typeof VaultFolderIdRoute
   '/verify/$documentHash': typeof VerifyDocumentHashRoute
   '/vault': typeof VaultIndexRoute
+  '/invitations/$token/accept': typeof InvitationsTokenAcceptRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/audit': typeof AuditRoute
+  '/billing': typeof BillingRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/lifecycle': typeof LifecycleRoute
   '/login': typeof LoginRoute
@@ -163,6 +197,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/team': typeof TeamRoute
   '/trash': typeof TrashRoute
   '/documents/$documentId': typeof DocumentsDocumentIdRoute
   '/shared/$token': typeof SharedTokenRoute
@@ -170,11 +205,14 @@ export interface FileRoutesById {
   '/vault/$folderId': typeof VaultFolderIdRoute
   '/verify/$documentHash': typeof VerifyDocumentHashRoute
   '/vault/': typeof VaultIndexRoute
+  '/invitations/$token/accept': typeof InvitationsTokenAcceptRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/audit'
+    | '/billing'
     | '/forgot-password'
     | '/lifecycle'
     | '/login'
@@ -184,6 +222,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/search'
     | '/settings'
+    | '/team'
     | '/trash'
     | '/documents/$documentId'
     | '/shared/$token'
@@ -191,9 +230,12 @@ export interface FileRouteTypes {
     | '/vault/$folderId'
     | '/verify/$documentHash'
     | '/vault/'
+    | '/invitations/$token/accept'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/audit'
+    | '/billing'
     | '/forgot-password'
     | '/lifecycle'
     | '/login'
@@ -203,6 +245,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/search'
     | '/settings'
+    | '/team'
     | '/trash'
     | '/documents/$documentId'
     | '/shared/$token'
@@ -210,9 +253,12 @@ export interface FileRouteTypes {
     | '/vault/$folderId'
     | '/verify/$documentHash'
     | '/vault'
+    | '/invitations/$token/accept'
   id:
     | '__root__'
     | '/'
+    | '/audit'
+    | '/billing'
     | '/forgot-password'
     | '/lifecycle'
     | '/login'
@@ -222,6 +268,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/search'
     | '/settings'
+    | '/team'
     | '/trash'
     | '/documents/$documentId'
     | '/shared/$token'
@@ -229,10 +276,13 @@ export interface FileRouteTypes {
     | '/vault/$folderId'
     | '/verify/$documentHash'
     | '/vault/'
+    | '/invitations/$token/accept'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuditRoute: typeof AuditRoute
+  BillingRoute: typeof BillingRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LifecycleRoute: typeof LifecycleRoute
   LoginRoute: typeof LoginRoute
@@ -242,6 +292,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
+  TeamRoute: typeof TeamRoute
   TrashRoute: typeof TrashRoute
   DocumentsDocumentIdRoute: typeof DocumentsDocumentIdRoute
   SharedTokenRoute: typeof SharedTokenRoute
@@ -249,6 +300,7 @@ export interface RootRouteChildren {
   VaultFolderIdRoute: typeof VaultFolderIdRoute
   VerifyDocumentHashRoute: typeof VerifyDocumentHashRoute
   VaultIndexRoute: typeof VaultIndexRoute
+  InvitationsTokenAcceptRoute: typeof InvitationsTokenAcceptRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -258,6 +310,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/audit': {
+      id: '/audit'
+      path: '/audit'
+      fullPath: '/audit'
+      preLoaderRoute: typeof AuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/billing': {
+      id: '/billing'
+      path: '/billing'
+      fullPath: '/billing'
+      preLoaderRoute: typeof BillingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -323,6 +389,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/team': {
+      id: '/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof TeamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/trash': {
       id: '/trash'
       path: '/trash'
@@ -372,11 +445,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VerifyDocumentHashRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/invitations/$token/accept': {
+      id: '/invitations/$token/accept'
+      path: '/invitations/$token/accept'
+      fullPath: '/invitations/$token/accept'
+      preLoaderRoute: typeof InvitationsTokenAcceptRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuditRoute: AuditRoute,
+  BillingRoute: BillingRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LifecycleRoute: LifecycleRoute,
   LoginRoute: LoginRoute,
@@ -386,6 +468,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
+  TeamRoute: TeamRoute,
   TrashRoute: TrashRoute,
   DocumentsDocumentIdRoute: DocumentsDocumentIdRoute,
   SharedTokenRoute: SharedTokenRoute,
@@ -393,6 +476,7 @@ const rootRouteChildren: RootRouteChildren = {
   VaultFolderIdRoute: VaultFolderIdRoute,
   VerifyDocumentHashRoute: VerifyDocumentHashRoute,
   VaultIndexRoute: VaultIndexRoute,
+  InvitationsTokenAcceptRoute: InvitationsTokenAcceptRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
