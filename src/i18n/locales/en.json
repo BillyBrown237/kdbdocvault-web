@@ -45,13 +45,85 @@
   "nav": {
     "dashboard": "Home",
     "vault": "Vault",
+    "search": "Search",
+    "lifecycle": "Lifecycle",
+    "trash": "Trash",
+    "settings": "Settings",
     "profile": "Profile",
     "organizations": "Organizations"
+  },
+  "mfa": {
+    "title": "Two-step verification",
+    "subtitle": "Enter the code from your authenticator app",
+    "code": "6-digit code",
+    "verify": "Verify",
+    "invalid": "Invalid code"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "security": "Security",
+    "sessions": "Sessions",
+    "name": "Name",
+    "phone": "Phone",
+    "save": "Save",
+    "saved": "Profile updated",
+    "changePassword": "Change password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "passwordChanged": "Password changed",
+    "twoFactor": "Two-factor authentication (TOTP)",
+    "enabled": "Enabled",
+    "totpOn": "Two-factor authentication is active.",
+    "totpOff": "Add a layer of security with an authenticator app.",
+    "setup2fa": "Set up",
+    "scanQr": "Scan this QR code with your authenticator app, then enter the generated code.",
+    "currentCode": "Authenticator code",
+    "enable2fa": "Enable",
+    "disable2fa": "Disable",
+    "totpEnabled": "Two-factor authentication enabled",
+    "totpDisabled": "Two-factor authentication disabled",
+    "activeSessions": "Active sessions",
+    "thisDevice": "This device",
+    "unknownDevice": "Unknown device",
+    "revoke": "Revoke",
+    "sessionRevoked": "Session revoked"
+  },
+  "forgot": {
+    "title": "Forgot password",
+    "subtitle": "We'll send you a reset code",
+    "submit": "Send code",
+    "sent": "If an account exists, a reset code has been sent.",
+    "haveToken": "I have a code",
+    "backToLogin": "Back to sign in"
+  },
+  "reset": {
+    "title": "Reset password",
+    "subtitle": "Enter the code you received and your new password",
+    "token": "Reset code",
+    "newPassword": "New password",
+    "submit": "Reset",
+    "done": "Password reset — sign in",
+    "invalid": "Invalid or expired code"
   },
   "common": {
     "back": "Back",
     "loadMore": "Load more",
-    "retry": "Retry"
+    "retry": "Retry",
+    "create": "Create"
+  },
+  "search": {
+    "title": "Search",
+    "placeholder": "Search documents…",
+    "hint": "Type to search your documents",
+    "noResults": "No results for \"{{q}}\""
+  },
+  "trash": {
+    "title": "Trash",
+    "empty": "Trash is empty",
+    "restore": "Restore",
+    "restored": "Document restored",
+    "purgeAfter": "Permanently deleted on {{date}}"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -70,11 +142,53 @@
   "vault": {
     "title": "Vault",
     "empty": "Your vault is empty — upload your first document",
-    "emptyFolder": "This folder is empty"
+    "emptyFolder": "This folder is empty",
+    "newFolder": "New folder",
+    "folderName": "Folder name",
+    "folderCreated": "Folder created"
   },
   "upload": {
     "button": "Upload",
     "retry": "Retry"
+  },
+  "lifecycle": {
+    "title": "Lifecycle",
+    "expiring": "Expiring",
+    "obligations": "Obligations",
+    "noExpiring": "Nothing expiring in the next 90 days",
+    "noObligations": "No obligations",
+    "keyDate": "Key date: {{date}}",
+    "due": "Due {{date}}",
+    "markDone": "Mark done",
+    "obligationDone": "Obligation completed",
+    "rules": "Lifecycle rules",
+    "addRule": "Add",
+    "ruleAdded": "Rule added",
+    "confirm": "Confirm",
+    "pendingOcr": "Detected (OCR)",
+    "reminders": "Reminders",
+    "addReminder": "Add",
+    "reminderAdded": "Reminder added",
+    "reminderLine": "{{days}} days before",
+    "offsetDays": "Days",
+    "daysBefore": "days before",
+    "ruleType": {
+      "expiry": "Expiry",
+      "renewal": "Renewal",
+      "review": "Review"
+    },
+    "obligationStatus": {
+      "open": "Open",
+      "done": "Done",
+      "overdue": "Overdue"
+    },
+    "channel": {
+      "email": "Email",
+      "sms": "SMS",
+      "whatsapp": "WhatsApp",
+      "in_app": "In-app",
+      "push": "Push"
+    }
   },
   "document": {
     "details": "Details",
@@ -87,6 +201,13 @@
     "versions": "Versions",
     "download": "Download",
     "favorite": "Favorite",
+    "organize": "Organize",
+    "newTag": "New tag",
+    "move": "Move",
+    "moveTarget": "Choose a folder…",
+    "moved": "Document moved",
+    "trashed": "Document moved to trash",
+    "trash": "Move to trash",
     "status": {
       "draft": "Draft",
       "active": "Active",
@@ -97,10 +218,86 @@
     }
   },
   "sign": {
-    "title": "Document signing"
+    "title": "Signatures",
+    "none": "No signature envelopes",
+    "new": "New",
+    "newEnvelope": "New signature request",
+    "message": "Message",
+    "messagePlaceholder": "Message to signers (optional)",
+    "signers": "Signers",
+    "signerName": "Name",
+    "signerEmail": "Email",
+    "addSigner": "Add signer",
+    "create": "Create",
+    "created": "Envelope created",
+    "send": "Send",
+    "sent": "Envelope sent",
+    "remind": "Remind",
+    "reminded": "Reminder sent",
+    "cancel": "Cancel",
+    "cancelled": "Envelope cancelled",
+    "cancelledByOwner": "Cancelled by owner",
+    "download": "Signed document",
+    "noVersion": "Document has no content yet",
+    "status": {
+      "draft": "Draft",
+      "sent": "Sent",
+      "completed": "Completed",
+      "declined": "Declined",
+      "cancelled": "Cancelled",
+      "expired": "Expired"
+    },
+    "signer": {
+      "pending": "Pending",
+      "verified": "Verified",
+      "signed": "Signed",
+      "declined": "Declined"
+    }
+  },
+  "signGuest": {
+    "hello": "Hello {{name}}",
+    "verifyFirst": "Verification required before signing",
+    "sendCode": "Send me a code",
+    "codeSent": "Code sent",
+    "enterCode": "Verification code",
+    "verify": "Verify",
+    "verified": "Verified",
+    "notYourTurn": "It's not your turn to sign yet",
+    "typeName": "Type your name to sign",
+    "consent": "I agree to sign this document electronically and that my signature is legally binding.",
+    "sign": "Sign",
+    "decline": "Decline",
+    "declinedReason": "Declined by signer",
+    "signedThanks": "Thank you, your signature has been recorded.",
+    "declinedDone": "You have declined to sign this document."
   },
   "shared": {
-    "title": "Shared document"
+    "title": "Shared document",
+    "notFound": "This link doesn't exist or has expired",
+    "passwordRequired": "This document is password-protected",
+    "wrongPassword": "Wrong password",
+    "unlock": "Unlock",
+    "viewAction": "View document",
+    "downloadAction": "Download document",
+    "viewOnly": "View only",
+    "previewFailed": "Preview unavailable for this file type"
+  },
+  "share": {
+    "title": "Sharing",
+    "permission": "Permission",
+    "view": "View",
+    "download": "Download",
+    "password": "Password",
+    "passwordOptional": "Optional",
+    "expires": "Expires",
+    "create": "Create link",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "oneTime": "This link will never be shown again — copy it now.",
+    "protected": "protected",
+    "until": "until {{date}}",
+    "views": "{{count}} view(s)",
+    "revoke": "Revoke"
   },
   "verify": {
     "title": "Document verification"

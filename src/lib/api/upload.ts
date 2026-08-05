@@ -18,9 +18,20 @@
 import { ApiProblem, NetworkError, apiFetch } from './http'
 import type { Document } from './types'
 
-export async function sha256Hex(file: File): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', await file.arrayBuffer())
-  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('')
+export interface FileChecksum {
+  hex: string
+  base64: string
+}
+
+/** hex goes to initiate (API contract); base64 goes on the PUT itself —
+ * the presigned URL SIGNS the x-amz-checksum-sha256 header, so the PUT
+ * must carry it or the storage service rejects the request. */
+export async function sha256(file: File): Promise<FileChecksum> {
+  const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', await file.arrayBuffer()))
+  return {
+    hex: Array.from(digest, (b) => b.toString(16).padStart(2, '0')).join(''),
+    base64: btoa(String.fromCharCode(...digest)),
+  }
 }
 
 interface XhrResult {
@@ -68,6 +79,7 @@ interface InitiateResponse {
 export class UploadTask {
   private uploadId: string | null = null
   private uploadUrl: string | null = null
+  private checksum: FileChecksum | null = null
   private putDone = false
 
   constructor(
@@ -79,14 +91,14 @@ export class UploadTask {
     // Step 1 — reserve (idempotent server-side; a 410-expired reservation
     // is cleared so the next run() reserves fresh).
     if (!this.uploadId) {
-      const checksum = await sha256Hex(this.file)
+      this.checksum ??= await sha256(this.file)
       const r = await apiFetch<InitiateResponse>('/documents/uploads', {
         method: 'POST',
         body: JSON.stringify({
           filename: this.file.name,
           size_bytes: this.file.size,
           mime_type: this.file.type || 'application/octet-stream',
-          checksum_sha256: checksum,
+          checksum_sha256: this.checksum.hex,
           folder_id: this.folderId,
         }),
       })
@@ -94,13 +106,18 @@ export class UploadTask {
       this.uploadUrl = r.upload_url
     }
 
-    // Step 2 — the bytes (skipped on retry if it already succeeded).
+    // Step 2 — the bytes (skipped on retry if it already succeeded). The
+    // checksum header is part of the presigned signature — omit it and the
+    // storage service answers 400 before looking at the body.
     if (!this.putDone) {
       const put = await xhrSend(
         this.uploadUrl!,
         'PUT',
         this.file,
-        { 'Content-Type': this.file.type || 'application/octet-stream' },
+        {
+          'Content-Type': this.file.type || 'application/octet-stream',
+          'x-amz-checksum-sha256': this.checksum!.base64,
+        },
         onProgress,
       )
       if (put.status < 200 || put.status >= 300) throw parseProblem(put)

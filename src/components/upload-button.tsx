@@ -5,6 +5,8 @@ import { RotateCcw, Upload } from 'lucide-react'
 
 import { ApiProblem, NetworkError } from '@/lib/api/http'
 import { UploadTask } from '@/lib/api/upload'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 
 interface UploadItem {
   id: string
@@ -64,19 +66,15 @@ export function UploadButton({ folderId }: { folderId?: string }) {
         className="hidden"
         onChange={(e) => handleFiles(e.target.files)}
       />
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        className="flex items-center gap-2 rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700"
-      >
+      <Button onClick={() => inputRef.current?.click()}>
         <Upload className="h-4 w-4" />
         {t('upload.button')}
-      </button>
+      </Button>
 
       {items.length > 0 && (
         <div className="fixed right-4 bottom-16 z-30 w-72 space-y-2 md:bottom-4">
           {items.map((it) => (
-            <div key={it.id} className="rounded-lg border border-border bg-card p-3 shadow-md">
+            <Card key={it.id} className="p-3 shadow-md">
               <div className="flex items-center justify-between gap-2">
                 <span className="truncate text-xs font-medium">{it.task.file.name}</span>
                 {it.status === 'error' && (
@@ -93,14 +91,15 @@ export function UploadButton({ folderId }: { folderId?: string }) {
               {it.status === 'error' ? (
                 <div className="mt-1 flex items-center justify-between gap-2">
                   <p className="min-w-0 flex-1 truncate text-xs text-red-600">{it.error}</p>
-                  <button
-                    type="button"
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => void runItem(it.id, it.task)}
-                    className="flex shrink-0 items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:bg-muted"
+                    className="h-7 shrink-0"
                   >
                     <RotateCcw className="h-3 w-3" />
                     {t('upload.retry')}
-                  </button>
+                  </Button>
                 </div>
               ) : (
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
@@ -110,7 +109,7 @@ export function UploadButton({ folderId }: { folderId?: string }) {
                   />
                 </div>
               )}
-            </div>
+            </Card>
           ))}
         </div>
       )}

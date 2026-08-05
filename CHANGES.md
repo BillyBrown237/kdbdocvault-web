@@ -1,3 +1,244 @@
+# Slice W5 — Sharing (first public capability surface)
+
+## New files
+
+- `src/components/share-panel.tsx` — on document detail: create link (view/download,
+  optional password + expiry), one-time URL reveal with copy (never shown again —
+  matches the backend's raw-token discipline), active-link list with view counts
+  and revoke
+- `src/routes/shared.$token.tsx` — the public guest page, REPLACING the W1
+  placeholder: resolve → password unlock if required → view (object-URL tab) or
+  download by permission. No auth guard; dead links show a uniform "not found".
+  First real consumer of `publicApiFetch` + the /pub proxy alias.
+
+## Modified
+
+- `src/lib/api/{types,queries}.ts` — ShareLink/SharedMeta; shareLinksQuery,
+  createShareLink, revokeShareLink; resolveShared, unlockShared, sharedContentBlob
+- `src/routes/documents.$documentId.tsx` — SharePanel added
+- i18n: `share.*`, `shared.*` (FR + EN)
+
+## Backend touch (in kdbdocvault, rebuild needed)
+
+- `LinkHandlers.cs` / `DataRooms.cs`: share URLs now built from
+  `App:FrontendBaseUrl` (the web app, :3000 in dev) instead of `App:PublicBaseUrl`
+  (the API) — copied links previously opened the wrong origin.
+
+## Verify
+
+Rebuild backend. On a document: create a view link with a password → copy the URL →
+open it in a PRIVATE window (no session): title shows, password gate, unlock, view
+opens the file. Create a download link without password → downloads directly.
+Revoke a link → the private window now gets "link doesn't exist". View counts tick.
+
+---
+
+# Slice W8 — Lifecycle (expiring, rules, reminders, obligations)
+
+Core differentiator for the legal/business market.
+
+## New files
+
+- `src/routes/lifecycle.tsx` — Lifecycle page, Tabs: Expiring (rules due ≤90d, doc-title
+  links, type badges) and Obligations (list + mark-done). In main nav.
+- `src/components/lifecycle-panel.tsx` — on document detail: add/confirm/delete lifecycle
+  rules (expiry/renewal/review + date), per-rule reminders (offset days + channel, delete),
+  OCR-detected rules show a Confirm action
+
+## Modified
+
+- `src/lib/api/types.ts` — LifecycleRule, Reminder, Obligation + unions
+- `src/lib/api/queries.ts` — expiring, rules CRUD/confirm, reminders CRUD, obligations
+- `src/routes/documents.$documentId.tsx` — LifecyclePanel mounted
+- `src/components/app-shell.tsx` — Lifecycle nav entry
+- i18n `lifecycle.*`, `nav.lifecycle` (FR + EN)
+
+## Backend companion (B33, rebuild)
+
+Expiring feed enriched with document_title; obligations list/create/update implemented.
+
+## Verify
+
+Rebuild backend. On a document: Lifecycle rules → add an Expiry with a date ~30d out →
+add a reminder (7 days before, email). Lifecycle page → Expiring shows the document by
+title. Create an obligation (via API/panel) → Obligations tab → mark done.
+
+---
+
+# Slice W7 — Auth completion (MFA, TOTP, sessions, password reset, profile)
+
+## New routes
+
+- `src/routes/mfa.tsx` — MFA challenge screen; login now routes here on `mfa_required`
+  (challenge token held in memory via auth.ts, dropped on refresh → back to login)
+- `src/routes/settings.tsx` — Tabs: Profile (name/phone/locale), Security (change password +
+  TOTP enable with QR / disable), Sessions (list + revoke non-current). In profile menu.
+- `src/routes/forgot-password.tsx`, `reset-password.tsx` — public, anti-enumeration copy;
+  login "Forgot password?" now links here
+
+## Modified
+
+- `src/lib/auth.ts` — pending-challenge holder; `completeMfa` returns tenant scope
+- `src/lib/api/queries.ts` — sessions, revokeSession, updateProfile, changePassword,
+  totpSetup/confirm/disable, forgotPassword, resetPassword
+- `src/routes/login.tsx` — mfa_required → /mfa; forgot-password link
+- `src/components/app-shell.tsx` — Settings link in profile menu
+- i18n `mfa.*`, `settings.*`, `forgot.*`, `reset.*` (FR + EN)
+
+## New deps (npm install)
+
+qrcode + @types/qrcode (TOTP QR rendering from the otpauth_uri).
+
+## Backend companion (B32, rebuild)
+
+PATCH /me and PUT /me/password implemented (were spec-only).
+
+## Verify
+
+Rebuild backend, `npm install`. Settings → Security → Set up 2FA → scan QR in an
+authenticator → enter code → enabled. Log out, log in → MFA screen → code → in. Settings →
+Sessions lists devices, revoke works. Forgot password → code from Mailpit → reset → sign in.
+
+---
+
+# Slice W6 — Signatures (envelopes + guest signing)
+
+First feature slice on the shadcn design system.
+
+## New files
+
+- `src/components/signature-panel.tsx` — on document detail: list envelopes with
+  per-signer status badges; create-envelope Dialog (message + repeatable signer rows);
+  send / remind / cancel actions; signed-document download when completed
+- `src/routes/sign.$signToken.tsx` — public guest flow (replaces W1 placeholder):
+  resolve → OTP verify (if required) → type-to-sign with consent, or decline →
+  confirmation. All via `publicApiFetch` (/pub alias).
+
+## Modified
+
+- `src/lib/api/types.ts` — Envelope, Signer, GuestSignView + status unions
+- `src/lib/api/queries.ts` — envelopesForDocumentQuery, createEnvelope, send/remind/cancel;
+  guest: guestSignView, guestRequestOtp, guestSubmitOtp, guestSign, guestDecline
+- `src/routes/documents.$documentId.tsx` — SignaturePanel mounted
+- i18n `sign.*` + `signGuest.*` (FR + EN)
+
+## Backend touch (kdbdocvault, rebuild)
+
+Guest-RLS pin applied to the Signatures module (fix B31) so /sign resolves — same class
+as the shared-link B30.3 fix, applied pre-emptively.
+
+## Verify
+
+Rebuild backend. On a document with content: Signatures card → New → add a signer (use an
+email you can read in Mailpit) → Create (draft) → Send. Open the /sign link from the
+signer email in a private window → verify with the OTP → type name + consent → Sign.
+Envelope flips to completed; "Signed document" downloads the sealed PDF.
+
+---
+
+# Slice D1 — shadcn/ui design system + retrofit
+
+The house directive: expose the *complete* backend and make it genuinely polished,
+with shadcn/ui used everywhere possible. This slice installs the primitives (they were
+never actually added — only components.json existed) and retrofits every screen built so
+far, so W6+ is built on a consistent design system.
+
+## New dependencies (run `npm install`)
+
+@radix-ui/react-{avatar,dialog,dropdown-menu,label,select,separator,slot,tabs,tooltip},
+sonner. (cva/clsx/tailwind-merge were already present.)
+
+## New files — src/components/ui/
+
+button, input, label, card, badge, dialog, dropdown-menu, select, avatar, skeleton,
+separator, sonner (Toaster + toast), tabs, table, tooltip. Canonical shadcn "new-york",
+slate — tokens already in styles.css from W1.
+
+## Retrofitted to shadcn + toasts
+
+- `main.tsx` — `<Toaster richColors />` mounted
+- app-shell — Avatar + DropdownMenu profile menu (tenant switch, trash, language, logout),
+  branded sidebar
+- login / register / onboarding — Card + Input + Label + Button; errors now `toast` instead
+  of inline text
+- dashboard — Card usage tiles + Skeleton loading
+- vault rows — Card + status Badge (variant per status)
+- upload button, new-folder (now a Dialog), document detail, document-actions (Select for
+  move, Badge tag chips), share panel (Select/Input/Badge), search (Input + Skeleton),
+  trash (Card rows + Skeleton), public shared page (Card/Button/Input/Badge)
+
+## Verify
+
+`npm install`, `npm run dev`. Every screen should render with consistent shadcn styling;
+success/error feedback appears as top-right toasts (create folder, move, trash, restore,
+share copy, auth errors).
+
+## Next
+
+Design system is in place → W6 (signatures) and all subsequent modules build on these
+primitives. Remaining backend surfaces to expose per the "all functionality" directive:
+signatures, auth completion (MFA/sessions/password reset), lifecycle, billing, team/admin,
+then workflows, data rooms, reports, imports, API keys, webhooks, emergency access.
+
+---
+
+# Fix W5.1 — view-only links: in-app viewer instead of the browser's PDF tab
+
+Opening a view-permission blob in a new tab handed the guest the browser's PDF
+viewer, download button included. View-only now renders IN the page:
+
+- `src/components/inline-pdf-viewer.tsx` — pdf.js canvas rendering, no toolbar,
+  no blob URL in a tab, context menu suppressed (new dep: `pdfjs-dist` →
+  **run `npm install`**)
+- images render as a non-draggable `<img>`; other types get an honest
+  "preview unavailable"
+- download-permission links keep the direct download
+
+Honesty note (also in code comments): this is DETERRENCE, not DRM — screenshots
+cannot be prevented. The real control is server-side and already ships: every
+watermarkable view is stamped with the link id + date, so a leak carries its
+provenance. That's the industry-standard posture (Drive/DocSend-style).
+
+Backend companion: ShareGuestSession now LOGS the reason for every guest 404
+(unknown token / row invisible / revoked / expired / view-exhausted) while
+guests keep seeing the uniform 404 — no more guessing whether a 404 is a bug
+or a correctly-dead link.
+
+---
+
+# Slice W4 — Search + organization
+
+Pairs with backend slice B30.
+
+## New files
+
+- `src/routes/search.tsx` — debounced search over `/search` (hits show snippet),
+  in the main nav
+- `src/routes/trash.tsx` — trash list with restore + purge dates (profile menu link)
+- `src/components/new-folder-button.tsx` — inline create-folder (vault root + folders)
+- `src/components/document-actions.tsx` — detail-page "Organize" card: tag chips
+  (toggle set, create inline), move to folder, move to trash
+- `src/lib/use-debounced-value.ts`
+
+## Modified
+
+- `src/lib/api/queries.ts` — searchQuery, tagsQuery, createTag, setDocumentTags,
+  moveDocument, trashDocument, trashQuery, restoreDocument, createFolder
+- `src/lib/api/types.ts` — SearchHit, TrashItem
+- `src/components/app-shell.tsx` — Search in nav, Trash in profile menu
+- `src/routes/vault.index.tsx`, `vault.$folderId.tsx` — New-folder button
+- `src/routes/documents.$documentId.tsx` — Organize card
+- i18n: `search.*`, `trash.*`, `vault.newFolder/folderName`, `document.organize/*`,
+  `common.create` (FR + EN)
+
+## Verify
+
+Rebuild backend first (B30). Then: create a folder from the vault; search for an
+uploaded document's title; open a document → toggle/create tags (persist across
+reload), move it into the folder, trash it; find it in Trash → restore → it's back.
+
+---
+
 # Slice W3 — Upload pipeline + document detail
 
 ## New files

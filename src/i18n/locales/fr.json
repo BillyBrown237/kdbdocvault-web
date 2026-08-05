@@ -45,13 +45,85 @@
   "nav": {
     "dashboard": "Accueil",
     "vault": "Coffre",
+    "search": "Recherche",
+    "lifecycle": "Échéances",
+    "trash": "Corbeille",
+    "settings": "Paramètres",
     "profile": "Profil",
     "organizations": "Organisations"
+  },
+  "mfa": {
+    "title": "Vérification en deux étapes",
+    "subtitle": "Saisissez le code de votre application d'authentification",
+    "code": "Code à 6 chiffres",
+    "verify": "Vérifier",
+    "invalid": "Code invalide"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "profile": "Profil",
+    "security": "Sécurité",
+    "sessions": "Sessions",
+    "name": "Nom",
+    "phone": "Téléphone",
+    "save": "Enregistrer",
+    "saved": "Profil mis à jour",
+    "changePassword": "Changer le mot de passe",
+    "currentPassword": "Mot de passe actuel",
+    "newPassword": "Nouveau mot de passe",
+    "passwordChanged": "Mot de passe modifié",
+    "twoFactor": "Authentification à deux facteurs (TOTP)",
+    "enabled": "Activée",
+    "totpOn": "L'authentification à deux facteurs est active.",
+    "totpOff": "Ajoutez une couche de sécurité avec une application d'authentification.",
+    "setup2fa": "Configurer",
+    "scanQr": "Scannez ce QR code avec votre application d'authentification, puis saisissez le code généré.",
+    "currentCode": "Code de l'application",
+    "enable2fa": "Activer",
+    "disable2fa": "Désactiver",
+    "totpEnabled": "Authentification à deux facteurs activée",
+    "totpDisabled": "Authentification à deux facteurs désactivée",
+    "activeSessions": "Sessions actives",
+    "thisDevice": "Cet appareil",
+    "unknownDevice": "Appareil inconnu",
+    "revoke": "Révoquer",
+    "sessionRevoked": "Session révoquée"
+  },
+  "forgot": {
+    "title": "Mot de passe oublié",
+    "subtitle": "Nous vous enverrons un code de réinitialisation",
+    "submit": "Envoyer le code",
+    "sent": "Si un compte existe, un code de réinitialisation a été envoyé.",
+    "haveToken": "J'ai un code",
+    "backToLogin": "Retour à la connexion"
+  },
+  "reset": {
+    "title": "Réinitialiser le mot de passe",
+    "subtitle": "Saisissez le code reçu et votre nouveau mot de passe",
+    "token": "Code de réinitialisation",
+    "newPassword": "Nouveau mot de passe",
+    "submit": "Réinitialiser",
+    "done": "Mot de passe réinitialisé — connectez-vous",
+    "invalid": "Code invalide ou expiré"
   },
   "common": {
     "back": "Retour",
     "loadMore": "Afficher plus",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "create": "Créer"
+  },
+  "search": {
+    "title": "Recherche",
+    "placeholder": "Rechercher des documents…",
+    "hint": "Tapez pour rechercher dans vos documents",
+    "noResults": "Aucun résultat pour « {{q}} »"
+  },
+  "trash": {
+    "title": "Corbeille",
+    "empty": "La corbeille est vide",
+    "restore": "Restaurer",
+    "restored": "Document restauré",
+    "purgeAfter": "Suppression définitive le {{date}}"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -70,11 +142,53 @@
   "vault": {
     "title": "Coffre",
     "empty": "Votre coffre est vide — importez votre premier document",
-    "emptyFolder": "Ce dossier est vide"
+    "emptyFolder": "Ce dossier est vide",
+    "newFolder": "Nouveau dossier",
+    "folderName": "Nom du dossier",
+    "folderCreated": "Dossier créé"
   },
   "upload": {
     "button": "Importer",
     "retry": "Réessayer"
+  },
+  "lifecycle": {
+    "title": "Échéances",
+    "expiring": "À échéance",
+    "obligations": "Obligations",
+    "noExpiring": "Aucune échéance dans les 90 prochains jours",
+    "noObligations": "Aucune obligation",
+    "keyDate": "Échéance : {{date}}",
+    "due": "Dû le {{date}}",
+    "markDone": "Terminer",
+    "obligationDone": "Obligation terminée",
+    "rules": "Règles d'échéance",
+    "addRule": "Ajouter",
+    "ruleAdded": "Règle ajoutée",
+    "confirm": "Confirmer",
+    "pendingOcr": "Détecté (OCR)",
+    "reminders": "Rappels",
+    "addReminder": "Ajouter",
+    "reminderAdded": "Rappel ajouté",
+    "reminderLine": "{{days}} jours avant",
+    "offsetDays": "Jours",
+    "daysBefore": "jours avant",
+    "ruleType": {
+      "expiry": "Expiration",
+      "renewal": "Renouvellement",
+      "review": "Revue"
+    },
+    "obligationStatus": {
+      "open": "Ouverte",
+      "done": "Terminée",
+      "overdue": "En retard"
+    },
+    "channel": {
+      "email": "E-mail",
+      "sms": "SMS",
+      "whatsapp": "WhatsApp",
+      "in_app": "In-app",
+      "push": "Push"
+    }
   },
   "document": {
     "details": "Détails",
@@ -87,6 +201,13 @@
     "versions": "Versions",
     "download": "Télécharger",
     "favorite": "Favori",
+    "organize": "Organiser",
+    "newTag": "Nouvelle étiquette",
+    "move": "Déplacer",
+    "moveTarget": "Choisir un dossier…",
+    "moved": "Document déplacé",
+    "trashed": "Document mis à la corbeille",
+    "trash": "Mettre à la corbeille",
     "status": {
       "draft": "Brouillon",
       "active": "Actif",
@@ -97,10 +218,87 @@
     }
   },
   "sign": {
-    "title": "Signature de document"
+    "title": "Signatures",
+    "none": "Aucune enveloppe de signature",
+    "new": "Nouvelle",
+    "newEnvelope": "Nouvelle demande de signature",
+    "message": "Message",
+    "messagePlaceholder": "Message aux signataires (optionnel)",
+    "signers": "Signataires",
+    "signerName": "Nom",
+    "signerEmail": "E-mail",
+    "addSigner": "Ajouter un signataire",
+    "create": "Créer",
+    "created": "Enveloppe créée",
+    "send": "Envoyer",
+    "sent": "Enveloppe envoyée",
+    "remind": "Relancer",
+    "reminded": "Rappel envoyé",
+    "cancel": "Annuler",
+    "cancelled": "Enveloppe annulée",
+    "cancelledByOwner": "Annulée par le propriétaire",
+    "download": "Document signé",
+    "noVersion": "Le document n'a pas encore de contenu",
+    "noVersion2": "",
+    "status": {
+      "draft": "Brouillon",
+      "sent": "Envoyée",
+      "completed": "Complétée",
+      "declined": "Refusée",
+      "cancelled": "Annulée",
+      "expired": "Expirée"
+    },
+    "signer": {
+      "pending": "En attente",
+      "verified": "Vérifié",
+      "signed": "Signé",
+      "declined": "Refusé"
+    }
+  },
+  "signGuest": {
+    "hello": "Bonjour {{name}}",
+    "verifyFirst": "Vérification requise avant de signer",
+    "sendCode": "Recevoir un code",
+    "codeSent": "Code envoyé",
+    "enterCode": "Code de vérification",
+    "verify": "Vérifier",
+    "verified": "Vérifié",
+    "notYourTurn": "Ce n'est pas encore votre tour de signer",
+    "typeName": "Saisissez votre nom pour signer",
+    "consent": "J'accepte de signer ce document par voie électronique et que ma signature ait valeur légale.",
+    "sign": "Signer",
+    "decline": "Refuser",
+    "declinedReason": "Refusé par le signataire",
+    "signedThanks": "Merci, votre signature a été enregistrée.",
+    "declinedDone": "Vous avez refusé de signer ce document."
   },
   "shared": {
-    "title": "Document partagé"
+    "title": "Document partagé",
+    "notFound": "Ce lien n'existe pas ou a expiré",
+    "passwordRequired": "Ce document est protégé par mot de passe",
+    "wrongPassword": "Mot de passe incorrect",
+    "unlock": "Déverrouiller",
+    "viewAction": "Consulter le document",
+    "downloadAction": "Télécharger le document",
+    "viewOnly": "Lecture seule",
+    "previewFailed": "Aperçu indisponible pour ce type de fichier"
+  },
+  "share": {
+    "title": "Partage",
+    "permission": "Permission",
+    "view": "Consultation",
+    "download": "Téléchargement",
+    "password": "Mot de passe",
+    "passwordOptional": "Optionnel",
+    "expires": "Expire le",
+    "create": "Créer le lien",
+    "copy": "Copier",
+    "copied": "Copié !",
+    "oneTime": "Ce lien ne sera plus jamais affiché — copiez-le maintenant.",
+    "protected": "protégé",
+    "until": "jusqu'au {{date}}",
+    "views": "{{count}} vue(s)",
+    "revoke": "Révoquer"
   },
   "verify": {
     "title": "Vérification de document"

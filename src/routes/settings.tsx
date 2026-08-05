@@ -1,0 +1,306 @@
+import { createFileRoute } from '@tanstack/react-router'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import QRCode from 'qrcode'
+import { Monitor, ShieldCheck } from 'lucide-react'
+
+import { AppShell } from '@/components/app-shell'
+import { ApiProblem, NetworkError } from '@/lib/api/http'
+import {
+  changePassword,
+  meQuery,
+  revokeSession,
+  sessionsQuery,
+  totpConfirm,
+  totpDisable,
+  totpSetup,
+  updateProfile,
+} from '@/lib/api/queries'
+import { requireTenant } from '@/lib/route-guards'
+import { formatDate } from '@/lib/format'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Separator } from '@/components/ui/separator'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { toast } from '@/components/ui/sonner'
+
+export const Route = createFileRoute('/settings')({
+  beforeLoad: ({ location }) => requireTenant(location),
+  component: SettingsPage,
+})
+
+function fail(err: unknown, t: (k: string) => string) {
+  if (err instanceof NetworkError) toast.error(t('errors.network'))
+  else if (err instanceof ApiProblem) toast.error(err.detail ?? err.title)
+  else toast.error(t('errors.unknown'))
+}
+
+function SettingsPage() {
+  const { t } = useTranslation()
+  return (
+    <AppShell>
+      <h1 className="text-2xl font-bold tracking-tight">{t('settings.title')}</h1>
+      <Tabs defaultValue="profile" className="mt-4">
+        <TabsList>
+          <TabsTrigger value="profile">{t('settings.profile')}</TabsTrigger>
+          <TabsTrigger value="security">{t('settings.security')}</TabsTrigger>
+          <TabsTrigger value="sessions">{t('settings.sessions')}</TabsTrigger>
+        </TabsList>
+        <TabsContent value="profile">
+          <ProfileTab />
+        </TabsContent>
+        <TabsContent value="security">
+          <PasswordCard />
+          <TotpCard />
+        </TabsContent>
+        <TabsContent value="sessions">
+          <SessionsCard />
+        </TabsContent>
+      </Tabs>
+    </AppShell>
+  )
+}
+
+function ProfileTab() {
+  const { t, i18n } = useTranslation()
+  const queryClient = useQueryClient()
+  const me = useQuery(meQuery)
+  const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
+
+  useEffect(() => {
+    if (me.data) {
+      setName(me.data.name ?? '')
+      setPhone(me.data.phone ?? '')
+    }
+  }, [me.data])
+
+  const save = useMutation({
+    mutationFn: () => updateProfile({ name, phone, locale: i18n.language.startsWith('fr') ? 'fr' : 'en' }),
+    onSuccess: async () => {
+      toast.success(t('settings.saved'))
+      await queryClient.invalidateQueries({ queryKey: ['me'] })
+    },
+    onError: (e) => fail(e, t),
+  })
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm text-muted-foreground">{t('settings.profile')}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-1.5">
+          <Label>{t('auth.login.identifier')}</Label>
+          <Input value={me.data?.email ?? ''} disabled />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="name">{t('settings.name')}</Label>
+          <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="phone">{t('settings.phone')}</Label>
+          <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+        </div>
+        <Button onClick={() => save.mutate()} disabled={save.isPending}>
+          {save.isPending ? t('app.loading') : t('settings.save')}
+        </Button>
+      </CardContent>
+    </Card>
+  )
+}
+
+function PasswordCard() {
+  const { t } = useTranslation()
+  const [current, setCurrent] = useState('')
+  const [next, setNext] = useState('')
+
+  const change = useMutation({
+    mutationFn: () => changePassword(current, next),
+    onSuccess: () => {
+      toast.success(t('settings.passwordChanged'))
+      setCurrent('')
+      setNext('')
+    },
+    onError: (e) => fail(e, t),
+  })
+
+  return (
+    <Card className="mt-4">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm text-muted-foreground">{t('settings.changePassword')}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="cur">{t('settings.currentPassword')}</Label>
+          <Input id="cur" type="password" value={current} onChange={(e) => setCurrent(e.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="new">{t('settings.newPassword')}</Label>
+          <Input id="new" type="password" value={next} onChange={(e) => setNext(e.target.value)} />
+        </div>
+        <Button onClick={() => change.mutate()} disabled={change.isPending || !current || next.length < 10}>
+          {change.isPending ? t('app.loading') : t('settings.save')}
+        </Button>
+      </CardContent>
+    </Card>
+  )
+}
+
+function TotpCard() {
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+  const me = useQuery(meQuery)
+  const [qr, setQr] = useState<string | null>(null)
+  const [code, setCode] = useState('')
+  const [disablePw, setDisablePw] = useState('')
+
+  const begin = useMutation({
+    mutationFn: totpSetup,
+    onSuccess: async (r) => setQr(await QRCode.toDataURL(r.otpauth_uri)),
+    onError: (e) => fail(e, t),
+  })
+  const confirm = useMutation({
+    mutationFn: () => totpConfirm(code),
+    onSuccess: async () => {
+      toast.success(t('settings.totpEnabled'))
+      setQr(null)
+      setCode('')
+      await queryClient.invalidateQueries({ queryKey: ['me'] })
+    },
+    onError: (e) => fail(e, t),
+  })
+  const disable = useMutation({
+    mutationFn: () => totpDisable(disablePw, code),
+    onSuccess: async () => {
+      toast.success(t('settings.totpDisabled'))
+      setDisablePw('')
+      setCode('')
+      await queryClient.invalidateQueries({ queryKey: ['me'] })
+    },
+    onError: (e) => fail(e, t),
+  })
+
+  const enabled = me.data?.mfa_enabled
+
+  return (
+    <Card className="mt-4">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
+          <ShieldCheck className="h-4 w-4" />
+          {t('settings.twoFactor')}
+          {enabled && <Badge variant="success">{t('settings.enabled')}</Badge>}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {enabled ? (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">{t('settings.totpOn')}</p>
+            <div className="space-y-1.5">
+              <Label>{t('auth.login.password')}</Label>
+              <Input type="password" value={disablePw} onChange={(e) => setDisablePw(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t('settings.currentCode')}</Label>
+              <Input inputMode="numeric" value={code} onChange={(e) => setCode(e.target.value)} />
+            </div>
+            <Button
+              variant="outline"
+              className="text-red-600 hover:text-red-600"
+              disabled={disable.isPending || !disablePw || !code}
+              onClick={() => disable.mutate()}
+            >
+              {t('settings.disable2fa')}
+            </Button>
+          </div>
+        ) : qr ? (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">{t('settings.scanQr')}</p>
+            <img src={qr} alt="TOTP QR" className="h-44 w-44 rounded-md border" />
+            <div className="space-y-1.5">
+              <Label>{t('settings.currentCode')}</Label>
+              <Input inputMode="numeric" value={code} onChange={(e) => setCode(e.target.value)} />
+            </div>
+            <Button disabled={confirm.isPending || !code} onClick={() => confirm.mutate()}>
+              {confirm.isPending ? t('app.loading') : t('settings.enable2fa')}
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">{t('settings.totpOff')}</p>
+            <Button onClick={() => begin.mutate()} disabled={begin.isPending}>
+              {begin.isPending ? t('app.loading') : t('settings.setup2fa')}
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+function SessionsCard() {
+  const { t, i18n } = useTranslation()
+  const queryClient = useQueryClient()
+  const sessions = useQuery(sessionsQuery)
+
+  const revoke = useMutation({
+    mutationFn: revokeSession,
+    onSuccess: async () => {
+      toast.success(t('settings.sessionRevoked'))
+      await queryClient.invalidateQueries({ queryKey: ['sessions'] })
+    },
+    onError: (e) => fail(e, t),
+  })
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm text-muted-foreground">{t('settings.activeSessions')}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {sessions.isPending ? (
+          <p className="text-sm text-muted-foreground">{t('app.loading')}</p>
+        ) : (
+          sessions.data?.data.map((s, i) => (
+            <div key={s.id}>
+              {i > 0 && <Separator className="mb-2" />}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-2">
+                  <Monitor className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-medium">
+                      {s.device || t('settings.unknownDevice')}
+                      {s.current && (
+                        <Badge variant="secondary" className="ml-2">
+                          {t('settings.thisDevice')}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {s.ip} · {formatDate(s.last_active_at, i18n.language)}
+                    </div>
+                  </div>
+                </div>
+                {!s.current && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-600 hover:text-red-600"
+                    disabled={revoke.isPending}
+                    onClick={() => revoke.mutate(s.id)}
+                  >
+                    {t('settings.revoke')}
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </CardContent>
+    </Card>
+  )
+}

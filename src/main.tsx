@@ -5,6 +5,7 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 
 import { getRouter } from './router'
 import { queryClient, queryPersister } from './lib/query'
+import { Toaster } from './components/ui/sonner'
 import './i18n'
 import './styles.css'
 
@@ -22,6 +23,7 @@ if (!rootElement.innerHTML) {
         }}
       >
         <RouterProvider router={router} />
+        <Toaster richColors position="top-right" />
       </PersistQueryClientProvider>
     </StrictMode>,
   )

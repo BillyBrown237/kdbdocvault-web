@@ -3,6 +3,7 @@ import { useInfiniteQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 
 import { AppShell } from '@/components/app-shell'
+import { NewFolderButton } from '@/components/new-folder-button'
 import { UploadButton } from '@/components/upload-button'
 import {
   DocumentRow,
@@ -30,9 +31,12 @@ function VaultRoot() {
 
   return (
     <AppShell>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-bold">{t('vault.title')}</h1>
-        <UploadButton />
+        <div className="flex items-center gap-2">
+          <NewFolderButton />
+          <UploadButton />
+        </div>
       </div>
 
       {isPending && <p className="mt-4 text-sm text-muted-foreground">{t('app.loading')}</p>}

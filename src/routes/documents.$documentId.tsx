@@ -5,6 +5,10 @@ import { useTranslation } from 'react-i18next'
 import { ChevronLeft, Download, Star } from 'lucide-react'
 
 import { AppShell } from '@/components/app-shell'
+import { DocumentActions } from '@/components/document-actions'
+import { SharePanel } from '@/components/share-panel'
+import { SignaturePanel } from '@/components/signature-panel'
+import { LifecyclePanel } from '@/components/lifecycle-panel'
 import {
   addFavorite,
   documentQuery,
@@ -16,6 +20,12 @@ import {
 import { ApiProblem, NetworkError } from '@/lib/api/http'
 import { formatBytes, formatDate } from '@/lib/format'
 import { requireTenant } from '@/lib/route-guards'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/skeleton'
+import { toast } from '@/components/ui/sonner'
 
 export const Route = createFileRoute('/documents/$documentId')({
   beforeLoad: ({ location }) => requireTenant(location),
@@ -33,7 +43,6 @@ function DocumentDetail() {
   const doc = useQuery(documentQuery(documentId))
   const versions = useQuery(documentVersionsQuery(documentId))
   const favorites = useQuery(favoritesQuery)
-  const [error, setError] = useState<string | null>(null)
   const [downloading, setDownloading] = useState(false)
 
   const isFavorite = favorites.data?.data.some((d) => d.id === documentId) ?? false
@@ -46,7 +55,6 @@ function DocumentDetail() {
   async function onDownload() {
     if (!doc.data) return
     setDownloading(true)
-    setError(null)
     try {
       const blob = await downloadDocumentBlob(documentId)
       const url = URL.createObjectURL(blob)
@@ -56,9 +64,9 @@ function DocumentDetail() {
       a.click()
       URL.revokeObjectURL(url)
     } catch (err) {
-      if (err instanceof NetworkError) setError(t('errors.network'))
-      else if (err instanceof ApiProblem) setError(err.detail ?? err.title)
-      else setError(t('errors.unknown'))
+      if (err instanceof NetworkError) toast.error(t('errors.network'))
+      else if (err instanceof ApiProblem) toast.error(err.detail ?? err.title)
+      else toast.error(t('errors.unknown'))
     } finally {
       setDownloading(false)
     }
@@ -70,87 +78,86 @@ function DocumentDetail() {
   return (
     <AppShell>
       <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => router.history.back()}
-          className="rounded-md p-1 hover:bg-muted"
-          aria-label={t('common.back')}
-        >
+        <Button variant="ghost" size="icon" onClick={() => router.history.back()}>
           <ChevronLeft className="h-5 w-5" />
-        </button>
-        <h1 className="min-w-0 flex-1 truncate text-2xl font-bold">
+        </Button>
+        <h1 className="min-w-0 flex-1 truncate text-2xl font-bold tracking-tight">
           {d?.title ?? t('app.loading')}
         </h1>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => favoriteMutation.mutate()}
           disabled={favoriteMutation.isPending}
-          className="rounded-md p-2 hover:bg-muted"
           aria-label={t('document.favorite')}
         >
           <Star
-            className={`h-5 w-5 ${isFavorite ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground'}`}
+            className={isFavorite ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground'}
           />
-        </button>
-        <button
-          type="button"
-          onClick={() => void onDownload()}
-          disabled={downloading || !d}
-          className="flex items-center gap-2 rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
-        >
+        </Button>
+        <Button onClick={() => void onDownload()} disabled={downloading || !d}>
           <Download className="h-4 w-4" />
           {downloading ? t('app.loading') : t('document.download')}
-        </button>
+        </Button>
       </div>
-
-      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
       {d && (
         <div className="mt-6 grid gap-6 md:grid-cols-2">
-          <section className="rounded-lg border border-border bg-card p-4">
-            <h2 className="text-sm font-semibold text-muted-foreground">
-              {t('document.details')}
-            </h2>
-            <dl className="mt-3 space-y-2 text-sm">
-              <Row label={t('document.detailStatus')} value={t(`document.status.${d.status}`)} />
-              {version && (
-                <>
-                  <Row
-                    label={t('document.size')}
-                    value={formatBytes(version.size_bytes, i18n.language)}
-                  />
-                  <Row label={t('document.mime')} value={version.mime_type} />
-                </>
-              )}
-              <Row label={t('document.updated')} value={formatDate(d.updated_at, i18n.language)} />
-              <Row label={t('document.created')} value={formatDate(d.created_at, i18n.language)} />
-              {d.tags && d.tags.length > 0 && (
-                <Row label={t('document.tags')} value={d.tags.map((x) => x.name).join(', ')} />
-              )}
-            </dl>
-          </section>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm text-muted-foreground">{t('document.details')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl className="space-y-2 text-sm">
+                <div className="flex items-center justify-between gap-4">
+                  <dt className="text-muted-foreground">{t('document.detailStatus')}</dt>
+                  <dd>
+                    <Badge variant="secondary">{t(`document.status.${d.status}`)}</Badge>
+                  </dd>
+                </div>
+                {version && (
+                  <>
+                    <Row label={t('document.size')} value={formatBytes(version.size_bytes, i18n.language)} />
+                    <Row label={t('document.mime')} value={version.mime_type} />
+                  </>
+                )}
+                <Row label={t('document.updated')} value={formatDate(d.updated_at, i18n.language)} />
+                <Row label={t('document.created')} value={formatDate(d.created_at, i18n.language)} />
+              </dl>
+            </CardContent>
+          </Card>
 
-          <section className="rounded-lg border border-border bg-card p-4">
-            <h2 className="text-sm font-semibold text-muted-foreground">
-              {t('document.versions')}
-            </h2>
-            {versions.isPending ? (
-              <p className="mt-3 text-sm text-muted-foreground">{t('app.loading')}</p>
-            ) : (
-              <ul className="mt-3 space-y-2 text-sm">
-                {versions.data?.data.map((v) => (
-                  <li key={v.id} className="flex items-center justify-between">
-                    <span>
-                      v{v.version_no} · {formatBytes(v.size_bytes, i18n.language)}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatDate(v.created_at, i18n.language)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm text-muted-foreground">{t('document.versions')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {versions.isPending ? (
+                <Skeleton className="h-16" />
+              ) : (
+                <ul className="space-y-2 text-sm">
+                  {versions.data?.data.map((v, i) => (
+                    <li key={v.id}>
+                      {i > 0 && <Separator className="mb-2" />}
+                      <div className="flex items-center justify-between">
+                        <span>
+                          v{v.version_no} · {formatBytes(v.size_bytes, i18n.language)}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {formatDate(v.created_at, i18n.language)}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+
+          <DocumentActions document={d} />
+          <LifecyclePanel documentId={d.id} />
+          <SharePanel documentId={d.id} />
+          <SignaturePanel documentId={d.id} versionId={d.current_version?.id} />
         </div>
       )}
     </AppShell>

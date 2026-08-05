@@ -111,6 +111,132 @@ export interface Document {
   deleted_at: string | null
 }
 
+export interface ShareLink {
+  id: string
+  document_id: string
+  permission: 'view' | 'download'
+  has_password: boolean
+  expires_at: string | null
+  max_views: number | null
+  view_count: number
+  watermark: boolean
+  notify_on_access: boolean
+  revoked_at: string | null
+  created_at: string
+  /** Present ONLY on the create response — the raw token's single appearance. */
+  url?: string | null
+}
+
+export interface SharedMeta {
+  title: string
+  requires_password: boolean
+  permission: 'view' | 'download'
+}
+
+export type SignerStatus = 'pending' | 'verified' | 'signed' | 'declined'
+export type EnvelopeStatus =
+  | 'draft'
+  | 'sent'
+  | 'completed'
+  | 'declined'
+  | 'cancelled'
+  | 'expired'
+
+export interface Signer {
+  id: string
+  name: string
+  email: string
+  phone: string | null
+  signing_order: number
+  verify_method: 'email_otp' | 'sms_otp' | 'id_check'
+  status: SignerStatus
+  verified_at: string | null
+  signed_at: string | null
+  declined_reason: string | null
+}
+
+export interface Envelope {
+  id: string
+  document_id: string
+  version_id: string
+  status: EnvelopeStatus
+  message: string | null
+  deadline: string | null
+  created_by: string
+  sent_at: string | null
+  completed_at: string | null
+  cancel_reason: string | null
+  created_at: string
+  signers: Signer[]
+}
+
+/** Public guest-sign view (GET /sign/{token}). */
+export interface GuestSignView {
+  envelope: {
+    id: string
+    status: EnvelopeStatus
+    document_title: string
+    message: string | null
+    deadline: string | null
+  }
+  signer: { name: string; status: SignerStatus }
+  verify_required: boolean
+  is_your_turn: boolean
+  id_check_status: string | null
+}
+
+export type RuleType = 'expiry' | 'renewal' | 'review'
+export type RuleStatus = 'pending_confirmation' | 'active' | 'resolved'
+
+export interface LifecycleRule {
+  id: string
+  document_id: string
+  document_title?: string | null
+  rule_type: RuleType
+  key_date: string
+  source: 'manual' | 'ocr'
+  status: RuleStatus
+}
+
+export type ReminderChannel = 'in_app' | 'email' | 'sms' | 'whatsapp' | 'push'
+
+export interface Reminder {
+  id: string
+  rule_id: string
+  offset_days: number
+  channel: ReminderChannel
+  recipient_id: string | null
+  escalate_to: string | null
+  status: 'scheduled' | 'sent' | 'acknowledged' | 'escalated'
+  fire_at: string
+  sent_at: string | null
+  acknowledged_at: string | null
+}
+
+export interface Obligation {
+  id: string
+  document_id: string
+  document_title?: string | null
+  title: string
+  due_date: string
+  recurrence: string | null
+  owner_id: string | null
+  status: 'open' | 'done' | 'overdue'
+}
+
+export interface SearchHit {
+  document: Document
+  score?: number
+  snippets?: string[]
+}
+
+export interface TrashItem {
+  id: string
+  title: string
+  deleted_at: string | null
+  purge_after: string | null
+}
+
 /** `GET /folders/{id}/contents` mixes both — a Document always has `title`. */
 export type FolderContentItem = Folder | Document
 

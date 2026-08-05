@@ -23,7 +23,11 @@
  */
 export const API_ORIGIN = import.meta.env.VITE_API_URL ?? ''
 export const API_V1 = `${API_ORIGIN}/v1`
-const API_PUBLIC = import.meta.env.VITE_PUBLIC_API_URL ?? `${API_ORIGIN}/pub`
+// The /pub alias exists ONLY to dodge the SPA-route collision on the SAME
+// origin (the proxy strips it). When an explicit API origin is configured
+// (cross-origin dev/prod), there is no collision — talk to the API's real
+// unversioned paths directly.
+const API_PUBLIC = import.meta.env.VITE_PUBLIC_API_URL ?? (API_ORIGIN ? API_ORIGIN : '/pub')
 
 // --- access token (in-memory only, never persisted) -------------------------
 

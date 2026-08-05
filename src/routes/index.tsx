@@ -7,6 +7,8 @@ import { DocumentRow, EmptyState } from '@/components/vault-list'
 import { favoritesQuery, recentQuery, tenantUsageQuery } from '@/lib/api/queries'
 import { requireTenant } from '@/lib/route-guards'
 import { formatBytes } from '@/lib/format'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export const Route = createFileRoute('/')({
   beforeLoad: ({ location }) => requireTenant(location),
@@ -21,32 +23,33 @@ function Dashboard() {
 
   return (
     <AppShell>
-      <h1 className="text-2xl font-bold">{t('dashboard.title')}</h1>
+      <h1 className="text-2xl font-bold tracking-tight">{t('dashboard.title')}</h1>
 
-      {usage.data && (
-        <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-          <UsageCard
-            label={t('usage.storage')}
-            value={`${formatBytes(usage.data.storage_bytes_used, i18n.language)} / ${formatBytes(usage.data.storage_bytes_included, i18n.language)}`}
-          />
-          <UsageCard
-            label={t('usage.seats')}
-            value={`${usage.data.seats_used} / ${usage.data.seats_included}`}
-          />
-          <UsageCard label={t('usage.aiCredits')} value={String(usage.data.ai_credits_used)} />
-          <UsageCard
-            label={t('usage.envelopes')}
-            value={String(usage.data.signature_envelopes_used)}
-          />
-        </div>
-      )}
+      <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+        {usage.isPending
+          ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20" />)
+          : usage.data && (
+              <>
+                <UsageCard
+                  label={t('usage.storage')}
+                  value={`${formatBytes(usage.data.storage_bytes_used, i18n.language)} / ${formatBytes(usage.data.storage_bytes_included, i18n.language)}`}
+                />
+                <UsageCard
+                  label={t('usage.seats')}
+                  value={`${usage.data.seats_used} / ${usage.data.seats_included}`}
+                />
+                <UsageCard label={t('usage.aiCredits')} value={String(usage.data.ai_credits_used)} />
+                <UsageCard
+                  label={t('usage.envelopes')}
+                  value={String(usage.data.signature_envelopes_used)}
+                />
+              </>
+            )}
+      </div>
 
-      <section className="mt-8">
-        <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
-          {t('dashboard.recent')}
-        </h2>
+      <Section title={t('dashboard.recent')}>
         {recent.isPending ? (
-          <p className="text-sm text-muted-foreground">{t('app.loading')}</p>
+          <ListSkeleton />
         ) : recent.data?.data.length ? (
           <div className="space-y-2">
             {recent.data.data.map((doc) => (
@@ -56,14 +59,11 @@ function Dashboard() {
         ) : (
           <EmptyState label={t('dashboard.noRecent')} />
         )}
-      </section>
+      </Section>
 
-      <section className="mt-8">
-        <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
-          {t('dashboard.favorites')}
-        </h2>
+      <Section title={t('dashboard.favorites')}>
         {favorites.isPending ? (
-          <p className="text-sm text-muted-foreground">{t('app.loading')}</p>
+          <ListSkeleton />
         ) : favorites.data?.data.length ? (
           <div className="space-y-2">
             {favorites.data.data.map((doc) => (
@@ -73,16 +73,39 @@ function Dashboard() {
         ) : (
           <EmptyState label={t('dashboard.noFavorites')} />
         )}
-      </section>
+      </Section>
     </AppShell>
   )
 }
 
 function UsageCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="mt-1 truncate text-sm font-semibold">{value}</div>
+    <Card>
+      <CardHeader className="p-4 pb-1">
+        <CardTitle className="text-xs font-normal text-muted-foreground">{label}</CardTitle>
+      </CardHeader>
+      <CardContent className="p-4 pt-0">
+        <div className="truncate text-sm font-semibold">{value}</div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="mt-8">
+      <h2 className="mb-3 text-sm font-semibold text-muted-foreground">{title}</h2>
+      {children}
+    </section>
+  )
+}
+
+function ListSkeleton() {
+  return (
+    <div className="space-y-2">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <Skeleton key={i} className="h-14" />
+      ))}
     </div>
   )
 }

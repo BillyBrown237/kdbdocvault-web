@@ -68,15 +68,28 @@ export async function login(identifier: string, password: string): Promise<Login
   return { status: 'ok', tenantId: tokens.tenant_id ?? null }
 }
 
-export async function completeMfa(
-  challengeToken: string,
-  codes: { totp_code?: string; sms_code?: string },
-): Promise<void> {
+// Short-lived, in-memory only: the challenge token from a login that needs MFA.
+// Not persisted — a page refresh drops it and the user re-authenticates.
+let pendingChallenge: string | null = null
+export function setPendingChallenge(token: string | null): void {
+  pendingChallenge = token
+}
+export function getPendingChallenge(): string | null {
+  return pendingChallenge
+}
+
+export async function completeMfa(codes: {
+  totp_code?: string
+  sms_code?: string
+}): Promise<{ tenantId: string | null }> {
+  if (!pendingChallenge) throw new Error('no pending challenge')
   const tokens = await apiFetch<AuthTokens>('/auth/mfa/challenge', {
     method: 'POST',
-    body: JSON.stringify({ challenge_token: challengeToken, ...codes }),
+    body: JSON.stringify({ challenge_token: pendingChallenge, ...codes }),
   })
   adopt(tokens)
+  pendingChallenge = null
+  return { tenantId: tokens.tenant_id ?? null }
 }
 
 export async function logout(): Promise<void> {

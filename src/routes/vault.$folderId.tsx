@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { ChevronLeft } from 'lucide-react'
 
 import { AppShell } from '@/components/app-shell'
+import { NewFolderButton } from '@/components/new-folder-button'
 import { UploadButton } from '@/components/upload-button'
 import {
   DocumentRow,
@@ -55,6 +56,7 @@ function FolderView() {
         <h1 className="min-w-0 flex-1 truncate text-2xl font-bold">
           {folder.data?.name ?? t('app.loading')}
         </h1>
+        <NewFolderButton parentId={folderId} />
         <UploadButton folderId={folderId} />
       </div>
       {folder.data?.path && (

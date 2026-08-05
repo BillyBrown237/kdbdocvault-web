@@ -10,9 +10,16 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as LifecycleRouteImport } from './routes/lifecycle'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as MfaRouteImport } from './routes/mfa'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SearchRouteImport } from './routes/search'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as TrashRouteImport } from './routes/trash'
 import { Route as DocumentsDocumentIdRouteImport } from './routes/documents.$documentId'
 import { Route as SharedTokenRouteImport } from './routes/shared.$token'
 import { Route as SignSignTokenRouteImport } from './routes/sign.$signToken'
@@ -25,9 +32,24 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LifecycleRoute = LifecycleRouteImport.update({
+  id: '/lifecycle',
+  path: '/lifecycle',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MfaRoute = MfaRouteImport.update({
+  id: '/mfa',
+  path: '/mfa',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -38,6 +60,26 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrashRoute = TrashRouteImport.update({
+  id: '/trash',
+  path: '/trash',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocumentsDocumentIdRoute = DocumentsDocumentIdRouteImport.update({
@@ -73,9 +115,16 @@ const VerifyDocumentHashRoute = VerifyDocumentHashRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/lifecycle': typeof LifecycleRoute
   '/login': typeof LoginRoute
+  '/mfa': typeof MfaRoute
   '/onboarding': typeof OnboardingRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
+  '/trash': typeof TrashRoute
   '/documents/$documentId': typeof DocumentsDocumentIdRoute
   '/shared/$token': typeof SharedTokenRoute
   '/sign/$signToken': typeof SignSignTokenRoute
@@ -85,9 +134,16 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/lifecycle': typeof LifecycleRoute
   '/login': typeof LoginRoute
+  '/mfa': typeof MfaRoute
   '/onboarding': typeof OnboardingRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
+  '/trash': typeof TrashRoute
   '/documents/$documentId': typeof DocumentsDocumentIdRoute
   '/shared/$token': typeof SharedTokenRoute
   '/sign/$signToken': typeof SignSignTokenRoute
@@ -98,9 +154,16 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/lifecycle': typeof LifecycleRoute
   '/login': typeof LoginRoute
+  '/mfa': typeof MfaRoute
   '/onboarding': typeof OnboardingRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
+  '/trash': typeof TrashRoute
   '/documents/$documentId': typeof DocumentsDocumentIdRoute
   '/shared/$token': typeof SharedTokenRoute
   '/sign/$signToken': typeof SignSignTokenRoute
@@ -112,9 +175,16 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/forgot-password'
+    | '/lifecycle'
     | '/login'
+    | '/mfa'
     | '/onboarding'
     | '/register'
+    | '/reset-password'
+    | '/search'
+    | '/settings'
+    | '/trash'
     | '/documents/$documentId'
     | '/shared/$token'
     | '/sign/$signToken'
@@ -124,9 +194,16 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/forgot-password'
+    | '/lifecycle'
     | '/login'
+    | '/mfa'
     | '/onboarding'
     | '/register'
+    | '/reset-password'
+    | '/search'
+    | '/settings'
+    | '/trash'
     | '/documents/$documentId'
     | '/shared/$token'
     | '/sign/$signToken'
@@ -136,9 +213,16 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/forgot-password'
+    | '/lifecycle'
     | '/login'
+    | '/mfa'
     | '/onboarding'
     | '/register'
+    | '/reset-password'
+    | '/search'
+    | '/settings'
+    | '/trash'
     | '/documents/$documentId'
     | '/shared/$token'
     | '/sign/$signToken'
@@ -149,9 +233,16 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
+  LifecycleRoute: typeof LifecycleRoute
   LoginRoute: typeof LoginRoute
+  MfaRoute: typeof MfaRoute
   OnboardingRoute: typeof OnboardingRoute
   RegisterRoute: typeof RegisterRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  SearchRoute: typeof SearchRoute
+  SettingsRoute: typeof SettingsRoute
+  TrashRoute: typeof TrashRoute
   DocumentsDocumentIdRoute: typeof DocumentsDocumentIdRoute
   SharedTokenRoute: typeof SharedTokenRoute
   SignSignTokenRoute: typeof SignSignTokenRoute
@@ -169,11 +260,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lifecycle': {
+      id: '/lifecycle'
+      path: '/lifecycle'
+      fullPath: '/lifecycle'
+      preLoaderRoute: typeof LifecycleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mfa': {
+      id: '/mfa'
+      path: '/mfa'
+      fullPath: '/mfa'
+      preLoaderRoute: typeof MfaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -188,6 +300,34 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trash': {
+      id: '/trash'
+      path: '/trash'
+      fullPath: '/trash'
+      preLoaderRoute: typeof TrashRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/documents/$documentId': {
@@ -237,9 +377,16 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
+  LifecycleRoute: LifecycleRoute,
   LoginRoute: LoginRoute,
+  MfaRoute: MfaRoute,
   OnboardingRoute: OnboardingRoute,
   RegisterRoute: RegisterRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  SearchRoute: SearchRoute,
+  SettingsRoute: SettingsRoute,
+  TrashRoute: TrashRoute,
   DocumentsDocumentIdRoute: DocumentsDocumentIdRoute,
   SharedTokenRoute: SharedTokenRoute,
   SignSignTokenRoute: SignSignTokenRoute,
