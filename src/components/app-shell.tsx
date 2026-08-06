@@ -5,7 +5,10 @@ import { useTranslation } from 'react-i18next'
 import { AlertTriangle } from 'lucide-react'
 import {
   CalendarClock,
+  ClipboardCheck,
   CreditCard,
+  DoorOpen,
+  FileArchive,
   FolderClosed,
   Home,
   LogOut,
@@ -16,12 +19,12 @@ import {
   Users,
 } from 'lucide-react'
 
+import { NotificationBell } from '@/components/notification-bell'
 import { queryClient } from '@/lib/query'
 import { meQuery, switchTenant, tenantQuery } from '@/lib/api/queries'
 import { logout } from '@/lib/auth'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +39,14 @@ const NAV = [
   { to: '/vault', key: 'nav.vault', icon: FolderClosed },
   { to: '/search', key: 'nav.search', icon: Search },
   { to: '/lifecycle', key: 'nav.lifecycle', icon: CalendarClock },
+  { to: '/approvals', key: 'nav.approvals', icon: ClipboardCheck },
+] as const
+
+// Sidebar-only: the mobile bar holds five thumb-sized targets and no more.
+// Rooms stays reachable on phones through the profile menu.
+const NAV_SECONDARY = [
+  { to: '/rooms', key: 'nav.rooms', icon: DoorOpen },
+  { to: '/imports', key: 'nav.imports', icon: FileArchive },
 ] as const
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -92,6 +103,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               {t(key)}
             </Link>
           ))}
+          {NAV_SECONDARY.map(({ to, key, icon: Icon }) => (
+            <Link
+              key={to}
+              to={to}
+              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              activeProps={{ className: 'bg-muted font-medium text-foreground' }}
+            >
+              <Icon className="h-4 w-4" />
+              {t(key)}
+            </Link>
+          ))}
         </nav>
       </aside>
 
@@ -100,6 +122,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <header className="flex items-center justify-between border-b px-4 py-3">
           <div className="font-bold md:hidden">{t('app.name')}</div>
           <div className="hidden text-sm text-muted-foreground md:block">{tenant.data?.name ?? ''}</div>
+
+          <div className="flex items-center gap-1">
+          <NotificationBell />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -136,6 +161,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <DropdownMenuSeparator />
                 </>
               )}
+              <DropdownMenuItem asChild className="md:hidden">
+                <Link to="/rooms">
+                  <DoorOpen className="h-4 w-4" />
+                  {t('nav.rooms')}
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="md:hidden">
+                <Link to="/imports">
+                  <FileArchive className="h-4 w-4" />
+                  {t('nav.imports')}
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link to="/settings">
                   <Settings className="h-4 w-4" />
@@ -179,6 +216,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          </div>
         </header>
 
         {readOnly && (

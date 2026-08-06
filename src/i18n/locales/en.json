@@ -47,13 +47,16 @@
     "vault": "Vault",
     "search": "Search",
     "lifecycle": "Lifecycle",
+    "approvals": "Approvals",
     "billing": "Billing",
     "team": "Team",
     "audit": "Audit log",
     "trash": "Trash",
     "settings": "Settings",
     "profile": "Profile",
-    "organizations": "Organizations"
+    "organizations": "Organizations",
+    "rooms": "Data rooms",
+    "imports": "Imports"
   },
   "mfa": {
     "title": "Two-step verification",
@@ -114,7 +117,8 @@
     "loadMore": "Load more",
     "retry": "Retry",
     "create": "Create",
-    "done": "Done"
+    "done": "Done",
+    "cancel": "Cancel"
   },
   "billing": {
     "title": "Billing",
@@ -152,7 +156,9 @@
     "title": "Search",
     "placeholder": "Search documents…",
     "hint": "Type to search your documents",
-    "noResults": "No results for \"{{q}}\""
+    "noResults": "No results for \"{{q}}\"",
+    "anyType": "Any type",
+    "anyTag": "Any tag"
   },
   "trash": {
     "title": "Trash",
@@ -186,6 +192,46 @@
   "upload": {
     "button": "Upload",
     "retry": "Retry"
+  },
+  "approvals": {
+    "title": "Approvals",
+    "inbox": "To approve",
+    "tasks": "Tasks",
+    "inboxEmpty": "Nothing to approve",
+    "step": "Step {{n}}",
+    "stepType": "Type: {{type}}",
+    "due": "Due {{date}}",
+    "commentOptional": "Comment (optional)",
+    "approve": "Approve",
+    "reject": "Reject",
+    "requestChanges": "Request changes",
+    "decided": "Decision recorded",
+    "newTask": "New task…",
+    "noTasks": "No tasks",
+    "taskDone": "Task completed",
+    "decision": {
+      "approve": "Approved",
+      "reject": "Rejected",
+      "request_changes": "Changes requested"
+    },
+    "delegateTo": "Delegate to…",
+    "delegated": "Step delegated"
+  },
+  "workflow": {
+    "title": "Approval workflow",
+    "chooseTemplate": "Choose a template…",
+    "start": "Start",
+    "started": "Workflow started",
+    "cancelled": "Workflow cancelled",
+    "cancelledByOwner": "Cancelled by owner",
+    "noTemplates": "No active workflow templates",
+    "pending": "Pending",
+    "status": {
+      "running": "Running",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "overdue": "Overdue"
+    }
   },
   "lifecycle": {
     "title": "Lifecycle",
@@ -288,7 +334,31 @@
       "verified": "Verified",
       "signed": "Signed",
       "declined": "Declined"
-    }
+    },
+    "evidence": "Evidence",
+    "evidenceTitle": "Signature evidence",
+    "evidencePending": "Evidence isn't sealed yet.",
+    "documentHash": "Document hash",
+    "sealedAt": "Sealed",
+    "eventTrail": "Event trail",
+    "reviewId": "Review ID",
+    "reviewIdFor": "ID document — {{name}}",
+    "idPrivacyNote": "Temporary link (10 min). The ID is never included in evidence bundles.",
+    "rejectReason": "Reason (if rejecting)",
+    "approve": "Approve",
+    "reject": "Reject",
+    "idApproved": "Identity approved",
+    "idRejected": "Identity rejected",
+    "idCheck": {
+      "submitted": "ID awaiting review",
+      "approved": "ID verified",
+      "rejected": "ID rejected"
+    },
+    "editSigner": "Edit signer",
+    "editSignerHint": "Possible until the person signs — useful for fixing a wrong address.",
+    "signerPhone": "Phone",
+    "saveSigner": "Save",
+    "signerUpdated": "Signer updated"
   },
   "signGuest": {
     "hello": "Hello {{name}}",
@@ -363,7 +433,14 @@
     "inviteRevoked": "Invitation revoked",
     "orgSaved": "Organization updated",
     "plan": "Plan",
-    "region": "Region"
+    "region": "Region",
+    "transfer": "Transfer",
+    "transferTitle": "Transfer {{name}}'s documents",
+    "transferExplainer": "This member's documents move to the chosen recipient and the Owner role goes with them. This cannot be undone.",
+    "transferTo": "Choose recipient…",
+    "transferConfirm": "Transfer",
+    "transferred": "{{count}} document transferred",
+    "transferred_other": "{{count}} documents transferred"
   },
   "invite": {
     "title": "Join the organization",
@@ -381,10 +458,220 @@
     "when": "When",
     "action": "Action",
     "resource": "Resource",
-    "actor": "Actor"
+    "actor": "Actor",
+    "events": "Events",
+    "export": "Export",
+    "exporting": "Exporting…",
+    "downloadExport": "Download export",
+    "exportFailed": "Export failed."
   },
   "errors": {
     "network": "Cannot connect — check your network",
     "unknown": "Something went wrong"
+  },
+  "rooms": {
+    "title": "Data rooms",
+    "subtitle": "Share a curated set of documents with an outside audience, and see what they actually read.",
+    "create": "New room",
+    "created": "Room created",
+    "name": "Name",
+    "namePlaceholder": "Due diligence — Project Wouri",
+    "description": "Description",
+    "descriptionPlaceholder": "Visible to visitors",
+    "expires": "Expires on",
+    "expiryHint": "Leave empty for a room with no end date.",
+    "expiresOn": "Expires {{date}}",
+    "noExpiry": "No expiry",
+    "status": {
+      "open": "Open",
+      "closed": "Closed",
+      "expired": "Expired"
+    },
+    "emptyTitle": "No data rooms yet",
+    "emptyBody": "Create a room to give a law firm, auditor or investor access to a selected set of documents — without opening your vault to them.",
+    "close": "Close room",
+    "closed": "Room closed",
+    "closedHint": "This room is closed: visitor links no longer resolve. History and analytics are kept.",
+    "documents": "Documents",
+    "visitors": "Visitors",
+    "settings": "Settings",
+    "visitorCount": "{{count}} visitor",
+    "visitorCount_other": "{{count}} visitors",
+    "noDocuments": "No documents in this room.",
+    "documentUnavailable": "Document unavailable",
+    "addDocuments": "Add documents",
+    "addSelected": "Add {{count}} document",
+    "addSelected_other": "Add {{count}} documents",
+    "documentsAdded": "Documents added",
+    "noCandidates": "No documents left to add.",
+    "invite": "Invite a visitor",
+    "invited": "Invitation sent",
+    "visitorEmail": "Email",
+    "visitorName": "Name",
+    "optional": "Optional",
+    "sendInvite": "Send",
+    "inviteHint": "The visitor gets a personal link by email. The link is never shown again — re-invite the person to issue a new one.",
+    "analytics": "Engagement",
+    "noVisitors": "No visitors yet.",
+    "visitor": "Visitor",
+    "opened": "Documents opened",
+    "viewTime": "Reading time",
+    "lastVisit": "Last visit",
+    "save": "Save",
+    "saved": "Changes saved"
+  },
+  "room": {
+    "notFound": "This link is no longer valid.",
+    "welcome": "Hello {{name}}",
+    "expiresOn": "Access until {{date}}",
+    "expiredOn": "Access expired on {{date}}",
+    "noExpiry": "No access deadline",
+    "empty": "Nothing has been placed in this room yet.",
+    "open": "Open",
+    "back": "Back",
+    "watermarked": "Watermarked · view only",
+    "privacyNotice": "Your activity in this room is recorded and visible to its owner."
+  },
+  "acl": {
+    "title": "Internal permissions",
+    "empty": "No explicit permissions — only role-inherited access applies.",
+    "principalType": "Type",
+    "who": "Grantee",
+    "choose": "Choose…",
+    "noneLeft": "No grantee available",
+    "access": "Access",
+    "expires": "Expires on",
+    "grant": "Grant",
+    "remove": "Remove",
+    "until": "Until {{date}}",
+    "expired": "Expired {{date}}",
+    "principal": {
+      "member": "Member",
+      "department": "Department",
+      "role": "Role"
+    },
+    "level": {
+      "view": "View",
+      "comment": "Comment",
+      "edit": "Edit",
+      "manage": "Manage"
+    },
+    "checkAccess": "Check access for",
+    "chooseMember": "Choose a member…",
+    "clear": "Clear",
+    "effective": "Effective access:",
+    "noAccess": "No access"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications.",
+    "markAll": "Mark all as read",
+    "loadMore": "Show more"
+  },
+  "anchors": {
+    "tab": "Anchors",
+    "explainer": "Each anchor pins the log's hash at a point in time: anyone holding an older anchor can prove history hasn't been rewritten since.",
+    "empty": "No anchors",
+    "seq": "Sequence",
+    "hash": "Chain hash",
+    "ref": "Reference",
+    "at": "Anchored"
+  },
+  "extraction": {
+    "title": "Extracted data",
+    "empty": "Nothing extracted from the current version.",
+    "pendingCount": "{{count}} to review",
+    "pendingCount_other": "{{count}} to review",
+    "confirm": "Confirm",
+    "confirmed": "Confirmed",
+    "confirmedBadge": "Confirmed",
+    "correct": "Correct",
+    "saveCorrection": "Save",
+    "page": "p. {{n}}",
+    "confidenceTitle": "Model confidence",
+    "reprocess": "Re-analyse",
+    "reprocessQueued": "Re-analysis queued — results will appear shortly.",
+    "expiryHint": "Confirming this date creates the deadline and switches reminders on.",
+    "entity": {
+      "expiry_date": "Expiry date",
+      "issue_date": "Issue date",
+      "amount": "Amount",
+      "counterparty": "Counterparty",
+      "reference": "Reference",
+      "person": "Person",
+      "organization": "Organisation"
+    }
+  },
+  "version": {
+    "add": "New version",
+    "added": "Version v{{n}} added",
+    "current": "Current",
+    "notePlaceholder": "Version note (optional)"
+  },
+  "docAudit": {
+    "title": "Document history",
+    "empty": "No events for this document."
+  },
+  "evidence": {
+    "create": "Evidence bundle",
+    "building": "Building…",
+    "download": "Download bundle",
+    "failed": "Building the bundle failed."
+  },
+  "savedSearch": {
+    "saveThis": "Save this search",
+    "save": "Save",
+    "saved": "Search saved",
+    "namePlaceholder": "Search name",
+    "delete": "Delete",
+    "running": "Saved search “{{name}}”: {{q}}"
+  },
+  "pins": {
+    "title": "Pinned",
+    "toggle": "Pin / unpin"
+  },
+  "docTypes": {
+    "tab": "Types",
+    "title": "Document types",
+    "explainer": "Types classify your documents and act as a search filter. Assigning a type to an existing document lands when the API supports it.",
+    "name": "Name",
+    "namePlaceholder": "Contract, Invoice, Certificate…",
+    "created": "Type created",
+    "system": "system"
+  },
+  "imports": {
+    "title": "Imports",
+    "subtitle": "Bring your existing archives in without uploading them one by one.",
+    "new": "New import",
+    "history": "History",
+    "sources": "Connected sources",
+    "explainer": "Drop a ZIP archive: every file becomes a document, with OCR and analysis just like a normal upload.",
+    "targetFolder": "Target folder",
+    "chooseZip": "Choose a ZIP archive",
+    "uploading": "Uploading…",
+    "zipOnly": "Only .zip archives are accepted.",
+    "started": "Import started",
+    "progress": "Progress",
+    "counters": "{{transferred}} / {{discovered}} imported · {{failed}} failed",
+    "cancel": "Cancel import",
+    "cancelled": "Import cancelled",
+    "cancelledNote": "Files already imported are kept.",
+    "errorReport": "Error report",
+    "noHistory": "No imports yet",
+    "manifestToggle": "Use a CSV metadata file (optional)",
+    "manifestHint": "If the archive contains a CSV listing your files, give its name and the path/title columns. If it's missing or malformed, the file name is used as the title.",
+    "csvEntry": "CSV file",
+    "pathColumn": "Path column",
+    "titleColumn": "Title column",
+    "sourcesUnavailable": "Connecting Google Drive, OneDrive, Dropbox and SharePoint isn't available yet — it requires registering the app with each provider. Use ZIP import in the meantime.",
+    "disconnect": "Disconnect",
+    "disconnected": "Source disconnected",
+    "status": {
+      "queued": "Queued",
+      "running": "Running",
+      "done": "Done",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    }
   }
 }

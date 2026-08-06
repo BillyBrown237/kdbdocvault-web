@@ -1,3 +1,379 @@
+# Slice W17 — Imports UI
+
+Companion to backend slice B37. **Imports** joins the sidebar with three tabs.
+
+## New files
+
+- `src/routes/imports.tsx`
+  - **New import** — target folder, ZIP picker with upload progress, then live
+    job progress (counters + bar), cancel, and the error-report download
+  - **History** — past imports with status, counts and their error reports
+  - **Connected sources** — states plainly that Drive/OneDrive/Dropbox/
+    SharePoint aren't available yet, and lists/revokes any existing connection
+    rows
+
+## Modified
+
+- `src/lib/api/upload.ts` — `runAsArchive()`: reserve + PUT, return the upload
+  id, and deliberately **skip `/complete`** (completing would create one
+  document out of the ZIP instead of importing its contents)
+- `src/lib/api/{types,queries}.ts` — ImportJob, ImportConnection; imports list,
+  get, start, cancel, connections list/revoke
+- `src/components/app-shell.tsx` — Imports in the sidebar and the mobile menu
+- i18n: `imports.*`, `nav.imports` (FR + EN)
+
+## Notes / decisions
+
+- **There is no "connect Drive" button.** The backend answers 501 by design, and
+  a button that always errors is worse than a sentence explaining why it isn't
+  there yet. The tab says what's missing and what to do instead.
+- **Progress polls only while the job is unfinished** — `refetchInterval`
+  returns false once status is done/failed/cancelled.
+- **The CSV manifest is behind a `<details>`.** Most migrations are "a folder of
+  scans", where the file name is the title; the mapping fields are there for the
+  minority who have a spreadsheet, without taxing everyone else's first screen.
+- Only `.zip` is accepted client-side, with a clear message — the worker can
+  only read archives, and letting a stray PDF through to a 500 would be rude.
+
+## Verify
+
+Rebuild the API and Workers first (B37), then follow the verify steps in
+`kdbdocvault/CHANGES.md`.
+
+# Slice W16 — Signature completion, delegation, ownership transfer, delivery
+
+## Fixed (a real defect, not a gap)
+
+The "download signed document" button was a bare
+`<a href="/v1/envelopes/{id}/signed-document">`. That endpoint is authenticated,
+and the access token lives **in memory only** — a link navigation carries no
+`Authorization` header, so the button could only ever have produced a 401. It
+now fetches through `apiFetch` (which sends the bearer, follows the 302 to the
+presigned URL, and hands back a blob) and triggers a real download.
+
+**Rule worth keeping:** any authenticated endpoint that answers a redirect to
+storage must be fetched, never linked. `<a href>` and `window.open` are
+unauthenticated navigations.
+
+## Modified
+
+- `src/components/signature-panel.tsx` — the envelope surface is now complete:
+  - sealed-PDF download (fixed, above)
+  - **Evidence dialog** — document hash, sealed-at, and the frozen event trail
+  - **ID review** — for signers whose ID is awaiting review: the image, and
+    approve / reject with a reason
+  - **Edit signer** — correct a typo'd email or phone while the signer is still
+    pending
+- `src/routes/approvals.tsx` — **delegate** a step to another member from the
+  inbox
+- `src/routes/team.tsx` — **transfer ownership**: move a member's documents to
+  someone else and hand over the Owner role
+- `src/components/notification-bell.tsx` — per-notification **delivery channels**
+  (in-app / email / SMS), failures in red
+- `src/lib/api/{types,queries}.ts` — `Signer.id_check_status`, SignatureEvidence;
+  updateSigner, evidence, sealed-document blob, ID-document blob, id-review,
+  delegateStep, transferOwnership, notification delivery
+
+## Notes / decisions
+
+- **The ID image is fetched into an object URL, never navigated to.** It's the
+  most sensitive object in the system and the link is a 10-minute capability —
+  it should not end up in browser history, a shared tab, or a bookmark. The
+  object URL is revoked when the dialog closes, right-click is suppressed, and
+  the dialog states the link is temporary and that IDs are excluded from
+  evidence bundles.
+- **Delegation reuses the step's comment box as the reason** rather than adding
+  a second text field that would be empty most of the time.
+- **Ownership transfer sits behind a dialog with an explicit recipient**, not a
+  one-click button next to "Remove". It's irreversible and moves every document
+  the person owns; the dialog says so. It answers 202 with a job shape, but the
+  work is already done (`documents_moved` is final), so nothing is polled — the
+  toast reports the count.
+- **Delivery status is cached with `staleTime: Infinity`.** By the time a
+  notification is in the bell, its delivery is settled history; refetching on
+  every popover open would be pure waste.
+- Editing a signer is offered only while that signer is `pending` — after they
+  verify or sign, changing the address would undermine the evidence.
+
+## Backend companion — slice B36
+
+The ID-review endpoint was mapped but **unreachable**: the signer shape carried
+no ID-check field, so no client could tell which signer was waiting. B36 adds
+`id_check_status` / `id_checked_at` to the signer DTO. See `kdbdocvault/CHANGES.md`.
+
+**This slice needs an API rebuild** — the first backend change in a while.
+
+## Verify
+
+1. Rebuild the API (`dotnet build` / restart) — B36 is a DTO change.
+2. Create an envelope with an `id_check` signer → send → as the guest, upload an
+   ID → back in the app, the signer row shows **ID awaiting review** and a
+   Review ID button. Open it: the image renders in the dialog. Approve → badge
+   flips to ID verified; the signer is marked verified.
+3. On a completed envelope: **Download** now yields the sealed PDF (it 401'd
+   before), and **Evidence** shows the hash and trail.
+4. A pending signer shows a pencil → change the email → saved.
+5. **Approvals** → a step in the inbox → Delegate to → pick a member → it leaves
+   your inbox and the trail records the delegation.
+6. **Team** → Transfer next to a member → choose a recipient → toast reports how
+   many documents moved.
+7. **Bell** → each notification shows small channel icons; a failed channel is red.
+
+## Still open (post-pilot)
+
+Workflow template builder (a visual step designer is its own project), and
+imports — the backend maps no import endpoints at all. Backend-side: assigning a
+document type to a document (`PATCH /documents/{id}` doesn't exist), and the
+reports module.
+
+# Slice W15 — Search facets, saved searches, pins, document types
+
+## Modified
+
+- `src/routes/search.tsx` — rebuilt: **type** and **tag** facets alongside the
+  query box, **save this search** (inline naming), and a row of saved-search
+  chips that run or delete. Selecting a chip switches the page to the *stored*
+  criteria; typing or changing a facet drops back to the live search.
+- `src/routes/documents.$documentId.tsx` — pin toggle in the header next to the
+  favourite star
+- `src/routes/index.tsx` — **Pinned** section, placed above Recent
+- `src/routes/settings.tsx` — **Types** tab: list existing document types
+  (system ones marked) and create new ones
+- `src/lib/api/{types,queries}.ts` — SavedSearch, DocumentType; `searchQuery`
+  now takes a `SearchFilters` object; saved-search list/save/run/delete,
+  pins list/pin/unpin, document types list/create
+
+## Notes / decisions
+
+- **Saved searches live under `/search/queries`, not `/queries`.** The routes
+  are registered inside the search group, so the flat `/queries` path I'd
+  written in the roadmap doesn't exist. Worth remembering: the module's group
+  prefix is part of the path even when the endpoint file doesn't show it. (The
+  backend's own `Results.Created` location header already said `/v1/search/queries/{id}` —
+  that was the tell.)
+- **A saved search re-runs server-side**, `GET /search/queries/{id}`, rather than
+  the client unpacking the stored JSON and rebuilding a query. The stored shape
+  is parsed leniently backend-side so it can grow; duplicating that parsing here
+  would guarantee the two drift.
+- **Saving requires a non-empty `q`** (the backend 422s otherwise), so the button
+  is disabled until there's a query. Facets alone aren't a saved search.
+- **Pins vs favourites.** The backend has two per-user bookmark lists with
+  near-identical behaviour — favourites, and pins ordered by when they were
+  pinned. Rather than invent a distinction, the UI keeps both and labels them
+  plainly: Pinned sits at the top of the dashboard because it's the list the
+  user curates by hand; Recent curates itself.
+- **Document types can be created but not assigned.** There is no
+  `PATCH /documents/{id}` in the backend, so nothing in the API attaches a type
+  to an existing document. Types are therefore a search facet and a taxonomy you
+  can set up now; the Settings tab says so rather than offering a control that
+  would silently do nothing. Assignment is a backend slice.
+- `metadata_schema` is posted as `{}`. The column exists and the endpoint
+  requires the key, but a JSON-schema editor is its own project and nothing
+  currently reads the schema.
+
+## Verify
+
+No rebuild needed (web-only).
+
+1. **Search** for something → narrow with the type or tag facet → results
+   change. Save it with a name → a chip appears. Reload the page, click the
+   chip: results come back without retyping. The ✕ on the chip deletes it.
+2. **Document detail** → pin icon fills → the document appears under **Pinned**
+   on the dashboard, newest pin first. Unpin removes it.
+3. **Settings → Types** → create "Contrat" → it appears in the list and in the
+   search type facet.
+
+## Still open (post-pilot)
+
+Signature evidence + signed-document download + ID review, workflow step
+delegation, ownership transfer, notification delivery status, workflow template
+builder, and imports (backend has no endpoints at all). Backend-side: assigning
+a document type, `PATCH /documents/{id}`, and the reports module that doesn't
+exist yet.
+
+# Slice W14 — Extraction review, versions, document trail, audit exports
+
+Before starting I diffed every mapped backend route against what the web
+actually calls. That killed my own plan: there is **no Reports module** — the
+"reports" I'd listed as the next slice don't exist server-side. What the diff
+*did* surface was a much better target: the extraction pipeline, the product's
+whole claim to being *intelligent*, had no UI at all.
+
+## New files
+
+- `src/components/extraction-panel.tsx` — review of what OCR/extraction found
+  in the current version: entity type, value, confidence as a bar (a bare
+  percentage reads as precision the model doesn't have), page number, and
+  confirm / correct per row. Re-analyse button on the header.
+- `src/components/versions-panel.tsx` — replaces the read-only versions card.
+  Version list with a "current" badge **plus uploading a new version**, with an
+  optional note and resumable retry.
+- `src/components/document-trail-panel.tsx` — the document's slice of the
+  hash-chained audit log, and the **evidence bundle** job (submit → poll →
+  download).
+- `src/lib/use-job.ts` — shared polling for 202-style jobs. Stops polling the
+  moment the job is `done` or `failed`; a settled job never changes again, and
+  a live interval is how a tab left open overnight quietly hammers the API.
+
+## Modified
+
+- `src/lib/api/upload.ts` — steps 1–2 factored into `reserveAndPut()`, shared by
+  `run()` and the new `runAsVersion()`. Resumability and the 410 reset are
+  preserved for both.
+- `src/lib/api/{types,queries}.ts` — Extraction, Job, AuditAnchor; extractions
+  list/confirm, reprocess, document audit, evidence bundle, audit export, job
+  poll, anchors
+- `src/routes/audit.tsx` — restructured into tabs (Events / **Anchors**) with an
+  **export** control (CSV or JSON) in the header
+- `src/routes/documents.$documentId.tsx` — ExtractionPanel, VersionsPanel and
+  DocumentTrailPanel mounted; the inline versions card removed
+- i18n: `extraction.*`, `version.*`, `docAudit.*`, `evidence.*`, `anchors.*`,
+  `audit.export*`, `common.cancel` (FR + EN)
+
+## Notes / decisions
+
+- **Confirming an extraction is not cosmetic.** For `expiry_date` the backend
+  creates or blesses the matching lifecycle rule, and the reminder scheduler
+  picks it up on its next pass exactly as if a person had typed the date in.
+  Correcting a date additionally deletes the machine's pending suggestion at the
+  old one. The panel says so in a hint under unconfirmed dates, and invalidates
+  the lifecycle and expiring queries on success — otherwise the user confirms a
+  date and the Lifecycle panel above it stays stale.
+- **`expiry_date` corrections must be ISO `yyyy-MM-dd` and in the future** — the
+  backend 422s otherwise. The input shows the format as a placeholder; the error
+  surfaces as a toast rather than being pre-validated, because the same endpoint
+  owns the rule and duplicating its calendar logic client-side would drift.
+- **Confidence under 70% renders amber.** An arbitrary line, but a visible one
+  beats presenting every candidate as equally trustworthy.
+- **New versions skip `/complete`.** `POST /documents/{id}/versions` consumes the
+  reservation directly (it marks the upload completed itself) — calling both
+  would try to spend the same upload twice.
+- **Reprocess isn't polled.** It answers a job shape whose id *is* the document
+  id, and that id isn't resolvable through `/audit/exports/{jobId}`. So the UI
+  fires it and says results will appear shortly, rather than polling an endpoint
+  that would 404.
+- **Anchors got an explainer line.** "Chain head hash at sequence N" means
+  nothing to the notary or bank manager this feature exists to convince.
+
+## Verify
+
+No rebuild needed (web-only).
+
+1. Open a PDF document with dates in it. **Extracted data** lists candidates.
+   Confirm one → badge flips to Confirmed. On an `expiry_date`, check the
+   Lifecycle panel above: the rule is now active, and the document appears under
+   Lifecycle → expiring.
+2. Correct a date to a different future ISO date → saves, and the old pending
+   suggestion disappears from the lifecycle rules.
+3. **Versions** → add a note, pick a file → progress bar → v2 appears and becomes
+   current. Kill the network mid-upload to check retry resumes.
+4. **Document history** → events listed → Evidence bundle → button becomes
+   "Building…" then a download link.
+5. **Audit log** → Anchors tab (empty until the anchoring job has run) and
+   Export → CSV → download link appears.
+
+## Still open (post-pilot)
+
+Saved searches (`/queries` CRUD), document types, pins, signature evidence +
+signed-document download + ID review, step delegation, ownership transfer,
+notification delivery status, workflow template builder, and imports (backend
+has no endpoints at all).
+
+# Slice W12/W13 — Data rooms, ACLs, room portal, notifications bell
+
+Two slices landed together: W13 is small and the bell belongs in the shell that
+W12 also touches.
+
+## New files
+
+- `src/routes/rooms.index.tsx` — room list (status/expiry badges, empty state)
+  + create dialog (name, description, optional expiry)
+- `src/routes/rooms.$roomId.tsx` — room detail in three tabs:
+  - **Documents** — resolves the `document_ids` the API returns into titles with
+    `useQueries` (cached already when the user came from the vault); add-documents
+    dialog searches the vault and filters out what's in the room
+  - **Visitors** — invite form + the engagement table (documents opened, reading
+    time from the heartbeat counter, last visit)
+  - **Settings** — rename / change expiry; disabled once the room is closed
+  Closing a room is `DELETE /data-rooms/{id}` — soft, analytics survive.
+- `src/components/acl-panel.tsx` — internal permissions on document detail:
+  entry list with inline level change and remove, add row (member / department /
+  role × view / comment / edit / manage, optional expiry), and an
+  **effective-access checker** that renders the backend's resolution trace
+  ("Direct grant: edit", "Via role 'Owner': manage", …).
+- `src/routes/room.$token.tsx` — PUBLIC visitor portal, the fourth anonymous
+  surface after /shared, /sign, /verify. Room header, curated document list,
+  in-page rendering, and heartbeat pings while a document is open.
+- `src/components/notification-bell.tsx` (W13) — bell in the top bar, unread
+  count badge, list with unread markers, mark-one-on-open and mark-all, paged.
+
+## Modified
+
+- `src/lib/api/types.ts` — DataRoom, DataRoomDetail, RoomVisitorAnalytics,
+  AclEntry/AclEntryInput, EffectiveAccess, RoomPortalView, Notification,
+  Department; `ACCESS_LEVELS` / `PRINCIPAL_TYPES` as const tuples so the
+  selects and the types can't drift apart
+- `src/lib/api/queries.ts` — data-room CRUD + documents + visitors + analytics,
+  ACL get/set, effective-access, the three public `/room/{token}` calls,
+  notifications list + mark-read, and the missing `departmentsQuery`
+- `src/lib/format.ts` — `formatDuration` for the reading-time column
+- `src/components/app-shell.tsx` — NotificationBell in the top bar; Rooms in the
+  sidebar (`NAV_SECONDARY`) and in the profile menu on mobile
+- `src/routes/documents.$documentId.tsx` — AclPanel mounted
+- i18n: `rooms.*`, `room.*`, `acl.*`, `notifications.*`, `nav.rooms` (FR + EN)
+
+## Notes / decisions
+
+- **The visitor's magic link is never returned by the API.** `POST
+  /data-rooms/{id}/visitors` answers `{status:"invited"}`; the raw token appears
+  exactly once, in `LoggingVisitorDelivery`, on its way to email. So the UI
+  cannot offer a copy-link button — the invite hint says re-invite to issue a new
+  link. In dev the link is in the API log (`…/room/{token}`).
+- **Rooms are watermarked view-only by construction.** The portal renders through
+  `InlinePdfViewer` (canvas) or an `<img>`, never a browser document tab — same
+  reasoning as the view-only share link. The backend stamps per visitor and
+  timestamp, so a leaked screenshot still carries an identity.
+- **Heartbeat is paused when the tab is hidden** (20s cadence). A forgotten
+  background tab shouldn't invent reading time; the backend clamps 1–120s per
+  ping anyway, and inflating your *own* number is the worst a hostile guest can do.
+- **The ACL API is set-replace, not row-edit** (`PUT` takes the whole array —
+  the table has no `updated_at` because rows are never edited). Every action in
+  the panel therefore rebuilds the full list from what's loaded and sends it back.
+- **Notifications are polled at 60s, not pushed.** There's no SSE/WebSocket
+  surface on the backend, and a socket per tab isn't worth a minute of latency
+  on an in-app bell.
+- **`/room/{token}` is unversioned** like the other capability surfaces, so it
+  goes through `publicApiFetch` and the `/pub` alias — the SPA owns `/room/...`
+  on the same origin.
+
+## Fixed in passing
+
+Pre-existing `tsc` errors that made `npm run typecheck` useless as a signal:
+unused imports in `app-shell`, `ui/dropdown-menu`, `ui/select`, `approvals`, and
+`page.render()` missing the `canvas` property required by the current
+pdfjs-dist `RenderParameters`. Typecheck is now clean.
+
+## Verify
+
+No rebuild needed (web-only).
+
+1. **Rooms** → New room → add documents from the vault → Visitors → invite
+   yourself. Grab the `…/room/{token}` URL from the API log, open it in a private
+   window: the portal lists the curated set; opening a document renders in-page.
+   Back in the app, the Visitors tab shows documents opened and reading time
+   climbing (leave a document open ~20s).
+2. **Document detail → Internal permissions** → grant a member `edit`, then
+   check access for that member: the trace should name the direct grant. Remove
+   it and re-check.
+3. **Bell** — appears in the top bar; the count reflects unread. Marking all read
+   clears it.
+4. Close the room → the visitor link 404s, the analytics stay.
+
+## Still open (post-pilot)
+
+Reports, API keys, webhooks, emergency access, imports (no backend endpoints
+yet), retention policies + legal-holds admin, workflow template builder.
+
 # Slice W5 — Sharing (first public capability surface)
 
 ## New files
@@ -30,6 +406,43 @@ Rebuild backend. On a document: create a view link with a password → copy the 
 open it in a PRIVATE window (no session): title shows, password gate, unlock, view
 opens the file. Create a download link without password → downloads directly.
 Revoke a link → the private window now gets "link doesn't exist". View counts tick.
+
+---
+
+# Slice W11 — Workflows & approvals (first post-pilot slice)
+
+Backend was fully mapped (templates, instances, steps, tasks) — pure web slice.
+
+## New files
+
+- `src/routes/approvals.tsx` — in main nav. Tabs: **To approve** (the step inbox —
+  per-step approve / request-changes / reject with an optional comment, count badge on
+  the tab) and **Tasks** (quick-add, list, mark done).
+- `src/components/workflow-panel.tsx` — on document detail: start a workflow from an
+  active template, see each instance with its step trail (decisions as badges), cancel a
+  running one.
+
+## Modified
+
+- `src/lib/api/types.ts` — WorkflowTemplate, Workflow, WorkflowStep, TaskItem
+- `src/lib/api/queries.ts` — templates, inbox, per-document workflows, start/cancel,
+  decide/remind, tasks list/create/update
+- `src/routes/documents.$documentId.tsx` — WorkflowPanel mounted
+- `src/components/app-shell.tsx` — Approvals nav entry
+- i18n `approvals.*`, `workflow.*`, `nav.approvals` (FR + EN)
+
+## Note
+
+Workflow **templates** are created via `POST /workflow-templates` with a JSON definition —
+no template *builder* UI in this slice (a visual step designer is its own project). The
+panel lists and starts whatever templates exist; create one via API/Postman to exercise
+the flow end-to-end.
+
+## Verify
+
+No rebuild needed (web-only). Create a template via API, then: document → Approval
+workflow → choose template → Start → step trail appears. Approvals → To approve shows the
+step → Approve with a comment → trail updates to Approved. Tasks tab: add, mark done.
 
 ---
 

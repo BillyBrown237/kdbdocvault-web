@@ -87,7 +87,10 @@ export class UploadTask {
     readonly folderId?: string,
   ) {}
 
-  async run(onProgress?: (fraction: number) => void): Promise<Document> {
+  /** Steps 1–2, shared by `run()` (new document) and `runAsVersion()` (new
+   * version of an existing one) — both reserve and PUT identically; only the
+   * materializing call at the end differs. */
+  private async reserveAndPut(onProgress?: (fraction: number) => void): Promise<void> {
     // Step 1 — reserve (idempotent server-side; a 410-expired reservation
     // is cleared so the next run() reserves fresh).
     if (!this.uploadId) {
@@ -123,6 +126,21 @@ export class UploadTask {
       if (put.status < 200 || put.status >= 300) throw parseProblem(put)
       this.putDone = true
     }
+  }
+
+  /** A 410 means the reservation died under us — forget it so the next call
+   * reserves fresh instead of replaying against a dead upload id. */
+  private resetOnExpiry(err: unknown): never {
+    if (err instanceof ApiProblem && err.status === 410) {
+      this.uploadId = null
+      this.uploadUrl = null
+      this.putDone = false
+    }
+    throw err
+  }
+
+  async run(onProgress?: (fraction: number) => void): Promise<Document> {
+    await this.reserveAndPut(onProgress)
 
     // Step 3 — materialize (replayable server-side until it succeeds).
     try {
@@ -131,13 +149,43 @@ export class UploadTask {
         body: JSON.stringify({ title: this.file.name }),
       })
     } catch (err) {
-      if (err instanceof ApiProblem && err.status === 410) {
-        // Reservation expired — restart cleanly on next run().
-        this.uploadId = null
-        this.uploadUrl = null
-        this.putDone = false
-      }
-      throw err
+      this.resetOnExpiry(err)
+    }
+  }
+
+  /**
+   * Reserve + PUT only, returning the upload id.
+   *
+   * For archives handed to `POST /imports`: the bytes travel the same
+   * presigned path as any document, but the reservation must NOT be
+   * completed — `/complete` would mint a single document out of the ZIP
+   * itself, which is the opposite of importing its contents. The import
+   * worker reads the upload row directly.
+   */
+  async runAsArchive(onProgress?: (fraction: number) => void): Promise<string> {
+    await this.reserveAndPut(onProgress)
+    return this.uploadId!
+  }
+
+  /**
+   * Same pipeline, different ending: `POST /documents/{id}/versions` consumes
+   * the reservation directly (it marks the upload completed itself), so the
+   * `/complete` call is skipped entirely — calling both would try to spend the
+   * same upload twice.
+   */
+  async runAsVersion(
+    documentId: string,
+    note?: string,
+    onProgress?: (fraction: number) => void,
+  ): Promise<{ id: string; version_no: number }> {
+    await this.reserveAndPut(onProgress)
+    try {
+      return await apiFetch<{ id: string; version_no: number }>(
+        `/documents/${documentId}/versions`,
+        { method: 'POST', body: JSON.stringify({ upload_id: this.uploadId, note }) },
+      )
+    } catch (err) {
+      this.resetOnExpiry(err)
     }
   }
 }

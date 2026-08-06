@@ -9,6 +9,8 @@ import { AppShell } from '@/components/app-shell'
 import { ApiProblem, NetworkError } from '@/lib/api/http'
 import {
   changePassword,
+  createDocumentType,
+  documentTypesQuery,
   meQuery,
   revokeSession,
   sessionsQuery,
@@ -49,6 +51,7 @@ function SettingsPage() {
           <TabsTrigger value="profile">{t('settings.profile')}</TabsTrigger>
           <TabsTrigger value="security">{t('settings.security')}</TabsTrigger>
           <TabsTrigger value="sessions">{t('settings.sessions')}</TabsTrigger>
+          <TabsTrigger value="types">{t('docTypes.tab')}</TabsTrigger>
         </TabsList>
         <TabsContent value="profile">
           <ProfileTab />
@@ -59,6 +62,9 @@ function SettingsPage() {
         </TabsContent>
         <TabsContent value="sessions">
           <SessionsCard />
+        </TabsContent>
+        <TabsContent value="types">
+          <DocumentTypesCard />
         </TabsContent>
       </Tabs>
     </AppShell>
@@ -300,6 +306,78 @@ function SessionsCard() {
             </div>
           ))
         )}
+      </CardContent>
+    </Card>
+  )
+}
+
+/**
+ * Document types classify documents and act as a search facet.
+ *
+ * Honest limitation: the backend maps list + create only. There is no
+ * `PATCH /documents/{id}`, so nothing in the API can attach a type to an
+ * existing document yet — types are created here and used as a filter, and
+ * assignment lands when the backend grows the endpoint.
+ */
+function DocumentTypesCard() {
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+  const types = useQuery(documentTypesQuery)
+  const [name, setName] = useState('')
+
+  const create = useMutation({
+    mutationFn: () => createDocumentType(name.trim()),
+    onSuccess: async () => {
+      setName('')
+      toast.success(t('docTypes.created'))
+      await queryClient.invalidateQueries({ queryKey: ['document-types'] })
+    },
+    onError: (err) => fail(err, t),
+  })
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm text-muted-foreground">{t('docTypes.title')}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground">{t('docTypes.explainer')}</p>
+
+        {types.data && types.data.data.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {types.data.data.map((ty) => (
+              <Badge key={ty.id} variant={ty.is_system ? 'secondary' : 'outline'}>
+                {ty.name}
+                {ty.is_system && (
+                  <span className="ml-1 text-[10px] opacity-70">{t('docTypes.system')}</span>
+                )}
+              </Badge>
+            ))}
+          </div>
+        )}
+
+        <Separator />
+
+        <form
+          className="flex flex-wrap items-end gap-2"
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (name.trim()) create.mutate()
+          }}
+        >
+          <div className="space-y-1.5">
+            <Label className="text-xs">{t('docTypes.name')}</Label>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={t('docTypes.namePlaceholder')}
+              className="w-56"
+            />
+          </div>
+          <Button type="submit" disabled={create.isPending || !name.trim()}>
+            {create.isPending ? t('app.loading') : t('common.create')}
+          </Button>
+        </form>
       </CardContent>
     </Card>
   )

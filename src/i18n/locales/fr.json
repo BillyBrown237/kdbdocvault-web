@@ -47,13 +47,16 @@
     "vault": "Coffre",
     "search": "Recherche",
     "lifecycle": "Échéances",
+    "approvals": "Approbations",
     "billing": "Facturation",
     "team": "Équipe",
     "audit": "Journal d'audit",
     "trash": "Corbeille",
     "settings": "Paramètres",
     "profile": "Profil",
-    "organizations": "Organisations"
+    "organizations": "Organisations",
+    "rooms": "Salles de données",
+    "imports": "Imports"
   },
   "mfa": {
     "title": "Vérification en deux étapes",
@@ -114,7 +117,8 @@
     "loadMore": "Afficher plus",
     "retry": "Réessayer",
     "create": "Créer",
-    "done": "Terminé"
+    "done": "Terminé",
+    "cancel": "Annuler"
   },
   "billing": {
     "title": "Facturation",
@@ -152,7 +156,9 @@
     "title": "Recherche",
     "placeholder": "Rechercher des documents…",
     "hint": "Tapez pour rechercher dans vos documents",
-    "noResults": "Aucun résultat pour « {{q}} »"
+    "noResults": "Aucun résultat pour « {{q}} »",
+    "anyType": "Tous les types",
+    "anyTag": "Toutes les étiquettes"
   },
   "trash": {
     "title": "Corbeille",
@@ -186,6 +192,46 @@
   "upload": {
     "button": "Importer",
     "retry": "Réessayer"
+  },
+  "approvals": {
+    "title": "Approbations",
+    "inbox": "À approuver",
+    "tasks": "Tâches",
+    "inboxEmpty": "Rien à approuver",
+    "step": "Étape {{n}}",
+    "stepType": "Type : {{type}}",
+    "due": "Échéance {{date}}",
+    "commentOptional": "Commentaire (optionnel)",
+    "approve": "Approuver",
+    "reject": "Rejeter",
+    "requestChanges": "Demander des modifications",
+    "decided": "Décision enregistrée",
+    "newTask": "Nouvelle tâche…",
+    "noTasks": "Aucune tâche",
+    "taskDone": "Tâche terminée",
+    "decision": {
+      "approve": "Approuvé",
+      "reject": "Rejeté",
+      "request_changes": "Modifications demandées"
+    },
+    "delegateTo": "Déléguer à…",
+    "delegated": "Étape déléguée"
+  },
+  "workflow": {
+    "title": "Circuit d'approbation",
+    "chooseTemplate": "Choisir un modèle…",
+    "start": "Démarrer",
+    "started": "Circuit démarré",
+    "cancelled": "Circuit annulé",
+    "cancelledByOwner": "Annulé par le propriétaire",
+    "noTemplates": "Aucun modèle de circuit actif",
+    "pending": "En attente",
+    "status": {
+      "running": "En cours",
+      "completed": "Terminé",
+      "cancelled": "Annulé",
+      "overdue": "En retard"
+    }
   },
   "lifecycle": {
     "title": "Échéances",
@@ -289,7 +335,31 @@
       "verified": "Vérifié",
       "signed": "Signé",
       "declined": "Refusé"
-    }
+    },
+    "evidence": "Preuve",
+    "evidenceTitle": "Dossier de preuve",
+    "evidencePending": "La preuve n'est pas encore scellée.",
+    "documentHash": "Empreinte du document",
+    "sealedAt": "Scellé le",
+    "eventTrail": "Journal des événements",
+    "reviewId": "Vérifier la pièce",
+    "reviewIdFor": "Pièce d'identité — {{name}}",
+    "idPrivacyNote": "Lien temporaire (10 min). La pièce n'est jamais incluse dans les dossiers de preuve.",
+    "rejectReason": "Motif (si refus)",
+    "approve": "Valider",
+    "reject": "Refuser",
+    "idApproved": "Identité validée",
+    "idRejected": "Identité refusée",
+    "idCheck": {
+      "submitted": "Pièce à vérifier",
+      "approved": "Identité vérifiée",
+      "rejected": "Identité refusée"
+    },
+    "editSigner": "Modifier le signataire",
+    "editSignerHint": "Possible tant que la personne n'a pas signé — utile pour corriger une adresse erronée.",
+    "signerPhone": "Téléphone",
+    "saveSigner": "Enregistrer",
+    "signerUpdated": "Signataire mis à jour"
   },
   "signGuest": {
     "hello": "Bonjour {{name}}",
@@ -364,7 +434,14 @@
     "inviteRevoked": "Invitation révoquée",
     "orgSaved": "Organisation mise à jour",
     "plan": "Formule",
-    "region": "Région"
+    "region": "Région",
+    "transfer": "Transférer",
+    "transferTitle": "Transférer les documents de {{name}}",
+    "transferExplainer": "Les documents de ce membre passent au bénéficiaire choisi et le rôle Propriétaire lui est transmis. Action irréversible.",
+    "transferTo": "Choisir le bénéficiaire…",
+    "transferConfirm": "Transférer",
+    "transferred": "{{count}} document transféré",
+    "transferred_other": "{{count}} documents transférés"
   },
   "invite": {
     "title": "Rejoindre l'organisation",
@@ -382,10 +459,220 @@
     "when": "Date",
     "action": "Action",
     "resource": "Ressource",
-    "actor": "Acteur"
+    "actor": "Acteur",
+    "events": "Événements",
+    "export": "Exporter",
+    "exporting": "Export en cours…",
+    "downloadExport": "Télécharger l'export",
+    "exportFailed": "L'export a échoué."
   },
   "errors": {
     "network": "Connexion impossible — vérifiez votre réseau",
     "unknown": "Une erreur est survenue"
+  },
+  "rooms": {
+    "title": "Salles de données",
+    "subtitle": "Partagez un ensemble de documents avec une audience externe, et suivez ce qu'elle consulte.",
+    "create": "Nouvelle salle",
+    "created": "Salle créée",
+    "name": "Nom",
+    "namePlaceholder": "Due diligence — Projet Wouri",
+    "description": "Description",
+    "descriptionPlaceholder": "Visible par les visiteurs",
+    "expires": "Expire le",
+    "expiryHint": "Laissez vide pour une salle sans échéance.",
+    "expiresOn": "Expire le {{date}}",
+    "noExpiry": "Sans échéance",
+    "status": {
+      "open": "Ouverte",
+      "closed": "Fermée",
+      "expired": "Expirée"
+    },
+    "emptyTitle": "Aucune salle de données",
+    "emptyBody": "Créez une salle pour donner à un cabinet, un auditeur ou un investisseur l'accès à une sélection de documents — sans leur ouvrir votre coffre.",
+    "close": "Fermer la salle",
+    "closed": "Salle fermée",
+    "closedHint": "La salle est fermée : les liens visiteurs ne répondent plus. L'historique et les statistiques sont conservés.",
+    "documents": "Documents",
+    "visitors": "Visiteurs",
+    "settings": "Paramètres",
+    "visitorCount": "{{count}} visiteur",
+    "visitorCount_other": "{{count}} visiteurs",
+    "noDocuments": "Aucun document dans cette salle.",
+    "documentUnavailable": "Document indisponible",
+    "addDocuments": "Ajouter des documents",
+    "addSelected": "Ajouter {{count}} document",
+    "addSelected_other": "Ajouter {{count}} documents",
+    "documentsAdded": "Documents ajoutés",
+    "noCandidates": "Aucun document à ajouter.",
+    "invite": "Inviter un visiteur",
+    "invited": "Invitation envoyée",
+    "visitorEmail": "E-mail",
+    "visitorName": "Nom",
+    "optional": "Optionnel",
+    "sendInvite": "Envoyer",
+    "inviteHint": "Le visiteur reçoit un lien personnel par e-mail. Le lien n'est jamais réaffiché — réinvitez la personne pour en générer un nouveau.",
+    "analytics": "Consultation",
+    "noVisitors": "Aucun visiteur pour l'instant.",
+    "visitor": "Visiteur",
+    "opened": "Documents ouverts",
+    "viewTime": "Temps de lecture",
+    "lastVisit": "Dernière visite",
+    "save": "Enregistrer",
+    "saved": "Modifications enregistrées"
+  },
+  "room": {
+    "notFound": "Ce lien n'est plus valide.",
+    "welcome": "Bonjour {{name}}",
+    "expiresOn": "Accès jusqu'au {{date}}",
+    "expiredOn": "Accès expiré le {{date}}",
+    "noExpiry": "Accès sans échéance",
+    "empty": "Aucun document n'a encore été déposé ici.",
+    "open": "Consulter",
+    "back": "Retour",
+    "watermarked": "Filigrané · lecture seule",
+    "privacyNotice": "Vos consultations sont enregistrées et visibles par le propriétaire de la salle."
+  },
+  "acl": {
+    "title": "Permissions internes",
+    "empty": "Aucune permission explicite — seuls les droits hérités du rôle s'appliquent.",
+    "principalType": "Type",
+    "who": "Bénéficiaire",
+    "choose": "Choisir…",
+    "noneLeft": "Aucun bénéficiaire disponible",
+    "access": "Accès",
+    "expires": "Expire le",
+    "grant": "Accorder",
+    "remove": "Retirer",
+    "until": "Jusqu'au {{date}}",
+    "expired": "Expiré le {{date}}",
+    "principal": {
+      "member": "Membre",
+      "department": "Département",
+      "role": "Rôle"
+    },
+    "level": {
+      "view": "Lecture",
+      "comment": "Commentaire",
+      "edit": "Modification",
+      "manage": "Gestion"
+    },
+    "checkAccess": "Vérifier l'accès de",
+    "chooseMember": "Choisir un membre…",
+    "clear": "Effacer",
+    "effective": "Accès effectif :",
+    "noAccess": "Aucun accès"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "Aucune notification.",
+    "markAll": "Tout marquer comme lu",
+    "loadMore": "Voir plus"
+  },
+  "anchors": {
+    "tab": "Ancrages",
+    "explainer": "Chaque ancrage fige l'empreinte du journal à un instant donné : quiconque détient un ancrage ancien peut prouver que l'historique n'a pas été réécrit depuis.",
+    "empty": "Aucun ancrage",
+    "seq": "Séquence",
+    "hash": "Empreinte de la chaîne",
+    "ref": "Référence",
+    "at": "Ancré le"
+  },
+  "extraction": {
+    "title": "Données extraites",
+    "empty": "Aucune donnée extraite de la version actuelle.",
+    "pendingCount": "{{count}} à valider",
+    "pendingCount_other": "{{count}} à valider",
+    "confirm": "Valider",
+    "confirmed": "Donnée validée",
+    "confirmedBadge": "Validée",
+    "correct": "Corriger",
+    "saveCorrection": "Enregistrer",
+    "page": "p. {{n}}",
+    "confidenceTitle": "Confiance du modèle",
+    "reprocess": "Relancer l'analyse",
+    "reprocessQueued": "Analyse relancée — les résultats arriveront sous peu.",
+    "expiryHint": "Valider cette date crée l'échéance et active les rappels.",
+    "entity": {
+      "expiry_date": "Date d'expiration",
+      "issue_date": "Date d'émission",
+      "amount": "Montant",
+      "counterparty": "Contrepartie",
+      "reference": "Référence",
+      "person": "Personne",
+      "organization": "Organisation"
+    }
+  },
+  "version": {
+    "add": "Nouvelle version",
+    "added": "Version v{{n}} ajoutée",
+    "current": "Actuelle",
+    "notePlaceholder": "Note de version (optionnel)"
+  },
+  "docAudit": {
+    "title": "Historique du document",
+    "empty": "Aucun événement pour ce document."
+  },
+  "evidence": {
+    "create": "Dossier de preuve",
+    "building": "Constitution…",
+    "download": "Télécharger le dossier",
+    "failed": "La constitution du dossier a échoué."
+  },
+  "savedSearch": {
+    "saveThis": "Enregistrer cette recherche",
+    "save": "Enregistrer",
+    "saved": "Recherche enregistrée",
+    "namePlaceholder": "Nom de la recherche",
+    "delete": "Supprimer",
+    "running": "Recherche « {{name}} » : {{q}}"
+  },
+  "pins": {
+    "title": "Épinglés",
+    "toggle": "Épingler / désépingler"
+  },
+  "docTypes": {
+    "tab": "Types",
+    "title": "Types de documents",
+    "explainer": "Les types classent vos documents et servent de filtre de recherche. L'affectation d'un type à un document existant arrivera avec l'API correspondante.",
+    "name": "Nom",
+    "namePlaceholder": "Contrat, Facture, Attestation…",
+    "created": "Type créé",
+    "system": "système"
+  },
+  "imports": {
+    "title": "Imports",
+    "subtitle": "Reprenez vos archives existantes sans les téléverser une par une.",
+    "new": "Nouvel import",
+    "history": "Historique",
+    "sources": "Sources connectées",
+    "explainer": "Déposez une archive ZIP : chaque fichier devient un document, avec OCR et analyse comme un téléversement normal.",
+    "targetFolder": "Dossier de destination",
+    "chooseZip": "Choisir une archive ZIP",
+    "uploading": "Envoi en cours…",
+    "zipOnly": "Seules les archives .zip sont acceptées.",
+    "started": "Import lancé",
+    "progress": "Progression",
+    "counters": "{{transferred}} / {{discovered}} importés · {{failed}} en échec",
+    "cancel": "Annuler l'import",
+    "cancelled": "Import annulé",
+    "cancelledNote": "Les fichiers déjà importés sont conservés.",
+    "errorReport": "Rapport d'erreurs",
+    "noHistory": "Aucun import",
+    "manifestToggle": "Utiliser un fichier CSV de métadonnées (optionnel)",
+    "manifestHint": "Si l'archive contient un CSV listant vos fichiers, indiquez son nom et les colonnes chemin/titre. En cas d'absence ou d'erreur, le nom du fichier sert de titre.",
+    "csvEntry": "Fichier CSV",
+    "pathColumn": "Colonne chemin",
+    "titleColumn": "Colonne titre",
+    "sourcesUnavailable": "La connexion à Google Drive, OneDrive, Dropbox et SharePoint n'est pas encore disponible : elle nécessite l'enregistrement de l'application auprès de chaque fournisseur. Utilisez l'import ZIP en attendant.",
+    "disconnect": "Déconnecter",
+    "disconnected": "Source déconnectée",
+    "status": {
+      "queued": "En file",
+      "running": "En cours",
+      "done": "Terminé",
+      "failed": "Échec",
+      "cancelled": "Annulé"
+    }
   }
 }

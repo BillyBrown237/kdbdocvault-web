@@ -10,9 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApprovalsRouteImport } from './routes/approvals'
 import { Route as AuditRouteImport } from './routes/audit'
 import { Route as BillingRouteImport } from './routes/billing'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as ImportsRouteImport } from './routes/imports'
 import { Route as LifecycleRouteImport } from './routes/lifecycle'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MfaRouteImport } from './routes/mfa'
@@ -24,6 +26,9 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TeamRouteImport } from './routes/team'
 import { Route as TrashRouteImport } from './routes/trash'
 import { Route as DocumentsDocumentIdRouteImport } from './routes/documents.$documentId'
+import { Route as RoomTokenRouteImport } from './routes/room.$token'
+import { Route as RoomsIndexRouteImport } from './routes/rooms.index'
+import { Route as RoomsRoomIdRouteImport } from './routes/rooms.$roomId'
 import { Route as SharedTokenRouteImport } from './routes/shared.$token'
 import { Route as SignSignTokenRouteImport } from './routes/sign.$signToken'
 import { Route as VaultIndexRouteImport } from './routes/vault.index'
@@ -34,6 +39,11 @@ import { Route as InvitationsTokenAcceptRouteImport } from './routes/invitations
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApprovalsRoute = ApprovalsRouteImport.update({
+  id: '/approvals',
+  path: '/approvals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuditRoute = AuditRouteImport.update({
@@ -49,6 +59,11 @@ const BillingRoute = BillingRouteImport.update({
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImportsRoute = ImportsRouteImport.update({
+  id: '/imports',
+  path: '/imports',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LifecycleRoute = LifecycleRouteImport.update({
@@ -106,6 +121,21 @@ const DocumentsDocumentIdRoute = DocumentsDocumentIdRouteImport.update({
   path: '/documents/$documentId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RoomTokenRoute = RoomTokenRouteImport.update({
+  id: '/room/$token',
+  path: '/room/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoomsIndexRoute = RoomsIndexRouteImport.update({
+  id: '/rooms/',
+  path: '/rooms/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoomsRoomIdRoute = RoomsRoomIdRouteImport.update({
+  id: '/rooms/$roomId',
+  path: '/rooms/$roomId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SharedTokenRoute = SharedTokenRouteImport.update({
   id: '/shared/$token',
   path: '/shared/$token',
@@ -139,9 +169,11 @@ const InvitationsTokenAcceptRoute = InvitationsTokenAcceptRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/approvals': typeof ApprovalsRoute
   '/audit': typeof AuditRoute
   '/billing': typeof BillingRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/imports': typeof ImportsRoute
   '/lifecycle': typeof LifecycleRoute
   '/login': typeof LoginRoute
   '/mfa': typeof MfaRoute
@@ -153,18 +185,23 @@ export interface FileRoutesByFullPath {
   '/team': typeof TeamRoute
   '/trash': typeof TrashRoute
   '/documents/$documentId': typeof DocumentsDocumentIdRoute
+  '/room/$token': typeof RoomTokenRoute
+  '/rooms/$roomId': typeof RoomsRoomIdRoute
   '/shared/$token': typeof SharedTokenRoute
   '/sign/$signToken': typeof SignSignTokenRoute
   '/vault/$folderId': typeof VaultFolderIdRoute
   '/verify/$documentHash': typeof VerifyDocumentHashRoute
+  '/rooms/': typeof RoomsIndexRoute
   '/vault/': typeof VaultIndexRoute
   '/invitations/$token/accept': typeof InvitationsTokenAcceptRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/approvals': typeof ApprovalsRoute
   '/audit': typeof AuditRoute
   '/billing': typeof BillingRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/imports': typeof ImportsRoute
   '/lifecycle': typeof LifecycleRoute
   '/login': typeof LoginRoute
   '/mfa': typeof MfaRoute
@@ -176,19 +213,24 @@ export interface FileRoutesByTo {
   '/team': typeof TeamRoute
   '/trash': typeof TrashRoute
   '/documents/$documentId': typeof DocumentsDocumentIdRoute
+  '/room/$token': typeof RoomTokenRoute
+  '/rooms/$roomId': typeof RoomsRoomIdRoute
   '/shared/$token': typeof SharedTokenRoute
   '/sign/$signToken': typeof SignSignTokenRoute
   '/vault/$folderId': typeof VaultFolderIdRoute
   '/verify/$documentHash': typeof VerifyDocumentHashRoute
+  '/rooms': typeof RoomsIndexRoute
   '/vault': typeof VaultIndexRoute
   '/invitations/$token/accept': typeof InvitationsTokenAcceptRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/approvals': typeof ApprovalsRoute
   '/audit': typeof AuditRoute
   '/billing': typeof BillingRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/imports': typeof ImportsRoute
   '/lifecycle': typeof LifecycleRoute
   '/login': typeof LoginRoute
   '/mfa': typeof MfaRoute
@@ -200,10 +242,13 @@ export interface FileRoutesById {
   '/team': typeof TeamRoute
   '/trash': typeof TrashRoute
   '/documents/$documentId': typeof DocumentsDocumentIdRoute
+  '/room/$token': typeof RoomTokenRoute
+  '/rooms/$roomId': typeof RoomsRoomIdRoute
   '/shared/$token': typeof SharedTokenRoute
   '/sign/$signToken': typeof SignSignTokenRoute
   '/vault/$folderId': typeof VaultFolderIdRoute
   '/verify/$documentHash': typeof VerifyDocumentHashRoute
+  '/rooms/': typeof RoomsIndexRoute
   '/vault/': typeof VaultIndexRoute
   '/invitations/$token/accept': typeof InvitationsTokenAcceptRoute
 }
@@ -211,9 +256,11 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/approvals'
     | '/audit'
     | '/billing'
     | '/forgot-password'
+    | '/imports'
     | '/lifecycle'
     | '/login'
     | '/mfa'
@@ -225,18 +272,23 @@ export interface FileRouteTypes {
     | '/team'
     | '/trash'
     | '/documents/$documentId'
+    | '/room/$token'
+    | '/rooms/$roomId'
     | '/shared/$token'
     | '/sign/$signToken'
     | '/vault/$folderId'
     | '/verify/$documentHash'
+    | '/rooms/'
     | '/vault/'
     | '/invitations/$token/accept'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/approvals'
     | '/audit'
     | '/billing'
     | '/forgot-password'
+    | '/imports'
     | '/lifecycle'
     | '/login'
     | '/mfa'
@@ -248,18 +300,23 @@ export interface FileRouteTypes {
     | '/team'
     | '/trash'
     | '/documents/$documentId'
+    | '/room/$token'
+    | '/rooms/$roomId'
     | '/shared/$token'
     | '/sign/$signToken'
     | '/vault/$folderId'
     | '/verify/$documentHash'
+    | '/rooms'
     | '/vault'
     | '/invitations/$token/accept'
   id:
     | '__root__'
     | '/'
+    | '/approvals'
     | '/audit'
     | '/billing'
     | '/forgot-password'
+    | '/imports'
     | '/lifecycle'
     | '/login'
     | '/mfa'
@@ -271,19 +328,24 @@ export interface FileRouteTypes {
     | '/team'
     | '/trash'
     | '/documents/$documentId'
+    | '/room/$token'
+    | '/rooms/$roomId'
     | '/shared/$token'
     | '/sign/$signToken'
     | '/vault/$folderId'
     | '/verify/$documentHash'
+    | '/rooms/'
     | '/vault/'
     | '/invitations/$token/accept'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApprovalsRoute: typeof ApprovalsRoute
   AuditRoute: typeof AuditRoute
   BillingRoute: typeof BillingRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
+  ImportsRoute: typeof ImportsRoute
   LifecycleRoute: typeof LifecycleRoute
   LoginRoute: typeof LoginRoute
   MfaRoute: typeof MfaRoute
@@ -295,10 +357,13 @@ export interface RootRouteChildren {
   TeamRoute: typeof TeamRoute
   TrashRoute: typeof TrashRoute
   DocumentsDocumentIdRoute: typeof DocumentsDocumentIdRoute
+  RoomTokenRoute: typeof RoomTokenRoute
+  RoomsRoomIdRoute: typeof RoomsRoomIdRoute
   SharedTokenRoute: typeof SharedTokenRoute
   SignSignTokenRoute: typeof SignSignTokenRoute
   VaultFolderIdRoute: typeof VaultFolderIdRoute
   VerifyDocumentHashRoute: typeof VerifyDocumentHashRoute
+  RoomsIndexRoute: typeof RoomsIndexRoute
   VaultIndexRoute: typeof VaultIndexRoute
   InvitationsTokenAcceptRoute: typeof InvitationsTokenAcceptRoute
 }
@@ -310,6 +375,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/approvals': {
+      id: '/approvals'
+      path: '/approvals'
+      fullPath: '/approvals'
+      preLoaderRoute: typeof ApprovalsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/audit': {
@@ -331,6 +403,13 @@ declare module '@tanstack/react-router' {
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/imports': {
+      id: '/imports'
+      path: '/imports'
+      fullPath: '/imports'
+      preLoaderRoute: typeof ImportsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lifecycle': {
@@ -410,6 +489,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocumentsDocumentIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/room/$token': {
+      id: '/room/$token'
+      path: '/room/$token'
+      fullPath: '/room/$token'
+      preLoaderRoute: typeof RoomTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rooms/': {
+      id: '/rooms/'
+      path: '/rooms'
+      fullPath: '/rooms/'
+      preLoaderRoute: typeof RoomsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rooms/$roomId': {
+      id: '/rooms/$roomId'
+      path: '/rooms/$roomId'
+      fullPath: '/rooms/$roomId'
+      preLoaderRoute: typeof RoomsRoomIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/shared/$token': {
       id: '/shared/$token'
       path: '/shared/$token'
@@ -457,9 +557,11 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApprovalsRoute: ApprovalsRoute,
   AuditRoute: AuditRoute,
   BillingRoute: BillingRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
+  ImportsRoute: ImportsRoute,
   LifecycleRoute: LifecycleRoute,
   LoginRoute: LoginRoute,
   MfaRoute: MfaRoute,
@@ -471,10 +573,13 @@ const rootRouteChildren: RootRouteChildren = {
   TeamRoute: TeamRoute,
   TrashRoute: TrashRoute,
   DocumentsDocumentIdRoute: DocumentsDocumentIdRoute,
+  RoomTokenRoute: RoomTokenRoute,
+  RoomsRoomIdRoute: RoomsRoomIdRoute,
   SharedTokenRoute: SharedTokenRoute,
   SignSignTokenRoute: SignSignTokenRoute,
   VaultFolderIdRoute: VaultFolderIdRoute,
   VerifyDocumentHashRoute: VerifyDocumentHashRoute,
+  RoomsIndexRoute: RoomsIndexRoute,
   VaultIndexRoute: VaultIndexRoute,
   InvitationsTokenAcceptRoute: InvitationsTokenAcceptRoute,
 }

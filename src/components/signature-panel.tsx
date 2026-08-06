@@ -1,18 +1,34 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { PenLine, Plus, Send, Trash2, X } from 'lucide-react'
+import {
+  Download,
+  FileCheck2,
+  Pencil,
+  PenLine,
+  Plus,
+  ScanFace,
+  Send,
+  Trash2,
+  X,
+} from 'lucide-react'
 
 import { ApiProblem, NetworkError } from '@/lib/api/http'
 import {
   cancelEnvelope,
   createEnvelope,
   envelopesForDocumentQuery,
+  evidenceQuery,
   remindEnvelope,
+  reviewSignerId,
+  sealedDocumentBlob,
   sendEnvelope,
+  signerIdDocumentBlob,
+  updateSigner,
   type SignerInput,
 } from '@/lib/api/queries'
-import type { Envelope, SignerStatus } from '@/lib/api/types'
+import { formatDate } from '@/lib/format'
+import type { Envelope, Signer, SignerStatus } from '@/lib/api/types'
 import { Badge, type BadgeProps } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -104,6 +120,7 @@ export function SignaturePanel({
               onSend={() => send.mutate(env.id)}
               onRemind={() => remind.mutate(env.id)}
               onCancel={() => cancel.mutate(env.id)}
+              onReviewed={invalidate}
               busy={send.isPending || cancel.isPending}
             />
           ))
@@ -118,15 +135,38 @@ function EnvelopeRow({
   onSend,
   onRemind,
   onCancel,
+  onReviewed,
   busy,
 }: {
   env: Envelope
   onSend: () => void
   onRemind: () => void
   onCancel: () => void
+  onReviewed: () => void
   busy: boolean
 }) {
   const { t } = useTranslation()
+  const [downloading, setDownloading] = useState(false)
+
+  async function onDownloadSealed() {
+    setDownloading(true)
+    try {
+      const blob = await sealedDocumentBlob(env.id)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${env.id}.pdf`
+      a.click()
+      setTimeout(() => URL.revokeObjectURL(url), 60_000)
+    } catch (err) {
+      if (err instanceof NetworkError) toast.error(t('errors.network'))
+      else if (err instanceof ApiProblem) toast.error(err.detail ?? err.title)
+      else toast.error(t('errors.unknown'))
+    } finally {
+      setDownloading(false)
+    }
+  }
+
   const statusVariant: BadgeProps['variant'] =
     env.status === 'completed'
       ? 'success'
@@ -164,26 +204,289 @@ function EnvelopeRow({
             </>
           )}
           {env.status === 'completed' && (
-            <Button size="sm" variant="outline" className="h-7" asChild>
-              <a href={`/v1/envelopes/${env.id}/signed-document`} target="_blank" rel="noreferrer">
-                {t('sign.download')}
-              </a>
-            </Button>
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7"
+                disabled={downloading}
+                onClick={() => void onDownloadSealed()}
+              >
+                <Download className="h-3 w-3" />
+                {downloading ? t('app.loading') : t('sign.download')}
+              </Button>
+              <EvidenceDialog envelopeId={env.id} />
+            </>
           )}
         </div>
       </div>
       <ul className="mt-2 space-y-1">
         {env.signers.map((s) => (
-          <li key={s.id} className="flex items-center justify-between text-sm">
-            <span className="min-w-0 truncate">
+          <li key={s.id} className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="min-w-0 flex-1 truncate">
               <span className="text-muted-foreground">{s.signing_order}.</span> {s.name}{' '}
               <span className="text-xs text-muted-foreground">{s.email}</span>
             </span>
+            {s.id_check_status && (
+              <Badge
+                variant={
+                  s.id_check_status === 'approved'
+                    ? 'success'
+                    : s.id_check_status === 'rejected'
+                      ? 'destructive'
+                      : 'outline'
+                }
+              >
+                {t(`sign.idCheck.${s.id_check_status}`)}
+              </Badge>
+            )}
+            {s.id_check_status === 'submitted' && (
+              <IdReviewDialog envelopeId={env.id} signer={s} onReviewed={onReviewed} />
+            )}
+            {s.status === 'pending' && env.status !== 'completed' && (
+              <EditSignerDialog envelopeId={env.id} signer={s} onSaved={onReviewed} />
+            )}
             <Badge variant={SIGNER_VARIANT[s.status]}>{t(`sign.signer.${s.status}`)}</Badge>
           </li>
         ))}
       </ul>
     </div>
+  )
+}
+
+/** The sealing job's frozen record: what was signed, and the event trail. */
+function EvidenceDialog({ envelopeId }: { envelopeId: string }) {
+  const { t, i18n } = useTranslation()
+  const [open, setOpen] = useState(false)
+  const evidence = useQuery({ ...evidenceQuery(envelopeId), enabled: open, retry: false })
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="ghost" className="h-7">
+          <FileCheck2 className="h-3 w-3" />
+          {t('sign.evidence')}
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{t('sign.evidenceTitle')}</DialogTitle>
+        </DialogHeader>
+        {evidence.isPending ? (
+          <p className="text-sm text-muted-foreground">{t('app.loading')}</p>
+        ) : evidence.isError ? (
+          <p className="text-sm text-muted-foreground">{t('sign.evidencePending')}</p>
+        ) : (
+          evidence.data && (
+            <div className="space-y-3 text-sm">
+              <div>
+                <p className="text-xs text-muted-foreground">{t('sign.documentHash')}</p>
+                <code className="block break-all text-xs">{evidence.data.document_hash}</code>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">{t('sign.sealedAt')}</p>
+                <p>{formatDate(evidence.data.sealed_at, i18n.language)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">{t('sign.eventTrail')}</p>
+                <pre className="max-h-64 overflow-auto rounded-md bg-muted p-2 text-[11px]">
+                  {JSON.stringify(evidence.data.event_trail, null, 2)}
+                </pre>
+              </div>
+            </div>
+          )
+        )}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+/**
+ * ID review. The image is fetched as a blob into an object URL and never
+ * navigated to: the presigned link is a 10-minute capability and the most
+ * sensitive object in the system — it should not end up in browser history,
+ * a shared tab, or a bookmark. The URL is revoked when the dialog closes.
+ */
+function IdReviewDialog({
+  envelopeId,
+  signer,
+  onReviewed,
+}: {
+  envelopeId: string
+  signer: Signer
+  onReviewed: () => void
+}) {
+  const { t } = useTranslation()
+  const [open, setOpen] = useState(false)
+  const [src, setSrc] = useState<string | null>(null)
+  const [reason, setReason] = useState('')
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!open) return
+    let url: string | null = null
+    let cancelled = false
+    void (async () => {
+      try {
+        const blob = await signerIdDocumentBlob(envelopeId, signer.id)
+        if (cancelled) return
+        url = URL.createObjectURL(blob)
+        setSrc(url)
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof NetworkError
+              ? t('errors.network')
+              : err instanceof ApiProblem
+                ? (err.detail ?? err.title)
+                : t('errors.unknown'),
+          )
+        }
+      }
+    })()
+    return () => {
+      cancelled = true
+      if (url) URL.revokeObjectURL(url)
+      setSrc(null)
+    }
+  }, [open, envelopeId, signer.id, t])
+
+  const review = useMutation({
+    mutationFn: (approve: boolean) =>
+      reviewSignerId(envelopeId, signer.id, approve, reason.trim() || undefined),
+    onSuccess: (_r, approve) => {
+      setOpen(false)
+      setReason('')
+      toast.success(t(approve ? 'sign.idApproved' : 'sign.idRejected'))
+      onReviewed()
+    },
+    onError: (err) => {
+      if (err instanceof NetworkError) toast.error(t('errors.network'))
+      else if (err instanceof ApiProblem) toast.error(err.detail ?? err.title)
+      else toast.error(t('errors.unknown'))
+    },
+  })
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" className="h-7">
+          <ScanFace className="h-3 w-3" />
+          {t('sign.reviewId')}
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{t('sign.reviewIdFor', { name: signer.name })}</DialogTitle>
+        </DialogHeader>
+
+        {error ? (
+          <p className="text-sm text-red-600">{error}</p>
+        ) : src ? (
+          <div className="select-none" onContextMenu={(e) => e.preventDefault()}>
+            <img
+              src={src}
+              alt=""
+              draggable={false}
+              className="mx-auto max-h-[50vh] rounded-md border"
+            />
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">{t('app.loading')}</p>
+        )}
+
+        <p className="text-xs text-muted-foreground">{t('sign.idPrivacyNote')}</p>
+
+        <Input
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder={t('sign.rejectReason')}
+        />
+        <DialogFooter>
+          <Button
+            variant="outline"
+            className="text-red-600 hover:text-red-600"
+            disabled={review.isPending}
+            onClick={() => review.mutate(false)}
+          >
+            {t('sign.reject')}
+          </Button>
+          <Button disabled={review.isPending} onClick={() => review.mutate(true)}>
+            {t('sign.approve')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function EditSignerDialog({
+  envelopeId,
+  signer,
+  onSaved,
+}: {
+  envelopeId: string
+  signer: Signer
+  onSaved: () => void
+}) {
+  const { t } = useTranslation()
+  const [open, setOpen] = useState(false)
+  const [email, setEmail] = useState(signer.email)
+  const [phone, setPhone] = useState(signer.phone ?? '')
+
+  const save = useMutation({
+    mutationFn: () =>
+      updateSigner(envelopeId, signer.id, {
+        email: email.trim() || undefined,
+        phone: phone.trim() || undefined,
+      }),
+    onSuccess: () => {
+      setOpen(false)
+      toast.success(t('sign.signerUpdated'))
+      onSaved()
+    },
+    onError: (err) => {
+      if (err instanceof NetworkError) toast.error(t('errors.network'))
+      else if (err instanceof ApiProblem) toast.error(err.detail ?? err.title)
+      else toast.error(t('errors.unknown'))
+    },
+  })
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="ghost" className="h-7 px-2" aria-label={t('sign.editSigner')}>
+          <Pencil className="h-3 w-3" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{t('sign.editSigner')}</DialogTitle>
+        </DialogHeader>
+        <form
+          className="space-y-3"
+          onSubmit={(e) => {
+            e.preventDefault()
+            save.mutate()
+          }}
+        >
+          <div className="space-y-1.5">
+            <Label className="text-xs">{t('sign.signerEmail')}</Label>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">{t('sign.signerPhone')}</Label>
+            <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+          </div>
+          <p className="text-xs text-muted-foreground">{t('sign.editSignerHint')}</p>
+          <DialogFooter>
+            <Button type="submit" disabled={save.isPending}>
+              {save.isPending ? t('app.loading') : t('sign.saveSigner')}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }
 

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 
 import { AppShell } from '@/components/app-shell'
 import { DocumentRow, EmptyState } from '@/components/vault-list'
-import { favoritesQuery, recentQuery, tenantUsageQuery } from '@/lib/api/queries'
+import { favoritesQuery, pinsQuery, recentQuery, tenantUsageQuery } from '@/lib/api/queries'
 import { requireTenant } from '@/lib/route-guards'
 import { formatBytes } from '@/lib/format'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -19,6 +19,7 @@ function Dashboard() {
   const { t, i18n } = useTranslation()
   const recent = useQuery(recentQuery)
   const favorites = useQuery(favoritesQuery)
+  const pins = useQuery(pinsQuery)
   const usage = useQuery(tenantUsageQuery)
 
   return (
@@ -46,6 +47,18 @@ function Dashboard() {
               </>
             )}
       </div>
+
+      {/* Pinned first: it's the only list the user curates by hand, so it
+          earns the top slot over "recent", which curates itself. */}
+      {(pins.data?.data.length ?? 0) > 0 && (
+        <Section title={t('pins.title')}>
+          <div className="space-y-2">
+            {pins.data!.data.map((doc) => (
+              <DocumentRow key={doc.id} document={doc} />
+            ))}
+          </div>
+        </Section>
+      )}
 
       <Section title={t('dashboard.recent')}>
         {recent.isPending ? (

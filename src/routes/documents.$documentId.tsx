@@ -2,20 +2,27 @@ import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, Download, Star } from 'lucide-react'
+import { ChevronLeft, Download, Pin, Star } from 'lucide-react'
 
+import { AclPanel } from '@/components/acl-panel'
 import { AppShell } from '@/components/app-shell'
 import { DocumentActions } from '@/components/document-actions'
+import { DocumentTrailPanel } from '@/components/document-trail-panel'
+import { ExtractionPanel } from '@/components/extraction-panel'
 import { SharePanel } from '@/components/share-panel'
 import { SignaturePanel } from '@/components/signature-panel'
 import { LifecyclePanel } from '@/components/lifecycle-panel'
+import { VersionsPanel } from '@/components/versions-panel'
+import { WorkflowPanel } from '@/components/workflow-panel'
 import {
   addFavorite,
   documentQuery,
-  documentVersionsQuery,
   downloadDocumentBlob,
   favoritesQuery,
+  pinDocument,
+  pinsQuery,
   removeFavorite,
+  unpinDocument,
 } from '@/lib/api/queries'
 import { ApiProblem, NetworkError } from '@/lib/api/http'
 import { formatBytes, formatDate } from '@/lib/format'
@@ -23,8 +30,6 @@ import { requireTenant } from '@/lib/route-guards'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
-import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/components/ui/sonner'
 
 export const Route = createFileRoute('/documents/$documentId')({
@@ -41,15 +46,21 @@ function DocumentDetail() {
   const { documentId } = Route.useParams()
 
   const doc = useQuery(documentQuery(documentId))
-  const versions = useQuery(documentVersionsQuery(documentId))
   const favorites = useQuery(favoritesQuery)
+  const pins = useQuery(pinsQuery)
   const [downloading, setDownloading] = useState(false)
 
   const isFavorite = favorites.data?.data.some((d) => d.id === documentId) ?? false
+  const isPinned = pins.data?.data.some((d) => d.id === documentId) ?? false
 
   const favoriteMutation = useMutation({
     mutationFn: () => (isFavorite ? removeFavorite(documentId) : addFavorite(documentId)),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['favorites'] }),
+  })
+
+  const pinMutation = useMutation({
+    mutationFn: () => (isPinned ? unpinDocument(documentId) : pinDocument(documentId)),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['pins'] }),
   })
 
   async function onDownload() {
@@ -95,6 +106,16 @@ function DocumentDetail() {
             className={isFavorite ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground'}
           />
         </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => pinMutation.mutate()}
+          disabled={pinMutation.isPending}
+          aria-label={t('pins.toggle')}
+          title={t('pins.toggle')}
+        >
+          <Pin className={isPinned ? 'fill-primary text-primary' : 'text-muted-foreground'} />
+        </Button>
         <Button onClick={() => void onDownload()} disabled={downloading || !d}>
           <Download className="h-4 w-4" />
           {downloading ? t('app.loading') : t('document.download')}
@@ -127,37 +148,16 @@ function DocumentDetail() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-muted-foreground">{t('document.versions')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {versions.isPending ? (
-                <Skeleton className="h-16" />
-              ) : (
-                <ul className="space-y-2 text-sm">
-                  {versions.data?.data.map((v, i) => (
-                    <li key={v.id}>
-                      {i > 0 && <Separator className="mb-2" />}
-                      <div className="flex items-center justify-between">
-                        <span>
-                          v{v.version_no} · {formatBytes(v.size_bytes, i18n.language)}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {formatDate(v.created_at, i18n.language)}
-                        </span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
+          <VersionsPanel documentId={d.id} />
 
+          <ExtractionPanel documentId={d.id} />
           <DocumentActions document={d} />
           <LifecyclePanel documentId={d.id} />
+          <WorkflowPanel documentId={d.id} />
+          <AclPanel documentId={d.id} />
           <SharePanel documentId={d.id} />
           <SignaturePanel documentId={d.id} versionId={d.current_version?.id} />
+          <DocumentTrailPanel documentId={d.id} />
         </div>
       )}
     </AppShell>

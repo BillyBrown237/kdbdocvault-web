@@ -153,6 +153,19 @@ export interface Signer {
   verified_at: string | null
   signed_at: string | null
   declined_reason: string | null
+  /** null until an ID-check signer uploads one (B36). */
+  id_check_status: 'submitted' | 'approved' | 'rejected' | null
+  id_checked_at: string | null
+}
+
+/** The legal artifact, written once by the sealing job and never updated. */
+export interface SignatureEvidence {
+  envelope_id: string
+  document_hash: string
+  sealed_pdf_key: string
+  certificate_key: string
+  event_trail: unknown
+  sealed_at: string
 }
 
 export interface Envelope {
@@ -288,6 +301,12 @@ export interface Role {
   is_system: boolean
 }
 
+export interface Department {
+  id: string
+  name: string
+  parent_id: string | null
+}
+
 export interface AuditEvent {
   id: string
   seq: number
@@ -308,6 +327,54 @@ export interface PublicVerifyResult {
   issuer: string | null
 }
 
+export interface WorkflowTemplate {
+  id: string
+  name: string
+  definition: unknown
+  version: number
+  active: boolean
+  created_at: string
+}
+
+export interface WorkflowStep {
+  id: string
+  instance_id: string
+  step_no: number
+  step_type: string
+  assignee_id: string | null
+  decision: string | null
+  comment: string | null
+  due_at: string | null
+  decided_at: string | null
+  delegated_from: string | null
+  /** present on the inbox feed */
+  document_title?: string | null
+}
+
+export interface Workflow {
+  id: string
+  template_id: string
+  template_version: number
+  document_id: string
+  status: 'running' | 'completed' | 'cancelled' | 'overdue'
+  started_by: string
+  started_at: string
+  completed_at: string | null
+  cancel_reason: string | null
+  steps: WorkflowStep[]
+}
+
+export interface TaskItem {
+  id: string
+  title: string
+  document_id: string | null
+  assignee_id: string | null
+  due_at: string | null
+  status: 'open' | 'done'
+  created_by: string
+  created_at: string
+}
+
 export interface SearchHit {
   document: Document
   score?: number
@@ -319,6 +386,156 @@ export interface TrashItem {
   title: string
   deleted_at: string | null
   purge_after: string | null
+}
+
+// --- data rooms, ACLs, notifications (W12/W13) -------------------------------
+
+export interface DataRoom {
+  id: string
+  name: string
+  description: string | null
+  status: 'open' | 'closed'
+  expires_at: string | null
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+
+/** `GET /data-rooms/{id}` — the list shape plus the room's contents. */
+export interface DataRoomDetail extends DataRoom {
+  document_ids: string[]
+  visitor_count: number
+}
+
+export interface RoomVisitorAnalytics {
+  email: string
+  name: string | null
+  documents_opened: number
+  total_view_seconds: number
+  last_visit: string | null
+}
+
+/** Ordered least → most privileged; the backend ranks them the same way. */
+export const ACCESS_LEVELS = ['view', 'comment', 'edit', 'manage'] as const
+export type AccessLevel = (typeof ACCESS_LEVELS)[number]
+
+export const PRINCIPAL_TYPES = ['member', 'department', 'role'] as const
+export type PrincipalType = (typeof PRINCIPAL_TYPES)[number]
+
+export interface AclEntry {
+  id: string
+  principal_type: PrincipalType
+  principal_id: string
+  access_level: AccessLevel
+  expires_at: string | null
+  created_by: string | null
+  created_at: string
+}
+
+/** What the PUT takes — no server-assigned fields. */
+export interface AclEntryInput {
+  principal_type: PrincipalType
+  principal_id: string
+  access_level: AccessLevel
+  expires_at?: string | null
+}
+
+export interface EffectiveAccess {
+  /** null = no grant reaches this member at all. */
+  access_level: AccessLevel | null
+  trace: { source: string; detail: string }[]
+}
+
+/** The visitor's view of a room — public surface, no auth. */
+export interface RoomPortalView {
+  room: { name: string; description: string | null; expires_at: string | null }
+  visitor: { name: string | null }
+  documents: { id: string; title: string }[]
+}
+
+export interface Notification {
+  id: string
+  title: string
+  body: string | null
+  event_type: string
+  resource_type: string | null
+  resource_id: string | null
+  read_at: string | null
+  created_at: string
+}
+
+// --- saved searches & document types (W15) -----------------------------------
+
+/** `query` is stored as jsonb and parsed leniently server-side: unknown keys
+ * are ignored, so the shape can grow without breaking old rows. */
+export interface SavedSearch {
+  id: string
+  name: string
+  query: { q: string; type_id?: string | null; folder_id?: string | null; tag?: string | null }
+  created_at: string
+  updated_at: string
+}
+
+export interface DocumentType {
+  id: string
+  name: string
+  is_system: boolean
+  metadata_schema: Record<string, unknown>
+}
+
+// --- imports (W17) -----------------------------------------------------------
+
+export interface ImportJob {
+  id: string
+  source: string
+  status: 'queued' | 'running' | 'done' | 'failed' | 'cancelled'
+  discovered: number
+  transferred: number
+  failed: number
+  /** Presigned, short-lived; only present when at least one file failed. */
+  error_report_url: string | null
+  started_at: string | null
+  finished_at: string | null
+}
+
+export interface ImportConnection {
+  id: string
+  provider: string
+  account_label: string | null
+  status: 'pending_auth' | 'connected' | 'revoked'
+  created_at: string
+}
+
+// --- extraction review, jobs, anchors (W14) ----------------------------------
+
+/** A candidate the pipeline pulled out of the CURRENT version's text.
+ * `confidence` is 0–1. `expiry_date` values are ISO `yyyy-MM-dd` and confirming
+ * one creates (or blesses) the matching lifecycle rule server-side. */
+export interface Extraction {
+  id: string
+  entity_type: string
+  value: string
+  confidence: number
+  page_no: number | null
+  confirmed: boolean
+}
+
+/** Async work: audit exports, evidence bundles, reprocessing. Poll until
+ * `status` is `done` (then `result_url` is set) or `failed`. */
+export interface Job {
+  job_id: string
+  status: 'queued' | 'running' | 'done' | 'failed'
+  progress_percent: number
+  result_url: string | null
+  error: string | null
+}
+
+export interface AuditAnchor {
+  id: string
+  chain_head_hash: string
+  seq: number
+  anchor_ref: string | null
+  anchored_at: string
 }
 
 /** `GET /folders/{id}/contents` mixes both — a Document always has `title`. */

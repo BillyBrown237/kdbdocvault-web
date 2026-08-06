@@ -43,7 +43,7 @@ export function InlinePdfViewer({ data }: { data: Blob }) {
           canvas.style.width = '100%'
           canvas.className = 'mb-3 rounded-md border border-slate-200 shadow-sm'
           container.appendChild(canvas)
-          await page.render({ canvasContext: canvas.getContext('2d')!, viewport }).promise
+          await page.render({ canvas, canvasContext: canvas.getContext('2d')!, viewport }).promise
         }
         if (!cancelled) setState('ready')
       } catch {

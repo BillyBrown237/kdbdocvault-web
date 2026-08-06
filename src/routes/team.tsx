@@ -14,9 +14,11 @@ import {
   revokeInvitation,
   rolesQuery,
   tenantQuery,
+  transferOwnership,
   updateMember,
   updateTenantName,
 } from '@/lib/api/queries'
+import type { Member } from '@/lib/api/types'
 import { requireTenant } from '@/lib/route-guards'
 import { formatDate } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
@@ -139,6 +141,10 @@ function MembersTab() {
                     ))}
                   </SelectContent>
                 </Select>
+                <TransferOwnershipDialog
+                  member={m}
+                  others={(members.data?.data ?? []).filter((x) => x.id !== m.id)}
+                />
                 <Button
                   size="sm"
                   variant="ghost"
@@ -154,6 +160,66 @@ function MembersTab() {
         ))}
       </CardContent>
     </Card>
+  )
+}
+
+/**
+ * Hands a member's documents and the Owner role to someone else — the exit
+ * path when a person leaves. Destructive and irreversible from the UI, so it
+ * sits behind a dialog with an explicit recipient choice rather than a
+ * one-click button next to "Remove".
+ */
+function TransferOwnershipDialog({ member, others }: { member: Member; others: Member[] }) {
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+  const [open, setOpen] = useState(false)
+  const [toId, setToId] = useState('')
+
+  const transfer = useMutation({
+    mutationFn: () => transferOwnership(member.id, toId),
+    onSuccess: async (r) => {
+      setOpen(false)
+      setToId('')
+      toast.success(t('team.transferred', { count: r.documents_moved }))
+      await queryClient.invalidateQueries({ queryKey: ['members'] })
+      await queryClient.invalidateQueries({ queryKey: ['documents'] })
+    },
+    onError: (e) => fail(e, t),
+  })
+
+  if (others.length === 0) return null
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="ghost" className="text-xs">
+          {t('team.transfer')}
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{t('team.transferTitle', { name: member.name ?? member.email })}</DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground">{t('team.transferExplainer')}</p>
+        <Select value={toId} onValueChange={setToId}>
+          <SelectTrigger>
+            <SelectValue placeholder={t('team.transferTo')} />
+          </SelectTrigger>
+          <SelectContent>
+            {others.map((m) => (
+              <SelectItem key={m.id} value={m.id}>
+                {m.name ?? m.email}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <DialogFooter>
+          <Button disabled={!toId || transfer.isPending} onClick={() => transfer.mutate()}>
+            {transfer.isPending ? t('app.loading') : t('team.transferConfirm')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 

@@ -14,8 +14,26 @@ import {
   setCurrentTenantId,
 } from './http'
 import type {
+  AclEntry,
+  AclEntryInput,
+  AuditAnchor,
   AuditEvent,
+  Extraction,
+  ImportConnection,
+  ImportJob,
+  Job,
+  DataRoom,
+  DataRoomDetail,
+  Department,
   Document,
+  DocumentType,
+  EffectiveAccess,
+  SavedSearch,
+  SignatureEvidence,
+  Signer,
+  Notification,
+  RoomPortalView,
+  RoomVisitorAnalytics,
   DocumentVersion,
   Envelope,
   Invitation,
@@ -39,10 +57,14 @@ import type {
   SharedMeta,
   Subscription,
   Tag,
+  TaskItem,
   Tenant,
   TenantUsage,
   TrashItem,
   User,
+  Workflow,
+  WorkflowStep,
+  WorkflowTemplate,
 } from './types'
 import type { QueryClient } from '@tanstack/react-query'
 
@@ -188,18 +210,88 @@ export function removeFavorite(documentId: string): Promise<void> {
 
 // --- search / organization (W4) -----------------------------------------------------
 
-export const searchQuery = (q: string) =>
+/** The facets the backend accepts alongside `q` — and exactly the shape a
+ * saved search stores, which is why it's exported. */
+export interface SearchFilters {
+  type_id?: string
+  folder_id?: string
+  tag?: string
+}
+
+export const searchQuery = (q: string, filters: SearchFilters = {}) =>
   infiniteQueryOptions({
-    queryKey: ['search', q],
+    queryKey: ['search', q, filters],
     queryFn: ({ pageParam }) =>
       apiFetch<Page<SearchHit>>(
-        `/search${qs({ q, cursor: pageParam || undefined, limit: PAGE_SIZE })}`,
+        `/search${qs({ q, ...filters, cursor: pageParam || undefined, limit: PAGE_SIZE })}`,
       ),
     initialPageParam: '',
     getNextPageParam: (last) =>
       last.pagination?.has_more ? (last.pagination.next_cursor ?? undefined) : undefined,
     enabled: q.trim().length > 0,
   })
+
+// Saved searches live under /search/queries — a sub-resource of search, not a
+// top-level /queries collection.
+
+export const savedSearchesQuery = queryOptions({
+  queryKey: ['saved-searches'],
+  queryFn: () => apiFetch<{ data: SavedSearch[] }>('/search/queries'),
+})
+
+export function saveSearch(name: string, query: SearchFilters & { q: string }): Promise<SavedSearch> {
+  return apiFetch<SavedSearch>('/search/queries', {
+    method: 'POST',
+    body: JSON.stringify({ name, query }),
+  })
+}
+
+export function deleteSavedSearch(queryId: string): Promise<void> {
+  return apiFetch<void>(`/search/queries/${queryId}`, { method: 'DELETE' })
+}
+
+/** Runs the stored criteria server-side — the client never re-derives them. */
+export const runSavedSearchQuery = (queryId: string) =>
+  infiniteQueryOptions({
+    queryKey: ['saved-search-run', queryId],
+    queryFn: ({ pageParam }) =>
+      apiFetch<Page<SearchHit>>(
+        `/search/queries/${queryId}${qs({ cursor: pageParam || undefined, limit: PAGE_SIZE })}`,
+      ),
+    initialPageParam: '',
+    getNextPageParam: (last) =>
+      last.pagination?.has_more ? (last.pagination.next_cursor ?? undefined) : undefined,
+  })
+
+// --- pins & document types --------------------------------------------------------
+
+export const pinsQuery = queryOptions({
+  queryKey: ['pins'],
+  queryFn: () => apiFetch<Page<Document>>('/pins'),
+})
+
+export function pinDocument(documentId: string): Promise<void> {
+  return apiFetch<void>(`/documents/${documentId}/pin`, { method: 'POST' })
+}
+
+export function unpinDocument(documentId: string): Promise<void> {
+  return apiFetch<void>(`/documents/${documentId}/pin`, { method: 'DELETE' })
+}
+
+export const documentTypesQuery = queryOptions({
+  queryKey: ['document-types'],
+  queryFn: () => apiFetch<Page<DocumentType>>('/document-types'),
+})
+
+export function createDocumentType(
+  name: string,
+  metadataSchema: Record<string, unknown> = {},
+): Promise<DocumentType> {
+  return apiFetch<DocumentType>('/document-types', {
+    method: 'POST',
+    body: JSON.stringify({ name, metadata_schema: metadataSchema }),
+  })
+}
 
 export const tagsQuery = queryOptions({
   queryKey: ['tags'],
@@ -325,6 +417,50 @@ export function cancelEnvelope(envelopeId: string, reason: string): Promise<void
   return apiFetch<void>(`/envelopes/${envelopeId}/cancel`, {
     method: 'POST',
     body: JSON.stringify({ reason }),
+  })
+}
+
+/** Correcting a typo'd address before the signer has acted. */
+export function updateSigner(
+  envelopeId: string,
+  signerId: string,
+  input: { email?: string; phone?: string },
+): Promise<Signer> {
+  return apiFetch<Signer>(`/envelopes/${envelopeId}/signers/${signerId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
+}
+
+export const evidenceQuery = (envelopeId: string) =>
+  queryOptions({
+    queryKey: ['evidence', envelopeId],
+    queryFn: () => apiFetch<SignatureEvidence>(`/envelopes/${envelopeId}/evidence`),
+  })
+
+/**
+ * Both of these answer a 302 to a short-lived presigned URL. They must go
+ * through `apiFetch` (which carries the bearer token and follows the redirect
+ * into a blob) — a bare `<a href>` navigation sends no Authorization header,
+ * since the access token lives in memory only, and would just 401.
+ */
+export function sealedDocumentBlob(envelopeId: string): Promise<Blob> {
+  return apiFetch<Blob>(`/envelopes/${envelopeId}/signed-document`)
+}
+
+export function signerIdDocumentBlob(envelopeId: string, signerId: string): Promise<Blob> {
+  return apiFetch<Blob>(`/envelopes/${envelopeId}/signers/${signerId}/id-document`)
+}
+
+export function reviewSignerId(
+  envelopeId: string,
+  signerId: string,
+  approve: boolean,
+  reason?: string,
+): Promise<void> {
+  return apiFetch<void>(`/envelopes/${envelopeId}/signers/${signerId}/id-review`, {
+    method: 'POST',
+    body: JSON.stringify({ approve, reason }),
   })
 }
 
@@ -589,6 +725,15 @@ export const rolesQuery = queryOptions({
   queryFn: () => apiFetch<Page<Role>>('/roles'),
 })
 
+export const departmentsQuery = queryOptions({
+  queryKey: ['departments'],
+  queryFn: () => apiFetch<Page<Department>>('/departments'),
+})
+
+export function createDepartment(input: { name: string; parent_id?: string }): Promise<Department> {
+  return apiFetch<Department>('/departments', { method: 'POST', body: JSON.stringify(input) })
+}
+
 export function createInvitation(input: {
   email: string
   role_id: string
@@ -607,6 +752,21 @@ export function updateMember(
   return apiFetch<Member>(`/members/${memberId}`, {
     method: 'PATCH',
     body: JSON.stringify(input),
+  })
+}
+
+/**
+ * Moves the outgoing owner's documents to another member and hands over the
+ * Owner role. Answers 202 with a job shape, but the work is already done
+ * (`documents_moved` is final) — there's nothing to poll.
+ */
+export function transferOwnership(
+  memberId: string,
+  toMemberId: string,
+): Promise<{ job_id: string; status: string; documents_moved: number }> {
+  return apiFetch(`/members/${memberId}/transfer-ownership`, {
+    method: 'POST',
+    body: JSON.stringify({ to_member_id: toMemberId }),
   })
 }
 
@@ -643,6 +803,337 @@ export function acceptInvitation(
 
 export function verifyDocumentHash(hash: string): Promise<PublicVerifyResult> {
   return publicApiFetch<PublicVerifyResult>(`/verify/${hash}`)
+}
+
+// --- workflows & tasks (W11) ------------------------------------------------------
+
+export const workflowTemplatesQuery = queryOptions({
+  queryKey: ['workflow-templates'],
+  queryFn: () => apiFetch<Page<WorkflowTemplate>>('/workflow-templates'),
+})
+
+export const workflowInboxQuery = queryOptions({
+  queryKey: ['workflow-inbox'],
+  queryFn: () => apiFetch<Page<WorkflowStep>>('/workflow-steps/inbox'),
+})
+
+export const workflowsForDocumentQuery = (documentId: string) =>
+  queryOptions({
+    queryKey: ['workflows', documentId],
+    queryFn: () => apiFetch<Page<Workflow>>(`/workflows${qs({ document_id: documentId })}`),
+  })
+
+export function startWorkflow(documentId: string, templateId: string, note?: string): Promise<Workflow> {
+  return apiFetch<Workflow>(`/documents/${documentId}/workflows`, {
+    method: 'POST',
+    body: JSON.stringify({ template_id: templateId, note }),
+  })
+}
+
+export function cancelWorkflow(workflowId: string, reason: string): Promise<void> {
+  return apiFetch<void>(`/workflows/${workflowId}/cancel`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  })
+}
+
+export function decideStep(
+  stepId: string,
+  decision: 'approve' | 'reject' | 'request_changes',
+  comment?: string,
+): Promise<void> {
+  return apiFetch<void>(`/workflow-steps/${stepId}/decide`, {
+    method: 'POST',
+    body: JSON.stringify({ decision, comment }),
+  })
+}
+
+/** Hands the step to another member — the trail keeps `delegated_from`. */
+export function delegateStep(
+  stepId: string,
+  toMemberId: string,
+  reason?: string,
+): Promise<WorkflowStep> {
+  return apiFetch<WorkflowStep>(`/workflow-steps/${stepId}/delegate`, {
+    method: 'POST',
+    body: JSON.stringify({ to_member_id: toMemberId, reason }),
+  })
+}
+
+export function remindStep(stepId: string): Promise<void> {
+  return apiFetch<void>(`/workflow-steps/${stepId}/remind`, { method: 'POST' })
+}
+
+export const tasksQuery = (status?: 'open' | 'done') =>
+  infiniteQueryOptions({
+    queryKey: ['tasks', status ?? 'all'],
+    queryFn: ({ pageParam }) =>
+      apiFetch<Page<TaskItem>>(
+        `/tasks${qs({ status, cursor: pageParam || undefined, limit: PAGE_SIZE })}`,
+      ),
+    initialPageParam: '',
+    getNextPageParam: (last) =>
+      last.pagination?.has_more ? (last.pagination.next_cursor ?? undefined) : undefined,
+  })
+
+export function createTask(input: {
+  title: string
+  document_id?: string
+  due_at?: string
+}): Promise<TaskItem> {
+  return apiFetch<TaskItem>('/tasks', { method: 'POST', body: JSON.stringify(input) })
+}
+
+export function updateTask(taskId: string, input: { status?: string }): Promise<TaskItem> {
+  return apiFetch<TaskItem>(`/tasks/${taskId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
+}
+
+// --- data rooms & ACLs (W12) -----------------------------------------------------
+
+export const dataRoomsQuery = queryOptions({
+  queryKey: ['data-rooms'],
+  queryFn: () => apiFetch<Page<DataRoom>>('/data-rooms'),
+})
+
+export const dataRoomQuery = (roomId: string) =>
+  queryOptions({
+    queryKey: ['data-room', roomId],
+    queryFn: () => apiFetch<DataRoomDetail>(`/data-rooms/${roomId}`),
+  })
+
+export const roomAnalyticsQuery = (roomId: string) =>
+  queryOptions({
+    queryKey: ['room-analytics', roomId],
+    queryFn: () =>
+      apiFetch<{ visitors: RoomVisitorAnalytics[] }>(`/data-rooms/${roomId}/analytics`),
+  })
+
+export function createDataRoom(input: {
+  name: string
+  description?: string
+  expires_at?: string
+}): Promise<DataRoom> {
+  return apiFetch<DataRoom>('/data-rooms', { method: 'POST', body: JSON.stringify(input) })
+}
+
+export function updateDataRoom(
+  roomId: string,
+  input: { name?: string; expires_at?: string | null },
+): Promise<DataRoom> {
+  return apiFetch<DataRoom>(`/data-rooms/${roomId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
+}
+
+/** DELETE closes the room (soft) — the audit trail and analytics survive. */
+export function closeDataRoom(roomId: string): Promise<void> {
+  return apiFetch<void>(`/data-rooms/${roomId}`, { method: 'DELETE' })
+}
+
+export function addRoomDocuments(roomId: string, documentIds: string[]): Promise<void> {
+  return apiFetch<void>(`/data-rooms/${roomId}/documents`, {
+    method: 'POST',
+    body: JSON.stringify({ document_ids: documentIds }),
+  })
+}
+
+/** The visitor's magic link is emailed, never returned — see CHANGES W12. */
+export function inviteRoomVisitor(
+  roomId: string,
+  input: { email: string; name?: string },
+): Promise<{ status: string }> {
+  return apiFetch(`/data-rooms/${roomId}/visitors`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export const aclQuery = (documentId: string) =>
+  queryOptions({
+    queryKey: ['acl', documentId],
+    queryFn: () => apiFetch<{ entries: AclEntry[] }>(`/documents/${documentId}/acl`),
+  })
+
+/** PUT replaces the WHOLE set — send every entry that should survive. */
+export function setAcl(documentId: string, entries: AclEntryInput[]): Promise<{ entries: AclEntry[] }> {
+  return apiFetch(`/documents/${documentId}/acl`, {
+    method: 'PUT',
+    body: JSON.stringify({ entries }),
+  })
+}
+
+export const effectiveAccessQuery = (documentId: string, memberId: string) =>
+  queryOptions({
+    queryKey: ['effective-access', documentId, memberId],
+    queryFn: () =>
+      apiFetch<EffectiveAccess>(
+        `/documents/${documentId}/effective-access${qs({ member_id: memberId })}`,
+      ),
+  })
+
+// --- room portal (PUBLIC, unversioned — same reasoning as /shared) ----------------
+
+export function resolveRoom(token: string): Promise<RoomPortalView> {
+  return publicApiFetch<RoomPortalView>(`/room/${token}`)
+}
+
+export function roomContentBlob(token: string, documentId: string): Promise<Blob> {
+  return publicApiFetch<Blob>(`/room/${token}/documents/${documentId}/content`)
+}
+
+/** Fire-and-forget engagement ping; the backend clamps seconds to 1–120. */
+export function roomHeartbeat(token: string, seconds: number): Promise<void> {
+  return publicApiFetch<void>(`/room/${token}/heartbeat`, {
+    method: 'POST',
+    body: JSON.stringify({ seconds }),
+  })
+}
+
+// --- notifications (W13) ----------------------------------------------------------
+
+export const notificationsQuery = (unread?: boolean) =>
+  infiniteQueryOptions({
+    queryKey: ['notifications', unread ?? 'all'],
+    queryFn: ({ pageParam }) =>
+      apiFetch<Page<Notification>>(
+        `/notifications${qs({
+          unread: unread ? 'true' : undefined,
+          cursor: pageParam || undefined,
+          limit: 25,
+        })}`,
+      ),
+    initialPageParam: '',
+    getNextPageParam: (last) =>
+      last.pagination?.has_more ? (last.pagination.next_cursor ?? undefined) : undefined,
+  })
+
+/** Per-channel delivery outcome (in-app / email / SMS) for one notification. */
+export const notificationDeliveryQuery = (notificationId: string) =>
+  queryOptions({
+    queryKey: ['notification-delivery', notificationId],
+    queryFn: () =>
+      apiFetch<{ channels: { channel: string; status: string; at: string | null }[] }>(
+        `/notifications/${notificationId}/delivery`,
+      ),
+  })
+
+export function markNotificationsRead(input: { ids?: string[]; all?: boolean }): Promise<void> {
+  return apiFetch<void>('/notifications/read', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+// --- extractions, jobs, document trail (W14) --------------------------------------
+
+export const extractionsQuery = (documentId: string) =>
+  queryOptions({
+    queryKey: ['extractions', documentId],
+    queryFn: () => apiFetch<{ data: Extraction[] }>(`/documents/${documentId}/extractions`),
+  })
+
+/** `corrected_value` omitted = "the machine was right". Supplying it both fixes
+ * the value and, for expiry_date, retires the suggestion at the old date. */
+export function confirmExtraction(
+  documentId: string,
+  extractionId: string,
+  correctedValue?: string,
+): Promise<Extraction> {
+  return apiFetch<Extraction>(
+    `/documents/${documentId}/extractions/${extractionId}/confirm`,
+    { method: 'POST', body: JSON.stringify({ corrected_value: correctedValue }) },
+  )
+}
+
+/** Re-runs OCR + extraction on the current version. The document IS the job. */
+export function reprocessDocument(documentId: string): Promise<Job> {
+  return apiFetch<Job>(`/documents/${documentId}/reprocess`, { method: 'POST' })
+}
+
+export const documentAuditQuery = (documentId: string) =>
+  infiniteQueryOptions({
+    queryKey: ['document-audit', documentId],
+    queryFn: ({ pageParam }) =>
+      apiFetch<Page<AuditEvent>>(
+        `/documents/${documentId}/audit${qs({ cursor: pageParam || undefined, limit: 25 })}`,
+      ),
+    initialPageParam: '',
+    getNextPageParam: (last) =>
+      last.pagination?.has_more ? (last.pagination.next_cursor ?? undefined) : undefined,
+  })
+
+export function createEvidenceBundle(documentId: string): Promise<Job> {
+  return apiFetch<Job>(`/documents/${documentId}/evidence-bundle`, { method: 'POST' })
+}
+
+export function createAuditExport(
+  format: string,
+  filters?: Record<string, string>,
+): Promise<Job> {
+  return apiFetch<Job>('/audit/exports', {
+    method: 'POST',
+    body: JSON.stringify({ format, filters }),
+  })
+}
+
+export const jobQuery = (jobId: string) =>
+  queryOptions({
+    queryKey: ['job', jobId],
+    queryFn: () => apiFetch<Job>(`/audit/exports/${jobId}`),
+  })
+
+export const auditAnchorsQuery = infiniteQueryOptions({
+  queryKey: ['audit-anchors'],
+  queryFn: ({ pageParam }) =>
+    apiFetch<Page<AuditAnchor>>(`/audit/anchors${qs({ cursor: pageParam || undefined, limit: 25 })}`),
+  initialPageParam: '',
+  getNextPageParam: (last) =>
+    last.pagination?.has_more ? (last.pagination.next_cursor ?? undefined) : undefined,
+})
+
+// --- imports (W17) ----------------------------------------------------------------
+
+export const importsQuery = infiniteQueryOptions({
+  queryKey: ['imports'],
+  queryFn: ({ pageParam }) =>
+    apiFetch<Page<ImportJob>>(`/imports${qs({ cursor: pageParam || undefined, limit: 25 })}`),
+  initialPageParam: '',
+  getNextPageParam: (last) =>
+    last.pagination?.has_more ? (last.pagination.next_cursor ?? undefined) : undefined,
+})
+
+export const importQuery = (importId: string) =>
+  queryOptions({
+    queryKey: ['import', importId],
+    queryFn: () => apiFetch<ImportJob>(`/imports/${importId}`),
+  })
+
+/** `upload_id` is a RESERVED (not completed) archive upload — see UploadTask. */
+export function startImport(input: {
+  upload_id: string
+  target_folder_id?: string
+  source?: 'zip' | 'csv'
+  mapping?: Record<string, string>
+  run_pipeline?: boolean
+}): Promise<ImportJob> {
+  return apiFetch<ImportJob>('/imports', { method: 'POST', body: JSON.stringify(input) })
+}
+
+export function cancelImport(importId: string): Promise<void> {
+  return apiFetch<void>(`/imports/${importId}/cancel`, { method: 'POST' })
+}
+
+export const importConnectionsQuery = queryOptions({
+  queryKey: ['import-connections'],
+  queryFn: () => apiFetch<{ data: ImportConnection[] }>('/import-connections'),
+})
+
+export function revokeImportConnection(connectionId: string): Promise<void> {
+  return apiFetch<void>(`/import-connections/${connectionId}`, { method: 'DELETE' })
 }
 
 // --- dashboard -------------------------------------------------------------------
