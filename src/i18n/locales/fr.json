@@ -3,7 +3,9 @@
     "name": "KDB Vault",
     "tagline": "Coffre-fort documentaire intelligent",
     "loading": "Chargement…",
-    "offline": "Vous êtes hors ligne — données en cache affichées"
+    "offline": "Vous êtes hors ligne — données en cache affichées",
+    "install": "Installer l’application",
+    "installed": "Application installée"
   },
   "auth": {
     "login": {
@@ -468,7 +470,11 @@
   },
   "errors": {
     "network": "Connexion impossible — vérifiez votre réseau",
-    "unknown": "Une erreur est survenue"
+    "unknown": "Une erreur est survenue",
+    "title": "Une erreur est survenue",
+    "goHome": "Aller au tableau de bord",
+    "notFoundTitle": "Page introuvable",
+    "notFoundBody": "Cette page n’existe pas ou a été déplacée."
   },
   "rooms": {
     "title": "Salles de données",

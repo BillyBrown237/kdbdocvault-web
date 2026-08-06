@@ -1,3 +1,73 @@
+# Slice W18 — PWA/offline polish + hardening
+
+The roadmap's original "W11" — displaced by workflows and never shipped. Four
+gaps, one of which was silently breaking installation:
+
+1. **The manifest pointed at icons that didn't exist.** `vite.config.ts` has
+   referenced `/icons/icon-192.png` etc. since W1, but there was no `public/`
+   directory at all. Browsers won't offer PWA install with unreachable icons,
+   so the app has never actually been installable.
+2. No error boundary — a render/loader throw produced a white screen.
+3. No offline banner (`app.offline` existed in both locales, unused).
+4. No install affordance, no web deploy block in Caddy, no CI.
+
+## New files
+
+- `public/icons/{icon-192,icon-512,icon-512-maskable,apple-touch-icon}.png`,
+  `public/{favicon.svg,favicon.png}` — document + vault-dial mark in the brand
+  slate/amber; maskable variant keeps the glyph inside the 80% safe zone
+- `src/components/error-fallback.tsx` — `ErrorFallback` (honest tiering:
+  ApiProblem detail shown as-is, NetworkError → `errors.network`, anything
+  else → `errors.unknown` with the stack visible in dev only) and
+  `NotFoundFallback`; both offer retry/home, both FR/EN
+- `src/lib/pwa.ts` — `useOnline()` (useSyncExternalStore over online/offline
+  events) and the `beforeinstallprompt` capture: module-scope, imported from
+  `main.tsx`, because the browser fires that event once and usually before
+  React mounts
+- `.github/workflows/ci.yml` — typecheck + build on push/PR, dist artifact.
+  Deploy stays manual (single-VPS pilot); CI's job is to make sure what gets
+  copied is green
+
+## Modified
+
+- `src/router.tsx` — `defaultErrorComponent` + `defaultNotFoundComponent`
+- `src/main.tsx` — imports `./lib/pwa` before first render
+- `src/components/app-shell.tsx` — offline banner above the read-only banner
+  (same pattern, slate not amber: offline is a fact, not a warning);
+  "Install app" appears in the profile menu **only while the browser holds an
+  install prompt** — no permanent dead menu item
+- `index.html` — favicon + apple-touch-icon links
+- i18n: `errors.{title,goHome,notFoundTitle,notFoundBody}`,
+  `app.{install,installed}` (FR + EN)
+
+### In `kdbdocvault` (deploy)
+
+- `deploy/Caddyfile` — `app.kdbvault.com` block: same-origin `/v1` proxy (no
+  CORS anywhere), `handle_path /pub/*` mirroring the vite dev proxy exactly,
+  SPA `try_files` fallback, immutable caching for hashed `/assets/*` but
+  **`no-cache` for `sw.js` + `index.html`** — otherwise installed PWAs never
+  see another update
+- `deploy/docker-compose.prod.yml` — `./web:/srv/web:ro` mount on caddy
+
+## Notes / decisions
+
+- **Install entry lives in the profile menu, not a banner.** A banner begs; a
+  menu item is there when wanted. It renders only while `beforeinstallprompt`
+  is captured, so it can never be a button that does nothing.
+- **The service worker still never touches API calls** (W1 decision upheld):
+  offline data is TanStack Query's IndexedDB persistence; the SW only caches
+  the app shell.
+
+## Verify
+
+- `npm run build`, serve `dist/` — DevTools → Application: manifest shows all
+  three icons, install prompt available on a second visit
+- DevTools → Network → Offline: slate banner appears, cached vault still browses
+- Throw inside any route component: fallback with retry, no white screen
+- On the VPS: copy `dist/` to `deploy/web/`, `docker compose up -d caddy`,
+  check `app.kdbvault.com/sign/x` deep-link returns the SPA and
+  `app.kdbvault.com/pub/…` reaches the API unversioned surface
+
 # Slice W17 — Imports UI
 
 Companion to backend slice B37. **Imports** joins the sidebar with three tabs.

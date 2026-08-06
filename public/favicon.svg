@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="108" fill="#0f172a"/>
+  <!-- document sheet -->
+  <path d="M166 112 h140 l60 60 v228 a20 20 0 0 1 -20 20 h-180 a20 20 0 0 1 -20 -20 v-268 a20 20 0 0 1 20 -20 z" fill="#f8fafc"/>
+  <path d="M306 112 l60 60 h-48 a12 12 0 0 1 -12 -12 z" fill="#cbd5e1"/>
+  <!-- vault dial -->
+  <circle cx="256" cy="286" r="64" fill="#0f172a"/>
+  <circle cx="256" cy="286" r="64" fill="none" stroke="#f59e0b" stroke-width="14"/>
+  <circle cx="256" cy="286" r="12" fill="#f59e0b"/>
+  <g stroke="#f59e0b" stroke-width="10" stroke-linecap="round">
+    <line x1="256" y1="238" x2="256" y2="256"/>
+    <line x1="256" y1="316" x2="256" y2="334"/>
+    <line x1="208" y1="286" x2="226" y2="286"/>
+    <line x1="286" y1="286" x2="304" y2="286"/>
+  </g>
+</svg>

@@ -3,7 +3,9 @@
     "name": "KDB Vault",
     "tagline": "Intelligent document vault",
     "loading": "Loading…",
-    "offline": "You are offline — showing cached data"
+    "offline": "You are offline — showing cached data",
+    "install": "Install app",
+    "installed": "App installed"
   },
   "auth": {
     "login": {
@@ -467,7 +469,11 @@
   },
   "errors": {
     "network": "Cannot connect — check your network",
-    "unknown": "Something went wrong"
+    "unknown": "Something went wrong",
+    "title": "Something went wrong",
+    "goHome": "Go to dashboard",
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "This page does not exist or has moved."
   },
   "rooms": {
     "title": "Data rooms",

@@ -6,8 +6,10 @@ import { AlertTriangle } from 'lucide-react'
 import {
   CalendarClock,
   ClipboardCheck,
+  CloudOff,
   CreditCard,
   DoorOpen,
+  Download,
   FileArchive,
   FolderClosed,
   Home,
@@ -23,6 +25,7 @@ import { NotificationBell } from '@/components/notification-bell'
 import { queryClient } from '@/lib/query'
 import { meQuery, switchTenant, tenantQuery } from '@/lib/api/queries'
 import { logout } from '@/lib/auth'
+import { promptInstall, useInstallable, useOnline } from '@/lib/pwa'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
@@ -56,6 +59,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const me = useQuery(meQuery)
   const tenant = useQuery(tenantQuery)
   const [readOnly, setReadOnly] = useState(false)
+  const online = useOnline()
+  const installable = useInstallable()
 
   useEffect(() => {
     const handler = () => setReadOnly(true)
@@ -206,6 +211,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <DropdownMenuItem onClick={toggleLanguage}>
                 {i18n.language.startsWith('fr') ? 'English' : 'Français'}
               </DropdownMenuItem>
+              {installable && (
+                <DropdownMenuItem onClick={() => void promptInstall()}>
+                  <Download className="h-4 w-4" />
+                  {t('app.install')}
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => void onLogout()}
@@ -218,6 +229,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </DropdownMenu>
           </div>
         </header>
+
+        {!online && (
+          <div className="flex items-center gap-2 border-b border-slate-300 bg-slate-100 px-4 py-2 text-sm text-slate-700">
+            <CloudOff className="h-4 w-4 shrink-0" />
+            <span>{t('app.offline')}</span>
+          </div>
+        )}
 
         {readOnly && (
           <div className="flex items-center gap-2 border-b border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-900">

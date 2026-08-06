@@ -7,6 +7,7 @@ import { getRouter } from './router'
 import { queryClient, queryPersister } from './lib/query'
 import { Toaster } from './components/ui/sonner'
 import './i18n'
+import './lib/pwa' // captures beforeinstallprompt before first render
 import './styles.css'
 
 const router = getRouter()
