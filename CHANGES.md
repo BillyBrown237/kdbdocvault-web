@@ -1,3 +1,61 @@
+# Slice W19.1 — Pick single Drive files, not just folders
+
+Files in the picker are now checkboxes. Ticking any switches the footer from
+"Import “{folder}”" to "Import N files" (+ a clear-selection escape) — one
+job is one thing, a folder OR a list, never a blend. Selection survives
+navigating between folders, so cherry-picking across subfolders works.
+Companion to backend B42.2 (`mapping.drive_file_ids`).
+
+- `src/routes/imports.tsx` — checkbox rows, selection map, footer switch
+- `src/lib/api/queries.ts` — `startDriveImport` sends whichever mode was picked
+- i18n: `imports.{driveEmpty,driveClearSelection,driveImportFiles}` (FR + EN);
+  `driveFileCount`/`driveNoSubfolders` retired (files are rows now, not a count)
+
+# Slice W19 — Google Drive imports UI
+
+Companion to backend slice B42. The Sources tab stops apologizing: Google
+Drive connects, browses, and imports. OneDrive/Dropbox/SharePoint remain a
+sentence (still 501 server-side).
+
+## Modified
+
+- `src/routes/imports.tsx`
+  - **Sources tab** — "Connect Google Drive" opens the consent screen in a
+    popup (`window.open`, never navigation: the app keeps running and the
+    callback page needs an opener to report to). A `message` listener —
+    origin-pinned, since the callback rides the /pub alias onto our own
+    origin — receives `{type:'kdb:import-connection', ok, reason}`, refetches
+    the connections list, and toasts connected / cancelled / failed.
+  - **New import tab** — with a live connection, an "Import from Google
+    Drive" button joins the ZIP flow (same target-folder select, same
+    ActiveImportCard progress polling — the job is the same shape). Without
+    one, a sentence points at the Sources tab; no button that could only 501.
+  - **`DriveFolderPicker`** — breadcrumb navigation from My Drive down,
+    folders clickable, file count shown per level, `page_token` "load more",
+    and an explicit "Import “{folder}”" confirm. Picking the root is
+    "Import “My Drive”" — importing everything stays a deliberate act.
+- `src/lib/api/types.ts` — `CreateImportConnectionResult`, `DriveBrowse`
+- `src/lib/api/queries.ts` — `createImportConnection`, `browseConnection`
+  (plain fetch: the picker owns its paging, and caching a seconds-old Drive
+  listing helps nobody), `startDriveImport` (wraps `drive_folder_id` into
+  `mapping`, per the B42 contract)
+- i18n: `imports.{sourcesHint,connectDrive,driveConnected,driveDenied,
+  driveFailed,driveExplainer,driveNotConnected,driveImport,drivePickFolder,
+  driveRoot,driveNoSubfolders,driveFileCount,driveImportThis}` + updated
+  `sourcesUnavailable` (FR + EN)
+
+## Verify
+
+1. Sources tab → Connect Google Drive → consent in the popup → popup closes
+   itself, toast "Google Drive connected", row shows your Gmail + `connected`.
+2. New import tab → Import from Google Drive → walk into a subfolder →
+   Import “{name}” → 202, progress card counts up; Docs arrive as PDF,
+   Sheets as XLSX; a Google Form produces one error-report line.
+3. Deny the consent screen instead: popup closes, "Connection cancelled at
+   Google", row stays `pending_auth`.
+4. Sources tab → Disconnect → row `revoked`, and the grant disappears from
+   myaccount.google.com/connections.
+
 # Slice W18 — PWA/offline polish + hardening
 
 The roadmap's original "W11" — displaced by workflows and never shipped. Four

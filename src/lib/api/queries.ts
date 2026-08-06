@@ -18,6 +18,8 @@ import type {
   AclEntryInput,
   AuditAnchor,
   AuditEvent,
+  CreateImportConnectionResult,
+  DriveBrowse,
   Extraction,
   ImportConnection,
   ImportJob,
@@ -1134,6 +1136,48 @@ export const importConnectionsQuery = queryOptions({
 
 export function revokeImportConnection(connectionId: string): Promise<void> {
   return apiFetch<void>(`/import-connections/${connectionId}`, { method: 'DELETE' })
+}
+
+export function createImportConnection(provider: string): Promise<CreateImportConnectionResult> {
+  return apiFetch<CreateImportConnectionResult>('/import-connections', {
+    method: 'POST',
+    body: JSON.stringify({ provider }),
+  })
+}
+
+/** Plain fetch, not queryOptions: the folder picker owns its own paging state
+ * (page_token accumulation), and caching stale Drive listings would only
+ * confuse a picker that's open for seconds. */
+export function browseConnection(
+  connectionId: string,
+  folderId?: string,
+  pageToken?: string,
+): Promise<DriveBrowse> {
+  return apiFetch<DriveBrowse>(
+    `/import-connections/${connectionId}/browse${qs({ folder_id: folderId, page_token: pageToken })}`,
+  )
+}
+
+/** Drive import — exactly one of: a folder id (recursive walk; 'root' = the
+ * whole My Drive, always an explicit choice) or a cherry-picked file-id list. */
+export function startDriveImport(input: {
+  connection_id: string
+  drive_folder_id?: string
+  drive_file_ids?: string[]
+  target_folder_id?: string
+  run_pipeline?: boolean
+}): Promise<ImportJob> {
+  return apiFetch<ImportJob>('/imports', {
+    method: 'POST',
+    body: JSON.stringify({
+      connection_id: input.connection_id,
+      target_folder_id: input.target_folder_id,
+      run_pipeline: input.run_pipeline,
+      mapping: input.drive_file_ids?.length
+        ? { drive_file_ids: input.drive_file_ids }
+        : { drive_folder_id: input.drive_folder_id },
+    }),
+  })
 }
 
 // --- dashboard -------------------------------------------------------------------

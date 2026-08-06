@@ -669,7 +669,7 @@
     "csvEntry": "CSV file",
     "pathColumn": "Path column",
     "titleColumn": "Title column",
-    "sourcesUnavailable": "Connecting Google Drive, OneDrive, Dropbox and SharePoint isn't available yet — it requires registering the app with each provider. Use ZIP import in the meantime.",
+    "sourcesUnavailable": "OneDrive, Dropbox and SharePoint aren’t available yet — they require registering the app with each provider. Google Drive works today; ZIP import covers the rest.",
     "disconnect": "Disconnect",
     "disconnected": "Source disconnected",
     "status": {
@@ -678,6 +678,21 @@
       "done": "Done",
       "failed": "Failed",
       "cancelled": "Cancelled"
-    }
+    },
+    "sourcesHint": "Connect a cloud drive, then import any of its folders from the \"New import\" tab.",
+    "connectDrive": "Connect Google Drive",
+    "driveConnected": "Google Drive connected",
+    "driveDenied": "Connection cancelled at Google",
+    "driveFailed": "Connecting Google Drive failed — try again",
+    "driveExplainer": "Or import a folder straight from {{account}} — folder structure preserved, Docs and Sheets converted.",
+    "driveNotConnected": "Connect Google Drive in the Sources tab, then import its folders from here.",
+    "driveImport": "Import from Google Drive",
+    "drivePickFolder": "Choose a Drive folder",
+    "driveRoot": "My Drive",
+    "driveImportThis": "Import “{{name}}”",
+    "driveEmpty": "This folder is empty",
+    "driveClearSelection": "Clear selection",
+    "driveImportFiles_one": "Import {{count}} file",
+    "driveImportFiles_other": "Import {{count}} files"
   }
 }

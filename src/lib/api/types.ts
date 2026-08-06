@@ -506,6 +506,20 @@ export interface ImportConnection {
   created_at: string
 }
 
+/** POST /import-connections (google_drive): open `authorize_url` in a popup;
+ * the callback page posts `{type:'kdb:import-connection', ok, reason}` back. */
+export interface CreateImportConnectionResult {
+  connection_id: string
+  authorize_url: string
+}
+
+/** One page of one Drive folder (W19 picker). Spec extension, like /room. */
+export interface DriveBrowse {
+  folders: { id: string; name: string }[]
+  files: { id: string; name: string; mime_type: string; size: number | null }[]
+  next_page_token: string | null
+}
+
 // --- extraction review, jobs, anchors (W14) ----------------------------------
 
 /** A candidate the pipeline pulled out of the CURRENT version's text.
