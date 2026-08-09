@@ -526,7 +526,8 @@ export function updateProfile(input: { name?: string; locale?: string; phone?: s
 
 export function changePassword(currentPassword: string, newPassword: string): Promise<void> {
   return apiFetch<void>('/me/password', {
-    method: 'PUT',
+    // B49: the contract says PATCH (backend accepts both during transition).
+    method: 'PATCH',
     body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
   })
 }
