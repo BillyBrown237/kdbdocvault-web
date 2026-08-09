@@ -29,8 +29,9 @@ import {
 } from '@/lib/api/queries'
 import { formatDate } from '@/lib/format'
 import type { Envelope, Signer, SignerStatus } from '@/lib/api/types'
-import { Badge, type BadgeProps } from '@/components/ui/badge'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { StatusBadge } from '@/components/ui/status-badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
@@ -45,12 +46,6 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { toast } from '@/components/ui/sonner'
 
-const SIGNER_VARIANT: Record<SignerStatus, BadgeProps['variant']> = {
-  pending: 'secondary',
-  verified: 'default',
-  signed: 'success',
-  declined: 'destructive',
-}
 
 export function SignaturePanel({
   documentId,
@@ -167,19 +162,10 @@ function EnvelopeRow({
     }
   }
 
-  const statusVariant: BadgeProps['variant'] =
-    env.status === 'completed'
-      ? 'success'
-      : env.status === 'declined' || env.status === 'cancelled' || env.status === 'expired'
-        ? 'destructive'
-        : env.status === 'sent'
-          ? 'default'
-          : 'secondary'
-
   return (
     <div className="rounded-lg border p-3">
       <div className="flex items-center justify-between gap-2">
-        <Badge variant={statusVariant}>{t(`sign.status.${env.status}`)}</Badge>
+        <StatusBadge domain="envelope" status={env.status} />
         <div className="flex gap-1">
           {env.status === 'draft' && (
             <Button size="sm" className="h-7" onClick={onSend} disabled={busy}>
@@ -246,7 +232,7 @@ function EnvelopeRow({
             {s.status === 'pending' && env.status !== 'completed' && (
               <EditSignerDialog envelopeId={env.id} signer={s} onSaved={onReviewed} />
             )}
-            <Badge variant={SIGNER_VARIANT[s.status]}>{t(`sign.signer.${s.status}`)}</Badge>
+            <StatusBadge domain="signer" status={s.status} />
           </li>
         ))}
       </ul>

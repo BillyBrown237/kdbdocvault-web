@@ -2,11 +2,9 @@ import { Link, useNavigate, useRouter } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AlertTriangle } from 'lucide-react'
 import {
   CalendarClock,
   ClipboardCheck,
-  CloudOff,
   CreditCard,
   DoorOpen,
   Download,
@@ -28,6 +26,7 @@ import { logout } from '@/lib/auth'
 import { promptInstall, useInstallable, useOnline } from '@/lib/pwa'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Banner } from '@/components/ui/banner'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -61,6 +60,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [readOnly, setReadOnly] = useState(false)
   const online = useOnline()
   const installable = useInstallable()
+
+  // B47/W-side: hide surfaces the role cannot reach — nobody should discover
+  // a permission by hitting a 403. The BACKEND is the enforcement; this is
+  // courtesy. Role names match the seeded system roles.
+  const role = me.data?.memberships.find((m) => m.tenant_id === tenant.data?.id)?.role
+  const isAdmin = role === 'Owner' || role === 'Admin'
+  const isMember = isAdmin || role === 'Member'
 
   useEffect(() => {
     const handler = () => setReadOnly(true)
@@ -108,7 +114,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               {t(key)}
             </Link>
           ))}
-          {NAV_SECONDARY.map(({ to, key, icon: Icon }) => (
+          {NAV_SECONDARY.filter(({ to }) => to !== '/imports' || isAdmin).map(({ to, key, icon: Icon }) => (
             <Link
               key={to}
               to={to}
@@ -172,36 +178,44 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   {t('nav.rooms')}
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild className="md:hidden">
-                <Link to="/imports">
-                  <FileArchive className="h-4 w-4" />
-                  {t('nav.imports')}
-                </Link>
-              </DropdownMenuItem>
+              {isAdmin && (
+                <DropdownMenuItem asChild className="md:hidden">
+                  <Link to="/imports">
+                    <FileArchive className="h-4 w-4" />
+                    {t('nav.imports')}
+                  </Link>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem asChild>
                 <Link to="/settings">
                   <Settings className="h-4 w-4" />
                   {t('nav.settings')}
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/team">
-                  <Users className="h-4 w-4" />
-                  {t('nav.team')}
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/audit">
-                  <ScrollText className="h-4 w-4" />
-                  {t('nav.audit')}
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/billing">
-                  <CreditCard className="h-4 w-4" />
-                  {t('nav.billing')}
-                </Link>
-              </DropdownMenuItem>
+              {isMember && (
+                <DropdownMenuItem asChild>
+                  <Link to="/team">
+                    <Users className="h-4 w-4" />
+                    {t('nav.team')}
+                  </Link>
+                </DropdownMenuItem>
+              )}
+              {isAdmin && (
+                <DropdownMenuItem asChild>
+                  <Link to="/audit">
+                    <ScrollText className="h-4 w-4" />
+                    {t('nav.audit')}
+                  </Link>
+                </DropdownMenuItem>
+              )}
+              {isAdmin && (
+                <DropdownMenuItem asChild>
+                  <Link to="/billing">
+                    <CreditCard className="h-4 w-4" />
+                    {t('nav.billing')}
+                  </Link>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem asChild>
                 <Link to="/trash">
                   <Trash2 className="h-4 w-4" />
@@ -230,21 +244,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        {!online && (
-          <div className="flex items-center gap-2 border-b border-slate-300 bg-slate-100 px-4 py-2 text-sm text-slate-700">
-            <CloudOff className="h-4 w-4 shrink-0" />
-            <span>{t('app.offline')}</span>
-          </div>
-        )}
+        {!online && <Banner variant="offline">{t('app.offline')}</Banner>}
 
         {readOnly && (
-          <div className="flex items-center gap-2 border-b border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-900">
-            <AlertTriangle className="h-4 w-4 shrink-0" />
-            <span className="flex-1">{t('billing.readOnly')}</span>
-            <Link to="/billing" className="font-medium underline">
-              {t('nav.billing')}
-            </Link>
-          </div>
+          <Banner
+            variant="readonly"
+            action={
+              <Link to="/billing" className="font-medium underline">
+                {t('nav.billing')}
+              </Link>
+            }
+          >
+            {t('billing.readOnly')}
+          </Banner>
         )}
 
         <main className="flex-1 p-4 pb-20 md:p-6 md:pb-6">{children}</main>

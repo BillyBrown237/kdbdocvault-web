@@ -3,19 +3,11 @@ import { useTranslation } from 'react-i18next'
 import { FileText, Folder as FolderIcon } from 'lucide-react'
 
 import { formatBytes, formatDate } from '@/lib/format'
-import { Badge, type BadgeProps } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { StatusBadge } from '@/components/ui/status-badge'
 import { Card } from '@/components/ui/card'
 import type { Document, Folder } from '@/lib/api/types'
 
-const STATUS_VARIANT: Record<Document['status'], BadgeProps['variant']> = {
-  draft: 'secondary',
-  active: 'success',
-  expiring: 'warning',
-  expired: 'destructive',
-  renewed: 'default',
-  archived: 'outline',
-}
 
 export function FolderRow({ folder }: { folder: Folder }) {
   return (
@@ -43,9 +35,7 @@ export function DocumentRow({ document }: { document: Document }) {
             {formatDate(document.updated_at, i18n.language)}
           </div>
         </div>
-        <Badge variant={STATUS_VARIANT[document.status]}>
-          {t(`document.status.${document.status}`)}
-        </Badge>
+        <StatusBadge domain="document" status={document.status} />
       </Card>
     </Link>
   )

@@ -3,8 +3,9 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { forgotPassword } from '@/lib/api/queries'
+import { AuthLayout } from '@/components/auth/auth-layout'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Callout } from '@/components/ui/callout'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
@@ -29,40 +30,40 @@ function ForgotPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-xl">{t('forgot.title')}</CardTitle>
-          <CardDescription>{t('forgot.subtitle')}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {sent ? (
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">{t('forgot.sent')}</p>
-              <Button asChild className="w-full">
-                <Link to="/reset-password" search={{ token: undefined }}>
-                  {t('forgot.haveToken')}
-                </Link>
-              </Button>
-            </div>
-          ) : (
-            <form className="space-y-4" onSubmit={(e) => void onSubmit(e)}>
-              <div className="space-y-1.5">
-                <Label htmlFor="id">{t('auth.login.identifier')}</Label>
-                <Input id="id" value={identifier} onChange={(e) => setIdentifier(e.target.value)} />
-              </div>
-              <Button type="submit" className="w-full" disabled={busy || !identifier}>
-                {busy ? t('app.loading') : t('forgot.submit')}
-              </Button>
-              <p className="text-center text-sm text-muted-foreground">
-                <Link to="/login" search={{ redirect: undefined }} className="underline">
-                  {t('forgot.backToLogin')}
-                </Link>
-              </p>
-            </form>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+    <AuthLayout>
+      <h1 className="text-2xl font-semibold tracking-tight">{t('forgot.title')}</h1>
+      <p className="mt-1 text-sm text-muted-foreground">{t('forgot.subtitle')}</p>
+
+      {sent ? (
+        <div className="mt-6 space-y-4">
+          <Callout variant="success">{t('forgot.sent')}</Callout>
+          <Button asChild className="w-full">
+            <Link to="/reset-password" search={{ token: undefined }}>
+              {t('forgot.haveToken')}
+            </Link>
+          </Button>
+        </div>
+      ) : (
+        <form className="mt-6 space-y-4" onSubmit={(e) => void onSubmit(e)}>
+          <div className="space-y-1.5">
+            <Label htmlFor="id">{t('auth.login.identifier')}</Label>
+            <Input
+              id="id"
+              autoComplete="username"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+            />
+          </div>
+          <Button type="submit" className="w-full" disabled={busy || !identifier}>
+            {busy ? t('app.loading') : t('forgot.submit')}
+          </Button>
+          <p className="text-center text-sm text-muted-foreground">
+            <Link to="/login" search={{ redirect: undefined }} className="underline">
+              {t('forgot.backToLogin')}
+            </Link>
+          </p>
+        </form>
+      )}
+    </AuthLayout>
   )
 }

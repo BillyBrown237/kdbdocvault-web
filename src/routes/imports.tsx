@@ -28,8 +28,8 @@ import { UploadTask } from '@/lib/api/upload'
 import type { DriveBrowse, ImportJob } from '@/lib/api/types'
 import { formatDate } from '@/lib/format'
 import { requireTenant } from '@/lib/route-guards'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { StatusBadge } from '@/components/ui/status-badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
@@ -504,7 +504,7 @@ function ActiveImportCard({ importId }: { importId: string }) {
       <CardHeader className="flex-row items-center justify-between pb-3">
         <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
           {t('imports.progress')}
-          <StatusBadge status={j.status} />
+          <StatusBadge domain="job" status={j.status} />
         </CardTitle>
         {running && (
           <Button
@@ -565,7 +565,7 @@ function HistoryTab() {
               {i > 0 && <Separator className="mb-2" />}
               <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
                 <span className="flex items-center gap-2">
-                  <StatusBadge status={j.status} />
+                  <StatusBadge domain="job" status={j.status} />
                   <span className="text-muted-foreground">
                     {j.started_at ? formatDate(j.started_at, i18n.language) : '—'}
                   </span>
@@ -682,9 +682,7 @@ function SourcesTab() {
                   </span>
                 </span>
                 <span className="flex items-center gap-2">
-                  <Badge variant={c.status === 'connected' ? 'default' : 'secondary'}>
-                    {c.status}
-                  </Badge>
+                  <StatusBadge domain="connection" status={c.status} />
                   {c.status !== 'revoked' && (
                     <Button
                       size="sm"
@@ -706,15 +704,4 @@ function SourcesTab() {
   )
 }
 
-function StatusBadge({ status }: { status: ImportJob['status'] }) {
-  const { t } = useTranslation()
-  const variant =
-    status === 'done'
-      ? 'success'
-      : status === 'failed'
-        ? 'destructive'
-        : status === 'cancelled'
-          ? 'secondary'
-          : 'default'
-  return <Badge variant={variant}>{t(`imports.status.${status}`)}</Badge>
-}
+// W22: job + connection statuses render through the shared StatusBadge.

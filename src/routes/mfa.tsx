@@ -3,13 +3,13 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 
-import { ApiProblem, NetworkError } from '@/lib/api/http'
+import { NetworkError } from '@/lib/api/http'
 import { completeMfa, getPendingChallenge } from '@/lib/auth'
+import { flags } from '@/lib/flags'
+import { AuthLayout } from '@/components/auth/auth-layout'
+import { OtpInput } from '@/components/auth/otp-input'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { toast } from '@/components/ui/sonner'
+import { Callout } from '@/components/ui/callout'
 
 export const Route = createFileRoute('/mfa')({
   validateSearch: z.object({ redirect: z.string().optional() }),
@@ -27,49 +27,73 @@ function MfaPage() {
   const search = Route.useSearch()
   const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
+  const [problem, setProblem] = useState<unknown>(null)
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function submit(value: string) {
+    if (busy || value.length !== 6) return
     setBusy(true)
+    setProblem(null)
     try {
-      const { tenantId } = await completeMfa({ totp_code: code })
+      const { tenantId } = await completeMfa({ totp_code: value })
       if (!tenantId) await navigate({ to: '/onboarding' })
       else if (search.redirect) router.history.push(search.redirect)
       else await navigate({ to: '/' })
     } catch (err) {
-      if (err instanceof NetworkError) toast.error(t('errors.network'))
-      else if (err instanceof ApiProblem) toast.error(t('mfa.invalid'))
-      else toast.error(t('errors.unknown'))
+      setProblem(err)
+      setCode('')
       setBusy(false)
     }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-xl">{t('mfa.title')}</CardTitle>
-          <CardDescription>{t('mfa.subtitle')}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form className="space-y-4" onSubmit={(e) => void onSubmit(e)}>
-            <div className="space-y-1.5">
-              <Label htmlFor="code">{t('mfa.code')}</Label>
-              <Input
-                id="code"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                autoFocus
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={busy || !code}>
-              {busy ? t('app.loading') : t('mfa.verify')}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+    <AuthLayout>
+      <h1 className="text-2xl font-semibold tracking-tight">{t('mfa.title')}</h1>
+      <p className="mt-1 text-sm text-muted-foreground">{t('mfa.totpHint')}</p>
+
+      <form
+        className="mt-6 space-y-4"
+        onSubmit={(e) => {
+          e.preventDefault()
+          void submit(code)
+        }}
+      >
+        {problem !== null &&
+          (problem instanceof NetworkError ? (
+            <Callout variant="info">{t('errors.network')}</Callout>
+          ) : (
+            <Callout problem={problem}>{t('mfa.invalid')}</Callout>
+          ))}
+
+        <OtpInput
+          value={code}
+          onChange={setCode}
+          onComplete={(v) => void submit(v)}
+          autoFocus
+          disabled={busy}
+          error={problem !== null && !(problem instanceof NetworkError)}
+        />
+
+        <Button type="submit" className="w-full" disabled={busy || code.length !== 6}>
+          {busy ? t('app.loading') : t('mfa.verify')}
+        </Button>
+
+        {/* Reserved method switcher (design-once): SMS / passkey variants. */}
+        {(flags.authSms || flags.authPasskeys) && (
+          <p className="text-center text-xs text-muted-foreground">
+            {flags.authSms && (
+              <button type="button" className="underline">
+                {t('mfa.useSms')}
+              </button>
+            )}
+          </p>
+        )}
+
+        <p className="text-center text-xs text-muted-foreground">
+          <a href="mailto:support@kdbvault.com" className="underline">
+            {t('mfa.lostDevice')}
+          </a>
+        </p>
+      </form>
+    </AuthLayout>
   )
 }

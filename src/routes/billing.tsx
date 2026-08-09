@@ -17,8 +17,9 @@ import {
 import { requireTenant } from '@/lib/route-guards'
 import { formatBytes, formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
-import { Badge, type BadgeProps } from '@/components/ui/badge'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { StatusBadge } from '@/components/ui/status-badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -27,12 +28,6 @@ export const Route = createFileRoute('/billing')({
   component: BillingPage,
 })
 
-const STATUS_VARIANT: Record<string, BadgeProps['variant']> = {
-  active: 'success',
-  trial: 'secondary',
-  past_due: 'warning',
-  cancelled: 'destructive',
-}
 
 function BillingPage() {
   const { t, i18n } = useTranslation()
@@ -77,9 +72,7 @@ function BillingPage() {
               <span className="text-lg font-semibold">
                 {plans.data?.data.find((p) => p.id === sub.data!.plan_id)?.name ?? sub.data.plan_id}
               </span>
-              <Badge variant={STATUS_VARIANT[sub.data.status] ?? 'secondary'}>
-                {t(`billing.status.${sub.data.status}`)}
-              </Badge>
+              <StatusBadge domain="subscription" status={sub.data.status} />
               {sub.data.renews_at && (
                 <span className="text-sm text-muted-foreground">
                   {t('billing.renews', { date: formatDate(sub.data.renews_at, i18n.language) })}
@@ -161,9 +154,7 @@ function BillingPage() {
                   {new Intl.NumberFormat(i18n.language).format(inv.amount_minor_units)} {inv.currency}
                 </div>
               </div>
-              <Badge variant={inv.status === 'paid' ? 'success' : inv.status === 'open' ? 'warning' : 'outline'}>
-                {t(`billing.invoiceStatus.${inv.status}`)}
-              </Badge>
+              <StatusBadge domain="invoice" status={inv.status} />
               <Button variant="outline" size="sm" asChild>
                 <a href={invoicePdfUrl(inv.id)} target="_blank" rel="noreferrer">
                   <Download className="h-3 w-3" />

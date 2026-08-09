@@ -9,6 +9,7 @@ import { hasTenant } from '@/lib/auth'
 import { requireAuth } from '@/lib/route-guards'
 import { queryClient } from '@/lib/query'
 import { cn } from '@/lib/utils'
+import { AuthLayout } from '@/components/auth/auth-layout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -62,13 +63,13 @@ function OnboardingPage() {
     `${new Intl.NumberFormat(i18n.language).format(minor)} ${currency} / ${t(`onboarding.interval.${interval}`)}`
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
-      <Card className="w-full max-w-lg">
-        <CardHeader>
-          <CardTitle className="text-xl">{t('onboarding.title')}</CardTitle>
+    <AuthLayout>
+      <Card className="w-full border-0 shadow-none">
+        <CardHeader className="px-0">
+          <CardTitle className="text-2xl">{t('onboarding.title')}</CardTitle>
           <CardDescription>{t('onboarding.subtitle')}</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-0">
           <form className="space-y-5" onSubmit={(e) => void onSubmit(e)}>
             <div className="space-y-1.5">
               <Label htmlFor="org-name">{t('onboarding.orgName')}</Label>
@@ -126,6 +127,6 @@ function OnboardingPage() {
           </form>
         </CardContent>
       </Card>
-    </div>
+    </AuthLayout>
   )
 }

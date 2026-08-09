@@ -1,3 +1,141 @@
+# Slice W23 — Auth screens redesign (the split login + family)
+
+Executes `docs/AUTH-SCREENS-DESIGN-PROMPT.md` in code. All logic (mutations,
+guards, redirects) untouched — this is the presentation pass.
+
+## New (`src/components/auth/`, `src/lib/flags.ts`)
+
+- **`auth-layout.tsx`** — the split: left is the VAULT (navy gradient,
+  wordmark with gradient "DocVault", rotating proof content — category line
+  / gold FCFA stat / honest testimonial slot — 8s crossfade paused under
+  `prefers-reduced-motion`, security line in mono, CSS-only vault-dial tick
+  motif), right is the form on light gray with an FR/EN toggle. Mobile:
+  compact navy header, form owns the screen.
+- **`otp-input.tsx`** — six boxes: auto-advance, backspace-to-previous,
+  paste distribution, WebOTP/keychain autofill (`one-time-code` on box 1),
+  calm error styling (red border, nothing shakes).
+- **`password-input.tsx`** — show/hide, CapsLock hint, and `StrengthMeter`:
+  entropy-based, four levels, weakest tone is AMBER (never red-shaming),
+  labels say what to do («visez une phrase»), composes cleanly with
+  react-hook-form.
+- **`flags.ts`** — `authPasskeys` / `authSso` / `authSms`, all false. The
+  deferred methods' exact positions exist in the code behind these flags
+  (login divider + buttons, MFA method switcher) — flip the flag, wire the
+  handler, nothing moves. Design-once, kept.
+
+## Refactored routes
+
+- **login** — the fixed-direction screen: split layout, Callout errors
+  (problem+json code + trace in fine print) instead of toasts,
+  session-expired chip via `?expired`, no "remember me" by design.
+- **mfa** — OtpInput with auto-submit on 6th digit, TOTP wording,
+  lost-device support link, reserved switcher row.
+- **register** — strength meter live on watch, consent line, verify step
+  now OtpInput with a "wrong address?" escape hatch back to the form
+  (values kept).
+- **forgot / reset** — layout + Callout; reset gets PasswordInput+meter,
+  token field in mono; success still lands on login with a chip.
+- **onboarding** — wrapped in the layout (borderless card), plan picker
+  untouched.
+- Invitation-accept keeps its current look — public page, migrates with a
+  later pass.
+
+i18n: `auth.*` additions (proof lines, strength labels, capsLock, consent,
+passkey/SSO labels), `mfa.{totpHint,lostDevice,useSms}` — FR + EN.
+
+## Verify
+
+`npm run typecheck && npm run dev` → /login shows the split (proof panel
+rotates, screenshot-worthy alone), OTP boxes autofill from keychain on
+/mfa and register-verify, CapsLock hint appears, strength meter reacts,
+wrong password produces a calm callout with the problem code in fine
+print, mobile (360px) reaches submit without scrolling.
+
+# Slice W22 — Design-system foundation (component library, first slice)
+
+Executes the foundation subset of `docs/COMPONENT-LIBRARY-DESIGN-PROMPT.md`.
+
+## Tokens (`src/styles.css`)
+
+- `--primary` realigned from slate-900 to the brand sheet's **Primary Blue**
+  (#2563EB) in both modes — every existing `bg-primary` button/link takes
+  the brand color with zero call-site changes.
+- Brand tokens added to the Tailwind theme: `brand-navy`,
+  `brand-navy-surface`, `brand-blue(-deep)`, `brand-azure`,
+  `brand-teal(-deep)`, `brand-gold` (exact hex from the sheet) + two
+  gradient utilities (`bg-brand-gradient`, `bg-brand-gradient-dark`) —
+  reserved for primary CTAs and hero surfaces per the de-slop constraint.
+
+## New components (`src/components/ui/`)
+
+- **`status-badge.tsx`** — ONE rendering per backend enum value: 14 domains
+  (document, processing, job, envelope, signer, connection, payment,
+  subscription, invoice, workflow, obligation, reminder, hold, membership),
+  five tones (slate=dormant, azure=in motion, emerald=good, amber=needs
+  attention, red=bad), `motion-safe` pulse on the two states a user
+  actively waits on (processing, awaiting_confirmation). Labels from a new
+  central `status.*` i18n table (57 keys × FR/EN); unmapped values render
+  their raw name — honest over pretty.
+- **`banner.tsx`** — the three standing banners unified: offline (slate —
+  a FACT: "waiting", never "failed", `role=status`), readonly (amber,
+  action slot), notice (azure). Stacking order documented.
+- **`callout.tsx`** — the problem+json renderer: calm form-level error
+  with the machine facts (`code · trace`) in monospace fine print — what a
+  user reads to support over the phone.
+
+## Retrofits (ad-hoc variant maps deleted)
+
+- `app-shell.tsx` — both inline banners → `<Banner>`
+- `vault-list.tsx` — document status (STATUS_VARIANT map removed)
+- `billing.tsx` — subscription + invoice statuses (map removed)
+- `signature-panel.tsx` — envelope + signer statuses (both maps removed)
+- `imports.tsx` — job + connection statuses (local StatusBadge removed)
+
+Remaining Badge call sites (lifecycle, workflow, team, rooms, audit…)
+migrate opportunistically as screens are touched; the domains are already
+in the component. Per-screen status label keys (`sign.status.*`,
+`imports.status.*`, `billing.status.*`, `document.status.*`) are now
+unused by these call sites — prune in a later cleanup.
+
+## Verify
+
+`npm run typecheck && npm run dev`: primary buttons are brand blue; vault
+rows, billing, signatures and imports show identical badge styling for
+identical semantics; offline + read-only banners unchanged in behavior;
+FR/EN labels come from `status.*`.
+
+# Slice W21 — Front-office site implemented from the design file
+
+`docs/KDB DocVault v2.dc.html` (Claude design export) → `site/`: a real
+static site, no framework, no build step.
+
+- **Transform, not rewrite:** the design's `{{ bindings }}`, `<sc-if>`
+  views and refs were resolved mechanically (session script
+  `build_site.py`) into three real pages — `index.html`, `produit.html`,
+  `securite.html` — with per-page nav state, titles, descriptions and
+  canonicals. Client-side "routing" became real URLs; everything else is
+  byte-faithful to the design.
+- `assets/site.js` — dependency-free port of the design component: FR↔EN
+  toggle over `data-t` nodes (persisted, `<html lang>` synced),
+  scroll-driven lifecycle timeline + hash-chain animation
+  (`prefers-reduced-motion` → final state), FCFA exposure calculator,
+  reminder-date checker. Initial values are baked into the HTML, so the
+  page is complete without JS.
+- `assets/site.css` (skip-link focus, print), `assets/favicon.svg`
+  (shield + dial).
+- Deploy: `kdbvault.com` block in `deploy/Caddyfile` (+ www redirect,
+  asset caching) and the `./site` mount in compose — backend repo.
+- Launch placeholders: phone/WhatsApp numbers, demo-certificate QR,
+  reference slots, legal pages.
+
+## Verify
+
+`cd site && python3 -m http.server` → the three pages navigate, FR/EN
+toggle persists across pages, the calculator recomputes, the date checker
+follows the input, timeline/chain animate on scroll (and don't with
+reduced motion), and view-source shows full FR content with no template
+syntax.
+
 # Slice W19.1 — Pick single Drive files, not just folders
 
 Files in the picker are now checkboxes. Ticking any switches the footer from

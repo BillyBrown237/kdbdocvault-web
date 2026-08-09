@@ -27,9 +27,32 @@
       "codeSent": "A code was sent to {{email}}",
       "code": "Verification code",
       "verify": "Verify",
-      "haveAccount": "Already have an account?"
+      "haveAccount": "Already have an account?",
+      "subtitle": "Three documents are enough to start.",
+      "consent": "By creating an account you accept the Terms and the Privacy policy.",
+      "wrongEmail": "Wrong address? Go back"
     },
-    "logout": "Sign out"
+    "logout": "Sign out",
+    "welcome": "Welcome back",
+    "sessionExpired": "Your session expired — sign in again to continue.",
+    "or": "or",
+    "passkey": "Continue with a passkey",
+    "sso": "Continue with your organization",
+    "capsLock": "Caps Lock is on",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "strength": {
+      "weak": "Add words or characters — aim for a phrase.",
+      "fair": "Okay. One more word would make it solid.",
+      "good": "Solid.",
+      "strong": "Very solid."
+    },
+    "proof": {
+      "category": "They store. We keep alive, prove, and expire.",
+      "stat": "4,080,000 FCFA of exposure avoided on a single licence.",
+      "testimonial": "Reserved slot — a client who agrees to be named."
+    },
+    "securityLine": "Encrypted in transit · Tamper-evident audit log · Publicly verifiable"
   },
   "onboarding": {
     "title": "Create your organization",
@@ -65,7 +88,10 @@
     "subtitle": "Enter the code from your authenticator app",
     "code": "6-digit code",
     "verify": "Verify",
-    "invalid": "Invalid code"
+    "invalid": "Invalid code",
+    "totpHint": "The code from your authenticator app.",
+    "lostDevice": "Lost your device? Contact support",
+    "useSms": "Receive the code by SMS instead"
   },
   "settings": {
     "title": "Settings",
@@ -694,5 +720,92 @@
     "driveClearSelection": "Clear selection",
     "driveImportFiles_one": "Import {{count}} file",
     "driveImportFiles_other": "Import {{count}} files"
+  },
+  "status": {
+    "document": {
+      "draft": "Draft",
+      "active": "Active",
+      "expiring": "Expiring",
+      "expired": "Expired",
+      "renewed": "Renewed",
+      "archived": "Archived"
+    },
+    "processing": {
+      "queued": "Queued",
+      "processing": "Processing",
+      "done": "Done",
+      "failed": "Failed"
+    },
+    "job": {
+      "queued": "Queued",
+      "running": "Running",
+      "done": "Done",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "envelope": {
+      "draft": "Draft",
+      "sent": "Sent",
+      "completed": "Completed",
+      "declined": "Declined",
+      "cancelled": "Cancelled",
+      "expired": "Expired"
+    },
+    "signer": {
+      "pending": "Pending",
+      "verified": "Verified",
+      "signed": "Signed",
+      "declined": "Declined"
+    },
+    "connection": {
+      "pending_auth": "Awaiting authorization",
+      "connected": "Connected",
+      "revoked": "Disconnected"
+    },
+    "payment": {
+      "pending": "Pending",
+      "awaiting_confirmation": "Confirm on your phone",
+      "succeeded": "Paid",
+      "failed": "Failed",
+      "refunded": "Refunded"
+    },
+    "subscription": {
+      "trial": "Trial",
+      "active": "Active",
+      "past_due": "Past due",
+      "cancelled": "Cancelled"
+    },
+    "invoice": {
+      "paid": "Paid",
+      "open": "Open",
+      "void": "Void"
+    },
+    "workflow": {
+      "running": "Running",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "overdue": "Overdue"
+    },
+    "obligation": {
+      "open": "Open",
+      "done": "Done",
+      "overdue": "Overdue"
+    },
+    "reminder": {
+      "scheduled": "Scheduled",
+      "sent": "Sent",
+      "acknowledged": "Acknowledged",
+      "escalated": "Escalated"
+    },
+    "hold": {
+      "active": "Legal hold",
+      "pending_release": "Release pending",
+      "released": "Released"
+    },
+    "membership": {
+      "active": "Active",
+      "suspended": "Suspended",
+      "pending": "Pending"
+    }
   }
 }

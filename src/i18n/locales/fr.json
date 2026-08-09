@@ -27,9 +27,32 @@
       "codeSent": "Un code a été envoyé à {{email}}",
       "code": "Code de vérification",
       "verify": "Vérifier",
-      "haveAccount": "Déjà un compte ?"
+      "haveAccount": "Déjà un compte ?",
+      "subtitle": "Trois documents suffisent pour commencer.",
+      "consent": "En créant un compte, vous acceptez les Conditions et la politique de Confidentialité.",
+      "wrongEmail": "Mauvaise adresse ? Revenir en arrière"
     },
-    "logout": "Se déconnecter"
+    "logout": "Se déconnecter",
+    "welcome": "Bon retour",
+    "sessionExpired": "Votre session a expiré — reconnectez-vous pour continuer.",
+    "or": "ou",
+    "passkey": "Continuer avec une clé d’accès",
+    "sso": "Continuer avec votre organisation",
+    "capsLock": "Verr. Maj est activé",
+    "showPassword": "Afficher le mot de passe",
+    "hidePassword": "Masquer le mot de passe",
+    "strength": {
+      "weak": "Ajoutez des mots ou des caractères — visez une phrase.",
+      "fair": "Correct. Un mot de plus le rendrait solide.",
+      "good": "Solide.",
+      "strong": "Très solide."
+    },
+    "proof": {
+      "category": "Ils stockent. Nous faisons vivre, prouver et expirer.",
+      "stat": "4 080 000 FCFA d’exposition évitée sur un seul agrément.",
+      "testimonial": "Emplacement réservé — un client qui accepte d’être nommé."
+    },
+    "securityLine": "Chiffré en transit · Journal d’audit inviolable · Vérifiable publiquement"
   },
   "onboarding": {
     "title": "Créez votre organisation",
@@ -65,7 +88,10 @@
     "subtitle": "Saisissez le code de votre application d'authentification",
     "code": "Code à 6 chiffres",
     "verify": "Vérifier",
-    "invalid": "Code invalide"
+    "invalid": "Code invalide",
+    "totpHint": "Le code de votre application d’authentification.",
+    "lostDevice": "Appareil perdu ? Contactez le support",
+    "useSms": "Recevoir le code par SMS à la place"
   },
   "settings": {
     "title": "Paramètres",
@@ -695,5 +721,92 @@
     "driveClearSelection": "Tout décocher",
     "driveImportFiles_one": "Importer {{count}} fichier",
     "driveImportFiles_other": "Importer {{count}} fichiers"
+  },
+  "status": {
+    "document": {
+      "draft": "Brouillon",
+      "active": "Actif",
+      "expiring": "Expire bientôt",
+      "expired": "Expiré",
+      "renewed": "Renouvelé",
+      "archived": "Archivé"
+    },
+    "processing": {
+      "queued": "En attente",
+      "processing": "Analyse en cours",
+      "done": "Analysé",
+      "failed": "Échec d’analyse"
+    },
+    "job": {
+      "queued": "En attente",
+      "running": "En cours",
+      "done": "Terminé",
+      "failed": "Échec",
+      "cancelled": "Annulé"
+    },
+    "envelope": {
+      "draft": "Brouillon",
+      "sent": "Envoyée",
+      "completed": "Complétée",
+      "declined": "Refusée",
+      "cancelled": "Annulée",
+      "expired": "Expirée"
+    },
+    "signer": {
+      "pending": "En attente",
+      "verified": "Identité vérifiée",
+      "signed": "A signé",
+      "declined": "A refusé"
+    },
+    "connection": {
+      "pending_auth": "Autorisation en attente",
+      "connected": "Connecté",
+      "revoked": "Déconnecté"
+    },
+    "payment": {
+      "pending": "En attente",
+      "awaiting_confirmation": "Confirmez sur votre téléphone",
+      "succeeded": "Payé",
+      "failed": "Échec",
+      "refunded": "Remboursé"
+    },
+    "subscription": {
+      "trial": "Essai",
+      "active": "Actif",
+      "past_due": "Paiement en retard",
+      "cancelled": "Résilié"
+    },
+    "invoice": {
+      "paid": "Payée",
+      "open": "À payer",
+      "void": "Annulée"
+    },
+    "workflow": {
+      "running": "En cours",
+      "completed": "Terminé",
+      "cancelled": "Annulé",
+      "overdue": "En retard"
+    },
+    "obligation": {
+      "open": "À faire",
+      "done": "Fait",
+      "overdue": "En retard"
+    },
+    "reminder": {
+      "scheduled": "Programmée",
+      "sent": "Envoyée",
+      "acknowledged": "Prise en compte",
+      "escalated": "Escaladée"
+    },
+    "hold": {
+      "active": "Gel juridique",
+      "pending_release": "Levée en attente",
+      "released": "Levé"
+    },
+    "membership": {
+      "active": "Actif",
+      "suspended": "Suspendu",
+      "pending": "En attente"
+    }
   }
 }
