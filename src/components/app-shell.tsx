@@ -3,10 +3,12 @@ import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
+  BarChart3,
   CalendarClock,
   ClipboardCheck,
   CreditCard,
   DoorOpen,
+  Gavel,
   Download,
   FileArchive,
   FolderClosed,
@@ -49,7 +51,11 @@ const NAV = [
 const NAV_SECONDARY = [
   { to: '/rooms', key: 'nav.rooms', icon: DoorOpen },
   { to: '/imports', key: 'nav.imports', icon: FileArchive },
+  { to: '/reports', key: 'nav.reports', icon: BarChart3 },
 ] as const
+
+/** Admin-only entries in NAV_SECONDARY (W20/B47 gating). */
+const ADMIN_ONLY = new Set(['/imports', '/reports'])
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { t, i18n } = useTranslation()
@@ -114,7 +120,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               {t(key)}
             </Link>
           ))}
-          {NAV_SECONDARY.filter(({ to }) => to !== '/imports' || isAdmin).map(({ to, key, icon: Icon }) => (
+          {NAV_SECONDARY.filter(({ to }) => !ADMIN_ONLY.has(to) || isAdmin).map(({ to, key, icon: Icon }) => (
             <Link
               key={to}
               to={to}
@@ -205,6 +211,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <Link to="/audit">
                     <ScrollText className="h-4 w-4" />
                     {t('nav.audit')}
+                  </Link>
+                </DropdownMenuItem>
+              )}
+              {isAdmin && (
+                <DropdownMenuItem asChild>
+                  <Link to="/legal-holds">
+                    <Gavel className="h-4 w-4" />
+                    {t('nav.holds')}
                   </Link>
                 </DropdownMenuItem>
               )}

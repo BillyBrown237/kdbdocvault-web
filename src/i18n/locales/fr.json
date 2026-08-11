@@ -81,7 +81,9 @@
     "profile": "Profil",
     "organizations": "Organisations",
     "rooms": "Salles de données",
-    "imports": "Imports"
+    "imports": "Imports",
+    "holds": "Gels juridiques",
+    "reports": "Rapports"
   },
   "mfa": {
     "title": "Vérification en deux étapes",
@@ -215,7 +217,17 @@
     "emptyFolder": "Ce dossier est vide",
     "newFolder": "Nouveau dossier",
     "folderName": "Nom du dossier",
-    "folderCreated": "Dossier créé"
+    "folderCreated": "Dossier créé",
+    "folderActions": "Actions du dossier",
+    "renameFolder": "Renommer le dossier",
+    "moveFolder": "Déplacer le dossier",
+    "deleteFolder": "Supprimer le dossier",
+    "moveTarget": "Déplacer vers",
+    "folderRenamed": "Dossier renommé",
+    "folderMoved": "Dossier déplacé",
+    "folderDeleted": "Dossier mis à la corbeille",
+    "deleteFolderWarning": "Le dossier « {{name}} », ses sous-dossiers et tous leurs documents partent à la corbeille (restauration possible 30 jours). Un document sous gel juridique bloque la suppression.",
+    "deleteFolderConfirm": "Mettre à la corbeille"
   },
   "upload": {
     "button": "Importer",
@@ -305,7 +317,7 @@
     "detailStatus": "Statut",
     "size": "Taille",
     "mime": "Type de fichier",
-    "updated": "Modifié le",
+    "updated": "Document mis à jour",
     "created": "Créé le",
     "tags": "Étiquettes",
     "versions": "Versions",
@@ -325,7 +337,12 @@
       "expired": "Expiré",
       "renewed": "Renouvelé",
       "archived": "Archivé"
-    }
+    },
+    "edit": "Modifier",
+    "editConflict": "Le document a changé entre-temps — rouvrez la fenêtre et réessayez.",
+    "titleField": "Titre",
+    "typeField": "Type de document",
+    "noType": "Sans type"
   },
   "sign": {
     "title": "Signatures",
@@ -639,7 +656,10 @@
     "add": "Nouvelle version",
     "added": "Version v{{n}} ajoutée",
     "current": "Actuelle",
-    "notePlaceholder": "Note de version (optionnel)"
+    "notePlaceholder": "Note de version (optionnel)",
+    "download": "Télécharger cette version",
+    "restore": "Restaurer cette version",
+    "restored": "Version restaurée en v{{n}}"
   },
   "docAudit": {
     "title": "Historique du document",
@@ -807,6 +827,91 @@
       "active": "Actif",
       "suspended": "Suspendu",
       "pending": "En attente"
+    }
+  },
+  "holds": {
+    "title": "Gels juridiques",
+    "subtitle": "Figer des documents pendant un litige ou un audit — la levée exige deux administrateurs.",
+    "create": "Créer un gel",
+    "created": "Gel créé",
+    "empty": "Aucun gel juridique",
+    "name": "Nom",
+    "namePlaceholder": "Litige Transcam 2026",
+    "description": "Description",
+    "itemCount_one": "{{count}} document",
+    "itemCount_other": "{{count}} documents",
+    "requestRelease": "Demander la levée",
+    "approveRelease": "Approuver la levée",
+    "releasePending": "Demande enregistrée — un second administrateur doit approuver.",
+    "released": "Gel levé",
+    "awaitingOther": "Vous avez ouvert la demande — un autre administrateur doit approuver.",
+    "awaitingYou": "Levée demandée — votre approbation la finalise.",
+    "attach": "Placer sous gel",
+    "attachConfirm": "Placer sous gel",
+    "attachHint": "Le document ne pourra plus être supprimé ni purgé tant que le gel est actif.",
+    "attached": "Document placé sous gel",
+    "pick": "Choisir un gel…"
+  },
+  "reports": {
+    "title": "Rapports",
+    "subtitle": "L’état du cabinet, en chiffres vérifiables.",
+    "tabs": {
+      "overview": "Vue d’ensemble",
+      "expiring": "Échéances",
+      "compliance": "Conformité",
+      "exposure": "Exposition",
+      "activity": "Activité",
+      "workflow": "Circuits"
+    },
+    "ov": {
+      "documents": "Documents actifs",
+      "storage": "Stockage utilisé",
+      "members": "Membres actifs",
+      "expiring30": "Expirent sous 30 jours",
+      "shares": "Liens de partage actifs",
+      "envelopes": "Enveloppes en cours / signées",
+      "workflows": "Circuits en cours",
+      "obligations": "Obligations ouvertes"
+    },
+    "exp": {
+      "within": "Sous {{count}} jours",
+      "none": "Aucune échéance dans la période."
+    },
+    "co": {
+      "coverage": "Couverture des échéances",
+      "withRule": "Documents avec règle",
+      "unclassified": "Sans type",
+      "orphaned": "Hors dossier",
+      "held": "Sous gel juridique",
+      "holds": "Gels actifs",
+      "overdue": "Obligations en retard",
+      "pendingRules": "Dates détectées à confirmer"
+    },
+    "ex": {
+      "active": "Liens actifs",
+      "noPassword": "Sans mot de passe",
+      "noExpiry": "Sans expiration",
+      "views": "Ouvertures (30 j)",
+      "viewers": "Visiteurs uniques (30 j)",
+      "rooms": "Data rooms ouvertes",
+      "visitors": "Visiteurs de rooms",
+      "watermarked": "Avec filigrane",
+      "top": "Documents les plus consultés",
+      "viewCount_one": "{{count}} ouverture",
+      "viewCount_other": "{{count}} ouvertures"
+    },
+    "ac": {
+      "period": "Du {{from}} au {{to}}",
+      "none": "Aucune activité sur la période.",
+      "total_one": "{{count}} action",
+      "total_other": "{{count}} actions"
+    },
+    "wf": {
+      "started": "Lancés (90 j)",
+      "completed": "Terminés (90 j)",
+      "avgHours": "Durée moyenne",
+      "overdue": "Étapes en retard",
+      "byTemplate": "Par modèle"
     }
   }
 }

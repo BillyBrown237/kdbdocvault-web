@@ -2,14 +2,21 @@ import { useNavigate } from '@tanstack/react-router'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FolderInput, Plus, Trash2 } from 'lucide-react'
+import { FolderInput, Gavel, Pencil, Plus, Trash2 } from 'lucide-react'
 
 import {
+  addHoldItems,
   createTag,
+  documentTypesQuery,
+  getDocumentWithEtag,
+  legalHoldsQuery,
+  meQuery,
   moveDocument,
+  patchDocument,
   rootFoldersQuery,
   setDocumentTags,
   tagsQuery,
+  tenantQuery,
   trashDocument,
 } from '@/lib/api/queries'
 import type { Document } from '@/lib/api/types'
@@ -18,6 +25,14 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { toast } from '@/components/ui/sonner'
 
@@ -30,6 +45,64 @@ export function DocumentActions({ document }: { document: Document }) {
   const allTags = useQuery(tagsQuery)
   const folders = useInfiniteQuery(rootFoldersQuery)
   const [newTag, setNewTag] = useState('')
+
+  // W24 (B48): edit title/type through PATCH + If-Match. The ETag is fetched
+  // FRESH when the dialog opens — echo server state, never compute it.
+  const docTypes = useQuery(documentTypesQuery)
+  const [editOpen, setEditOpen] = useState(false)
+  const [editEtag, setEditEtag] = useState<string | null>(null)
+  const [editTitle, setEditTitle] = useState(document.title)
+  const [editType, setEditType] = useState<string>(document.type_id ?? '__none__')
+
+  async function openEdit() {
+    try {
+      const { data, etag } = await getDocumentWithEtag(document.id)
+      setEditTitle(data.title)
+      setEditType(data.type_id ?? '__none__')
+      setEditEtag(etag)
+      setEditOpen(true)
+    } catch {
+      toast.error(t('errors.unknown'))
+    }
+  }
+
+  const editMutation = useMutation({
+    mutationFn: () =>
+      patchDocument(document.id, editEtag ?? '*', {
+        title: editTitle.trim(),
+        type_id: editType === '__none__' ? null : editType,
+      }),
+    onSuccess: async () => {
+      toast.success(t('document.updated'))
+      setEditOpen(false)
+      await queryClient.invalidateQueries({ queryKey: ['documents'] })
+    },
+    onError: (err) =>
+      toast.error(err instanceof Error && 'status' in err && (err as { status: number }).status === 409
+        ? t('document.editConflict')
+        : t('errors.unknown')),
+  })
+
+  // W24 (B50): place under legal hold — admin only.
+  const me = useQuery(meQuery)
+  const tenant = useQuery(tenantQuery)
+  const role = me.data?.memberships.find((m) => m.tenant_id === tenant.data?.id)?.role
+  const isAdmin = role === 'Owner' || role === 'Admin'
+  const holds = useQuery({ ...legalHoldsQuery, enabled: isAdmin })
+  const [holdOpen, setHoldOpen] = useState(false)
+  const [holdId, setHoldId] = useState<string>('')
+
+  const holdMutation = useMutation({
+    mutationFn: () => addHoldItems(holdId, [document.id]),
+    onSuccess: async () => {
+      toast.success(t('holds.attached'))
+      setHoldOpen(false)
+      await queryClient.invalidateQueries({ queryKey: ['documents', 'detail', document.id] })
+      await queryClient.invalidateQueries({ queryKey: ['legal-holds'] })
+    },
+    onError: () => toast.error(t('errors.unknown')),
+  })
+  const activeHolds = (holds.data?.data ?? []).filter((h) => h.status === 'active')
 
   const currentTagIds = new Set((document.tags ?? []).map((x) => x.id))
 
@@ -147,6 +220,16 @@ export function DocumentActions({ document }: { document: Document }) {
               </SelectContent>
             </Select>
           </div>
+          <Button variant="outline" onClick={() => void openEdit()}>
+            <Pencil className="h-4 w-4" />
+            {t('document.edit')}
+          </Button>
+          {isAdmin && activeHolds.length > 0 && !document.legal_hold && (
+            <Button variant="outline" onClick={() => setHoldOpen(true)}>
+              <Gavel className="h-4 w-4" />
+              {t('holds.attach')}
+            </Button>
+          )}
           <Button
             variant="outline"
             className="text-red-600 hover:text-red-600"
@@ -157,6 +240,83 @@ export function DocumentActions({ document }: { document: Document }) {
             {t('document.trash')}
           </Button>
         </div>
+
+        <Dialog open={editOpen} onOpenChange={setEditOpen}>
+          <DialogContent className="sm:max-w-sm">
+            <DialogHeader>
+              <DialogTitle>{t('document.edit')}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="doc-title">{t('document.titleField')}</Label>
+                <Input
+                  id="doc-title"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>{t('document.typeField')}</Label>
+                <Select value={editType} onValueChange={setEditType}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">{t('document.noType')}</SelectItem>
+                    {docTypes.data?.data.map((dt) => (
+                      <SelectItem key={dt.id} value={dt.id}>
+                        {dt.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditOpen(false)}>
+                {t('common.cancel')}
+              </Button>
+              <Button
+                disabled={editMutation.isPending || !editTitle.trim()}
+                onClick={() => editMutation.mutate()}
+              >
+                {editMutation.isPending ? t('app.loading') : t('common.done')}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={holdOpen} onOpenChange={setHoldOpen}>
+          <DialogContent className="sm:max-w-sm">
+            <DialogHeader>
+              <DialogTitle>{t('holds.attach')}</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground">{t('holds.attachHint')}</p>
+            <Select value={holdId} onValueChange={setHoldId}>
+              <SelectTrigger>
+                <SelectValue placeholder={t('holds.pick')} />
+              </SelectTrigger>
+              <SelectContent>
+                {activeHolds.map((h) => (
+                  <SelectItem key={h.id} value={h.id}>
+                    {h.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setHoldOpen(false)}>
+                {t('common.cancel')}
+              </Button>
+              <Button
+                disabled={holdMutation.isPending || !holdId}
+                onClick={() => holdMutation.mutate()}
+              >
+                {holdMutation.isPending ? t('app.loading') : t('holds.attachConfirm')}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   )

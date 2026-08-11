@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { FileText, Folder as FolderIcon } from 'lucide-react'
 
 import { formatBytes, formatDate } from '@/lib/format'
+import { FolderActions } from '@/components/folder-actions'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { Card } from '@/components/ui/card'
@@ -14,7 +15,10 @@ export function FolderRow({ folder }: { folder: Folder }) {
     <Link to="/vault/$folderId" params={{ folderId: folder.id }}>
       <Card className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/50">
         <FolderIcon className="h-5 w-5 shrink-0 text-amber-500" />
-        <span className="truncate text-sm font-medium">{folder.name}</span>
+        <span className="min-w-0 flex-1 truncate text-sm font-medium">{folder.name}</span>
+        {/* W24: rename/move/delete — inside the Link, so the trigger
+            preventDefaults navigation. */}
+        <FolderActions folder={folder} />
       </Card>
     </Link>
   )

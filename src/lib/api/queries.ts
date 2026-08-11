@@ -9,6 +9,7 @@ import {
   API_V1,
   ApiProblem,
   apiFetch,
+  apiFetchWithEtag,
   publicApiFetch,
   setAccessToken,
   setCurrentTenantId,
@@ -23,6 +24,13 @@ import type {
   Extraction,
   ImportConnection,
   ImportJob,
+  LegalHold,
+  ReportOverview,
+  ExpiringReportRow,
+  ActivityMember,
+  SharingExposureReport,
+  ComplianceReport,
+  WorkflowPerfReport,
   Job,
   DataRoom,
   DataRoomDetail,
@@ -1134,6 +1142,137 @@ export const importConnectionsQuery = queryOptions({
   queryKey: ['import-connections'],
   queryFn: () => apiFetch<{ data: ImportConnection[] }>('/import-connections'),
 })
+
+// --- editing (W24 / B48) ----------------------------------------------------------
+
+/** Fresh document + its ETag — the token PATCH must echo as If-Match. */
+export function getDocumentWithEtag(
+  documentId: string,
+): Promise<{ data: Document; etag: string | null }> {
+  return apiFetchWithEtag<Document>(`/documents/${documentId}`)
+}
+
+export function patchDocument(
+  documentId: string,
+  etag: string,
+  input: { title?: string; type_id?: string | null; folder_id?: string | null },
+): Promise<Document> {
+  return apiFetch<Document>(`/documents/${documentId}`, {
+    method: 'PATCH',
+    headers: { 'If-Match': etag },
+    body: JSON.stringify(input),
+  })
+}
+
+export function renameFolder(folderId: string, name: string): Promise<void> {
+  return apiFetch<void>(`/folders/${folderId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ name }),
+  })
+}
+
+export function moveFolder(folderId: string, parentId: string | null): Promise<void> {
+  return apiFetch<void>(`/folders/${folderId}/move`, {
+    method: 'POST',
+    body: JSON.stringify({ parent_id: parentId }),
+  })
+}
+
+export function deleteFolder(folderId: string): Promise<void> {
+  return apiFetch<void>(`/folders/${folderId}`, { method: 'DELETE' })
+}
+
+/** Authenticated 302 → presigned URL → bytes (the W16 rule: fetch, never link). */
+export function downloadVersionBlob(documentId: string, versionId: string): Promise<Blob> {
+  return apiFetch<Blob>(`/documents/${documentId}/versions/${versionId}/download`)
+}
+
+export function restoreVersion(
+  documentId: string,
+  versionId: string,
+): Promise<{ version_id: string; version_no: number }> {
+  return apiFetch<{ version_id: string; version_no: number }>(
+    `/documents/${documentId}/versions/${versionId}/restore`,
+    { method: 'POST' },
+  )
+}
+
+// --- reports (W20 / B46, admin+) --------------------------------------------------
+
+export const reportOverviewQuery = queryOptions({
+  queryKey: ['reports', 'overview'],
+  queryFn: () => apiFetch<ReportOverview>('/reports/overview'),
+})
+
+export const reportExpiringQuery = (withinDays: number) =>
+  queryOptions({
+    queryKey: ['reports', 'expiring', withinDays],
+    queryFn: () =>
+      apiFetch<{ within_days: number; count: number; data: ExpiringReportRow[] }>(
+        `/reports/expiring-documents${qs({ within_days: withinDays })}`,
+      ),
+  })
+
+export function downloadExpiringCsv(withinDays: number): Promise<Blob> {
+  return apiFetch<Blob>(`/reports/expiring-documents${qs({ within_days: withinDays, format: 'csv' })}`)
+}
+
+export const reportActivityQuery = (from?: string, to?: string) =>
+  queryOptions({
+    queryKey: ['reports', 'activity', from, to],
+    queryFn: () =>
+      apiFetch<{ from: string; to: string; members: ActivityMember[] }>(
+        `/reports/user-activity${qs({ from, to })}`,
+      ),
+  })
+
+export const reportExposureQuery = queryOptions({
+  queryKey: ['reports', 'exposure'],
+  queryFn: () => apiFetch<SharingExposureReport>('/reports/sharing-exposure'),
+})
+
+export const reportComplianceQuery = queryOptions({
+  queryKey: ['reports', 'compliance'],
+  queryFn: () => apiFetch<ComplianceReport>('/reports/compliance'),
+})
+
+export const reportWorkflowQuery = queryOptions({
+  queryKey: ['reports', 'workflow'],
+  queryFn: () => apiFetch<WorkflowPerfReport>('/reports/workflow-performance'),
+})
+
+// --- legal holds (W24 / B50, admin+) ----------------------------------------------
+
+export const legalHoldsQuery = queryOptions({
+  queryKey: ['legal-holds'],
+  queryFn: () => apiFetch<{ data: LegalHold[] }>('/legal-holds'),
+})
+
+export function createLegalHold(name: string, description?: string): Promise<LegalHold> {
+  return apiFetch<LegalHold>('/legal-holds', {
+    method: 'POST',
+    body: JSON.stringify({ name, description }),
+  })
+}
+
+export function addHoldItems(holdId: string, documentIds: string[]): Promise<{ added: number }> {
+  return apiFetch<{ added: number }>(`/legal-holds/${holdId}/items`, {
+    method: 'POST',
+    body: JSON.stringify({ document_ids: documentIds }),
+  })
+}
+
+/** First call opens the request (pending_second_approval); a second call by
+ * a DIFFERENT admin releases. Self-approval → 409 LEGAL_HOLD_SELF_APPROVAL. */
+export function releaseLegalHold(
+  holdId: string,
+  reason?: string,
+): Promise<{ status: string; release_request_id: string | null }> {
+  return apiFetch<{ status: string; release_request_id: string | null }>(
+    `/legal-holds/${holdId}/release`,
+    { method: 'POST', body: JSON.stringify({ reason }) },
+  )
+}
 
 export function revokeImportConnection(connectionId: string): Promise<void> {
   return apiFetch<void>(`/import-connections/${connectionId}`, { method: 'DELETE' })

@@ -180,6 +180,25 @@ export function apiFetch<T>(url: string, options: RequestInit = {}): Promise<T> 
 }
 
 /**
+ * W24: like apiFetch, but surfaces the response ETag — needed by the
+ * If-Match contract on PATCH /documents/{id} (§0.9). The ETag is opaque
+ * server state (UpdatedAt ticks); clients must ECHO it, never compute it.
+ */
+export async function apiFetchWithEtag<T>(
+  url: string,
+  options: RequestInit = {},
+): Promise<{ data: T; etag: string | null }> {
+  const target = url.startsWith('http') ? url : `${API_V1}${url}`
+  let res = await doFetch(target, options)
+  if (res.status === 401 && !url.startsWith('/auth/')) {
+    if (await refreshAccessToken()) res = await doFetch(target, options)
+  }
+  if (!res.ok) throw await toProblem(res)
+  const etag = res.headers.get('etag')
+  return { data: (await res.json()) as T, etag }
+}
+
+/**
  * Call against the UNVERSIONED public surfaces (/sign, /shared, /verify …).
  * Routed via the `/pub` alias so the SPA's own routes with the same paths
  * don't collide; the proxy strips the alias.

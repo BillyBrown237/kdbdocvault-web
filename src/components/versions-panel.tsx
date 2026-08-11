@@ -1,10 +1,14 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { History, RotateCcw, Upload } from 'lucide-react'
+import { Download, History, RotateCcw, Upload } from 'lucide-react'
 
 import { ApiProblem, NetworkError } from '@/lib/api/http'
-import { documentVersionsQuery } from '@/lib/api/queries'
+import {
+  documentVersionsQuery,
+  downloadVersionBlob,
+  restoreVersion,
+} from '@/lib/api/queries'
 import { UploadTask } from '@/lib/api/upload'
 import { formatBytes, formatDate } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
@@ -69,6 +73,39 @@ export function VersionsPanel({ documentId }: { documentId: string }) {
   const list = versions.data?.data ?? []
   const latest = list.reduce((max, v) => Math.max(max, v.version_no), 0)
 
+  // W24 (B48): the read side of history — download old bytes, promote old
+  // to new head. Download must FETCH (authenticated 302), never <a href>.
+  async function download(versionId: string, versionNo: number) {
+    try {
+      const blob = await downloadVersionBlob(documentId, versionId)
+      const url = URL.createObjectURL(blob)
+      const link = window.document.createElement('a')
+      link.href = url
+      link.download = `v${versionNo}`
+      link.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      toast.error(
+        err instanceof NetworkError
+          ? t('errors.network')
+          : err instanceof ApiProblem
+            ? (err.detail ?? err.title)
+            : t('errors.unknown'),
+      )
+    }
+  }
+
+  const restore = useMutation({
+    mutationFn: (versionId: string) => restoreVersion(documentId, versionId),
+    onSuccess: async (r) => {
+      toast.success(t('version.restored', { n: r.version_no }))
+      await queryClient.invalidateQueries({ queryKey: ['documents', 'detail', documentId] })
+      await queryClient.invalidateQueries({ queryKey: ['documents'] })
+    },
+    onError: (err) =>
+      toast.error(err instanceof ApiProblem ? (err.detail ?? err.title) : t('errors.unknown')),
+  })
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -95,10 +132,36 @@ export function VersionsPanel({ documentId }: { documentId: string }) {
                       {formatBytes(v.size_bytes, i18n.language)}
                     </span>
                   </span>
-                  <span className="shrink-0 text-xs text-muted-foreground">
-                    {formatDate(v.created_at, i18n.language)}
+                  <span className="flex shrink-0 items-center gap-1">
+                    <span className="text-xs text-muted-foreground">
+                      {formatDate(v.created_at, i18n.language)}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 w-7 p-0"
+                      aria-label={t('version.download')}
+                      onClick={() => void download(v.id, v.version_no)}
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                    </Button>
+                    {v.version_no !== latest && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 w-7 p-0"
+                        aria-label={t('version.restore')}
+                        disabled={restore.isPending}
+                        onClick={() => restore.mutate(v.id)}
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
                   </span>
                 </div>
+                {v.note && (
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">{v.note}</p>
+                )}
               </li>
             ))}
           </ul>

@@ -1,3 +1,84 @@
+# Slice W20 — Reports dashboard (activates B46)
+
+The six on-demand reports become screens. New admin route `/reports`
+(sidebar + gated by role like Imports), six tabs:
+
+- **Vue d'ensemble** — eight stat cards from the one-round-trip overview;
+  gold reserved for the number that should worry you (expiring ≤30 days —
+  the north-star metric's inverse).
+- **Échéances** — window select (30–365 days), rows linking to each
+  document, J-`days_left` colored by urgency (red ≤7, amber ≤30), and the
+  CSV download (fetched, not linked).
+- **Conformité** — coverage % in gold + the auditor's checklist counts.
+- **Exposition** — link weaknesses computed for the reader ("sans mot de
+  passe" instead of raw counts), rooms, top-10 most-viewed documents.
+- **Activité** — per-member totals with a compact action breakdown.
+- **Circuits** — 90-day throughput, average duration, overdue steps in
+  gold, per-template table.
+
+Numbers are monospace throughout (the W22 evidence texture); every stat
+label says what the number MEANS, not the column it came from.
+
+i18n: `reports.*` + `nav.reports` (FR + EN).
+
+## Verify
+
+`npm run typecheck && npm run dev`, as an admin: /reports shows real
+counts you can eyeball against the vault; the expiring rows link through;
+CSV downloads; a Member doesn't see the nav entry (and the API would 403
+them anyway).
+
+# Slice W24 — Editing UI (activates B48 + B50)
+
+The backend slices become human-usable.
+
+## Document editing (B48)
+
+- `apiFetchWithEtag` in http.ts — the If-Match contract done right: the
+  ETag is FETCHED fresh when the edit dialog opens and echoed back;
+  clients never compute server state. A 409 mid-edit says « rouvrez la
+  fenêtre et réessayez ».
+- Document detail: « Modifier » dialog (title + document type) via
+  PATCH; move stays with the existing move select (PATCH folder_id is for
+  API callers).
+
+## Folder lifecycle (B48)
+
+- `folder-actions.tsx` — per-row ⋮ menu on vault folder rows: rename,
+  move (root-level target select), delete. The delete confirm names the
+  subtree consequence, and a 423 refusal (held document inside) surfaces
+  VERBATIM — that message is legal information, not noise.
+
+## Versions (B48)
+
+- versions-panel rows grow download (fetch-the-302, W16 rule — never
+  `<a href>`) and restore (hidden on the current head); notes now display
+  under each row, so "Restored from vN" reads as provenance.
+
+## Legal holds (B50, admin)
+
+- New route `/legal-holds` (profile menu, admin section): create hold,
+  list with StatusBadge + item counts, and the two-admin release choreographed
+  honestly — the requester sees « un autre administrateur doit approuver »
+  with THEIR approve button disabled; the second admin sees « votre
+  approbation la finalise ».
+- Document detail (admin, unheld docs, when an active hold exists):
+  « Placer sous gel » attaches the current document to a chosen hold.
+- `ui/textarea.tsx` added (hold descriptions).
+
+i18n: `vault.folder*`, `document.edit*`, `version.*`, `holds.*`,
+`nav.holds` — FR + EN.
+
+## Verify
+
+`npm run typecheck && npm run dev`. Rename a folder from the vault →
+children breadcrumbs update. Delete a folder holding a held document →
+the 423 message appears as-is. Edit a title in two tabs → second save
+shows the conflict message. Download v1 of a multi-version document →
+old bytes; restore it → list grows "Restored from v1". As admin: create
+a hold, attach a document from its detail page, request release, approve
+from ANOTHER admin account.
+
 # Slice W23 — Auth screens redesign (the split login + family)
 
 Executes `docs/AUTH-SCREENS-DESIGN-PROMPT.md` in code. All logic (mutations,

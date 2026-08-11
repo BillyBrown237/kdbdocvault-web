@@ -81,7 +81,9 @@
     "profile": "Profile",
     "organizations": "Organizations",
     "rooms": "Data rooms",
-    "imports": "Imports"
+    "imports": "Imports",
+    "holds": "Legal holds",
+    "reports": "Reports"
   },
   "mfa": {
     "title": "Two-step verification",
@@ -215,7 +217,17 @@
     "emptyFolder": "This folder is empty",
     "newFolder": "New folder",
     "folderName": "Folder name",
-    "folderCreated": "Folder created"
+    "folderCreated": "Folder created",
+    "folderActions": "Folder actions",
+    "renameFolder": "Rename folder",
+    "moveFolder": "Move folder",
+    "deleteFolder": "Delete folder",
+    "moveTarget": "Move to",
+    "folderRenamed": "Folder renamed",
+    "folderMoved": "Folder moved",
+    "folderDeleted": "Folder moved to trash",
+    "deleteFolderWarning": "The folder “{{name}}”, its subfolders and all their documents go to trash (restorable for 30 days). A document under legal hold blocks the deletion.",
+    "deleteFolderConfirm": "Move to trash"
   },
   "upload": {
     "button": "Upload",
@@ -305,7 +317,7 @@
     "detailStatus": "Status",
     "size": "Size",
     "mime": "File type",
-    "updated": "Updated",
+    "updated": "Document updated",
     "created": "Created",
     "tags": "Tags",
     "versions": "Versions",
@@ -325,7 +337,12 @@
       "expired": "Expired",
       "renewed": "Renewed",
       "archived": "Archived"
-    }
+    },
+    "edit": "Edit",
+    "editConflict": "The document changed in the meantime — reopen the dialog and retry.",
+    "titleField": "Title",
+    "typeField": "Document type",
+    "noType": "No type"
   },
   "sign": {
     "title": "Signatures",
@@ -638,7 +655,10 @@
     "add": "New version",
     "added": "Version v{{n}} added",
     "current": "Current",
-    "notePlaceholder": "Version note (optional)"
+    "notePlaceholder": "Version note (optional)",
+    "download": "Download this version",
+    "restore": "Restore this version",
+    "restored": "Version restored as v{{n}}"
   },
   "docAudit": {
     "title": "Document history",
@@ -806,6 +826,91 @@
       "active": "Active",
       "suspended": "Suspended",
       "pending": "Pending"
+    }
+  },
+  "holds": {
+    "title": "Legal holds",
+    "subtitle": "Freeze documents during a dispute or audit — release requires two administrators.",
+    "create": "Create hold",
+    "created": "Hold created",
+    "empty": "No legal holds",
+    "name": "Name",
+    "namePlaceholder": "Transcam dispute 2026",
+    "description": "Description",
+    "itemCount_one": "{{count}} document",
+    "itemCount_other": "{{count}} documents",
+    "requestRelease": "Request release",
+    "approveRelease": "Approve release",
+    "releasePending": "Request recorded — a second administrator must approve.",
+    "released": "Hold released",
+    "awaitingOther": "You opened this request — another administrator must approve.",
+    "awaitingYou": "Release requested — your approval completes it.",
+    "attach": "Place under hold",
+    "attachConfirm": "Place under hold",
+    "attachHint": "The document can no longer be deleted or purged while the hold is active.",
+    "attached": "Document placed under hold",
+    "pick": "Choose a hold…"
+  },
+  "reports": {
+    "title": "Reports",
+    "subtitle": "The state of the firm, in verifiable numbers.",
+    "tabs": {
+      "overview": "Overview",
+      "expiring": "Deadlines",
+      "compliance": "Compliance",
+      "exposure": "Exposure",
+      "activity": "Activity",
+      "workflow": "Workflows"
+    },
+    "ov": {
+      "documents": "Active documents",
+      "storage": "Storage used",
+      "members": "Active members",
+      "expiring30": "Expiring within 30 days",
+      "shares": "Active share links",
+      "envelopes": "Envelopes open / signed",
+      "workflows": "Workflows running",
+      "obligations": "Open obligations"
+    },
+    "exp": {
+      "within": "Within {{count}} days",
+      "none": "No deadlines in the period."
+    },
+    "co": {
+      "coverage": "Deadline coverage",
+      "withRule": "Documents with a rule",
+      "unclassified": "Untyped",
+      "orphaned": "Outside any folder",
+      "held": "Under legal hold",
+      "holds": "Active holds",
+      "overdue": "Overdue obligations",
+      "pendingRules": "Detected dates to confirm"
+    },
+    "ex": {
+      "active": "Active links",
+      "noPassword": "Without password",
+      "noExpiry": "Without expiry",
+      "views": "Opens (30 d)",
+      "viewers": "Unique viewers (30 d)",
+      "rooms": "Open data rooms",
+      "visitors": "Room visitors",
+      "watermarked": "Watermarked",
+      "top": "Most viewed documents",
+      "viewCount_one": "{{count}} open",
+      "viewCount_other": "{{count}} opens"
+    },
+    "ac": {
+      "period": "From {{from}} to {{to}}",
+      "none": "No activity in the period.",
+      "total_one": "{{count}} action",
+      "total_other": "{{count}} actions"
+    },
+    "wf": {
+      "started": "Started (90 d)",
+      "completed": "Completed (90 d)",
+      "avgHours": "Average duration",
+      "overdue": "Overdue steps",
+      "byTemplate": "By template"
     }
   }
 }

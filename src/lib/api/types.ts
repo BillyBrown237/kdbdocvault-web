@@ -506,6 +506,90 @@ export interface ImportConnection {
   created_at: string
 }
 
+// --- reports (W20 / B46, admin+) --------------------------------------------
+
+export interface ReportOverview {
+  documents: { active: number; trashed: number }
+  storage_bytes: number
+  members_active: number
+  share_links_active: number
+  envelopes: { open: number; completed: number }
+  workflows_running: number
+  expiring_in_30_days: number
+  obligations_open: number
+  imports_running: number
+  generated_at: string
+}
+
+export interface ExpiringReportRow {
+  document_id: string
+  title: string
+  rule_type: string
+  key_date: string
+  days_left: number
+  owner_id: string
+  owner_name: string | null
+}
+
+export interface ActivityMember {
+  user_id: string | null
+  name: string | null
+  email: string | null
+  total: number
+  actions: Record<string, number>
+}
+
+export interface SharingExposureReport {
+  links: {
+    active: number
+    password_protected: number
+    without_expiry: number
+    expiring_in_7_days: number
+    watermarked: number
+  }
+  views_30d: number
+  unique_viewers_30d: number
+  rooms: { open: number; visitors: number }
+  top_shared: { document_id: string; title: string; views: number }[]
+  generated_at: string
+}
+
+export interface ComplianceReport {
+  documents_active: number
+  with_lifecycle_rule: number
+  retention_coverage_pct: number
+  unclassified: number
+  orphaned: number
+  under_legal_hold: number
+  holds_active: number
+  obligations_overdue: number
+  rules_pending_confirmation: number
+  generated_at: string
+}
+
+export interface WorkflowPerfReport {
+  started_90d: number
+  completed_90d: number
+  avg_completion_hours: number | null
+  overdue_open_steps: number
+  by_template: { template_id: string; name: string; completed: number; avg_hours: number | null }[]
+  generated_at: string
+}
+
+/** B50 legal holds (admin+). `pending_release` carries who opened the
+ * request so the UI can demand a DIFFERENT second administrator. */
+export interface LegalHold {
+  id: string
+  name: string
+  description: string | null
+  status: 'active' | 'pending_release' | 'released'
+  created_by: string | null
+  released_at: string | null
+  created_at: string
+  item_count: number
+  pending_release: { request_id: string; requested_by: string } | null
+}
+
 /** POST /import-connections (google_drive): open `authorize_url` in a popup;
  * the callback page posts `{type:'kdb:import-connection', ok, reason}` back. */
 export interface CreateImportConnectionResult {

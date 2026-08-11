@@ -15,11 +15,13 @@ import { Route as AuditRouteImport } from './routes/audit'
 import { Route as BillingRouteImport } from './routes/billing'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as ImportsRouteImport } from './routes/imports'
+import { Route as LegalHoldsRouteImport } from './routes/legal-holds'
 import { Route as LifecycleRouteImport } from './routes/lifecycle'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MfaRouteImport } from './routes/mfa'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -66,6 +68,11 @@ const ImportsRoute = ImportsRouteImport.update({
   path: '/imports',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LegalHoldsRoute = LegalHoldsRouteImport.update({
+  id: '/legal-holds',
+  path: '/legal-holds',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LifecycleRoute = LifecycleRouteImport.update({
   id: '/lifecycle',
   path: '/lifecycle',
@@ -89,6 +96,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportsRoute = ReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -174,11 +186,13 @@ export interface FileRoutesByFullPath {
   '/billing': typeof BillingRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/imports': typeof ImportsRoute
+  '/legal-holds': typeof LegalHoldsRoute
   '/lifecycle': typeof LifecycleRoute
   '/login': typeof LoginRoute
   '/mfa': typeof MfaRoute
   '/onboarding': typeof OnboardingRoute
   '/register': typeof RegisterRoute
+  '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
@@ -202,11 +216,13 @@ export interface FileRoutesByTo {
   '/billing': typeof BillingRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/imports': typeof ImportsRoute
+  '/legal-holds': typeof LegalHoldsRoute
   '/lifecycle': typeof LifecycleRoute
   '/login': typeof LoginRoute
   '/mfa': typeof MfaRoute
   '/onboarding': typeof OnboardingRoute
   '/register': typeof RegisterRoute
+  '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
@@ -231,11 +247,13 @@ export interface FileRoutesById {
   '/billing': typeof BillingRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/imports': typeof ImportsRoute
+  '/legal-holds': typeof LegalHoldsRoute
   '/lifecycle': typeof LifecycleRoute
   '/login': typeof LoginRoute
   '/mfa': typeof MfaRoute
   '/onboarding': typeof OnboardingRoute
   '/register': typeof RegisterRoute
+  '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
@@ -261,11 +279,13 @@ export interface FileRouteTypes {
     | '/billing'
     | '/forgot-password'
     | '/imports'
+    | '/legal-holds'
     | '/lifecycle'
     | '/login'
     | '/mfa'
     | '/onboarding'
     | '/register'
+    | '/reports'
     | '/reset-password'
     | '/search'
     | '/settings'
@@ -289,11 +309,13 @@ export interface FileRouteTypes {
     | '/billing'
     | '/forgot-password'
     | '/imports'
+    | '/legal-holds'
     | '/lifecycle'
     | '/login'
     | '/mfa'
     | '/onboarding'
     | '/register'
+    | '/reports'
     | '/reset-password'
     | '/search'
     | '/settings'
@@ -317,11 +339,13 @@ export interface FileRouteTypes {
     | '/billing'
     | '/forgot-password'
     | '/imports'
+    | '/legal-holds'
     | '/lifecycle'
     | '/login'
     | '/mfa'
     | '/onboarding'
     | '/register'
+    | '/reports'
     | '/reset-password'
     | '/search'
     | '/settings'
@@ -346,11 +370,13 @@ export interface RootRouteChildren {
   BillingRoute: typeof BillingRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   ImportsRoute: typeof ImportsRoute
+  LegalHoldsRoute: typeof LegalHoldsRoute
   LifecycleRoute: typeof LifecycleRoute
   LoginRoute: typeof LoginRoute
   MfaRoute: typeof MfaRoute
   OnboardingRoute: typeof OnboardingRoute
   RegisterRoute: typeof RegisterRoute
+  ReportsRoute: typeof ReportsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
@@ -412,6 +438,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ImportsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/legal-holds': {
+      id: '/legal-holds'
+      path: '/legal-holds'
+      fullPath: '/legal-holds'
+      preLoaderRoute: typeof LegalHoldsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lifecycle': {
       id: '/lifecycle'
       path: '/lifecycle'
@@ -445,6 +478,13 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reports': {
+      id: '/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof ReportsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -562,11 +602,13 @@ const rootRouteChildren: RootRouteChildren = {
   BillingRoute: BillingRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   ImportsRoute: ImportsRoute,
+  LegalHoldsRoute: LegalHoldsRoute,
   LifecycleRoute: LifecycleRoute,
   LoginRoute: LoginRoute,
   MfaRoute: MfaRoute,
   OnboardingRoute: OnboardingRoute,
   RegisterRoute: RegisterRoute,
+  ReportsRoute: ReportsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
