@@ -1,3 +1,20 @@
+# Slice W25 — Tenant export in settings (activates B52)
+
+Owner-only fifth tab on `/settings`: **Export des données**.
+
+- `createTenantExport()` (queries.ts) → `POST /tenant/export`; polling
+  rides the existing `useJob` hook and shared `/audit/exports/{jobId}`
+  surface — zero new plumbing.
+- The card explains WHAT leaves in the ZIP (original files + folder tree,
+  metadata.csv, full audit chain, signature evidence) and that none of it
+  needs KDB DocVault to read — the §19 promise, stated where the button is.
+- States: idle → running (with honest leave-the-page copy: the backend
+  returns the same in-flight job on a re-POST, so "press again on return")
+  → done (download button, 5-minute presign hint) → failed (error + retry).
+- Tab gated by the same membership-role check the app shell uses (courtesy
+  only; the backend's `owner` policy is the enforcement).
+- i18n: `settings.export*` FR/EN.
+
 # Slice W20 — Reports dashboard (activates B46)
 
 The six on-demand reports become screens. New admin route `/reports`

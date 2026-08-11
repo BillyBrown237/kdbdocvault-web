@@ -1091,6 +1091,12 @@ export function createAuditExport(
   })
 }
 
+/** B52/W25 — §19 exit guarantee. Owner-only; the backend returns the
+ * EXISTING job if one is already queued/running, so double-clicks are safe. */
+export function createTenantExport(): Promise<Job> {
+  return apiFetch<Job>('/tenant/export', { method: 'POST' })
+}
+
 export const jobQuery = (jobId: string) =>
   queryOptions({
     queryKey: ['job', jobId],

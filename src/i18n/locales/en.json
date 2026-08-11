@@ -123,7 +123,16 @@
     "thisDevice": "This device",
     "unknownDevice": "Unknown device",
     "revoke": "Revoke",
-    "sessionRevoked": "Session revoked"
+    "sessionRevoked": "Session revoked",
+    "exportTab": "Data export",
+    "exportTitle": "Export all your data",
+    "exportExplainer": "Download a complete archive of your organization: every document in its original format with the folder structure preserved, a metadata spreadsheet, the full audit trail, and all signature evidence. Nothing in the archive requires KDB DocVault to read.",
+    "exportStart": "Generate the archive",
+    "exportRunning": "Preparing your archive… This can take a few minutes. If you leave this page, press the button again on your return — it picks up the same export.",
+    "exportReady": "Your archive is ready.",
+    "exportDownload": "Download the archive (ZIP)",
+    "exportLinkHint": "The download link is valid for 5 minutes. If it expires, reload this page.",
+    "exportRetry": "Try again"
   },
   "forgot": {
     "title": "Forgot password",

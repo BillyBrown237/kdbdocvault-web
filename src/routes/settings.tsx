@@ -3,22 +3,25 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import QRCode from 'qrcode'
-import { Monitor, ShieldCheck } from 'lucide-react'
+import { Download, Monitor, ShieldCheck } from 'lucide-react'
 
 import { AppShell } from '@/components/app-shell'
 import { ApiProblem, NetworkError } from '@/lib/api/http'
 import {
   changePassword,
   createDocumentType,
+  createTenantExport,
   documentTypesQuery,
   meQuery,
   revokeSession,
   sessionsQuery,
+  tenantQuery,
   totpConfirm,
   totpDisable,
   totpSetup,
   updateProfile,
 } from '@/lib/api/queries'
+import { useJob } from '@/lib/use-job'
 import { requireTenant } from '@/lib/route-guards'
 import { formatDate } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
@@ -43,6 +46,12 @@ function fail(err: unknown, t: (k: string) => string) {
 
 function SettingsPage() {
   const { t } = useTranslation()
+  const me = useQuery(meQuery)
+  const tenant = useQuery(tenantQuery)
+  // Same courtesy gating as the app shell (B47): backend enforces, UI hides.
+  const role = me.data?.memberships.find((m) => m.tenant_id === tenant.data?.id)?.role
+  const isOwner = role === 'Owner'
+
   return (
     <AppShell>
       <h1 className="text-2xl font-bold tracking-tight">{t('settings.title')}</h1>
@@ -52,6 +61,7 @@ function SettingsPage() {
           <TabsTrigger value="security">{t('settings.security')}</TabsTrigger>
           <TabsTrigger value="sessions">{t('settings.sessions')}</TabsTrigger>
           <TabsTrigger value="types">{t('docTypes.tab')}</TabsTrigger>
+          {isOwner && <TabsTrigger value="export">{t('settings.exportTab')}</TabsTrigger>}
         </TabsList>
         <TabsContent value="profile">
           <ProfileTab />
@@ -66,8 +76,69 @@ function SettingsPage() {
         <TabsContent value="types">
           <DocumentTypesCard />
         </TabsContent>
+        {isOwner && (
+          <TabsContent value="export">
+            <TenantExportCard />
+          </TabsContent>
+        )}
       </Tabs>
     </AppShell>
+  )
+}
+
+/**
+ * B52/W25 — the §19 exit guarantee, visible. One button, one ZIP: every
+ * document (original bytes, folder tree preserved), metadata.csv, the full
+ * audit chain, signature evidence. Owner-only; the tab isn't rendered for
+ * other roles.
+ */
+function TenantExportCard() {
+  const { t } = useTranslation()
+  const { job, running, start } = useJob()
+
+  const request = useMutation({
+    mutationFn: createTenantExport,
+    onSuccess: (j) => start(j),
+    onError: (e) => fail(e, t),
+  })
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Download className="h-4 w-4" />
+          {t('settings.exportTitle')}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground">{t('settings.exportExplainer')}</p>
+        {job?.status === 'done' && job.result_url ? (
+          <div className="space-y-3">
+            <p className="text-sm">{t('settings.exportReady')}</p>
+            <Button asChild>
+              <a href={job.result_url} download>
+                <Download className="mr-2 h-4 w-4" />
+                {t('settings.exportDownload')}
+              </a>
+            </Button>
+            <p className="text-xs text-muted-foreground">{t('settings.exportLinkHint')}</p>
+          </div>
+        ) : job?.status === 'failed' ? (
+          <div className="space-y-3">
+            <p className="text-sm text-red-600">{job.error ?? t('errors.unknown')}</p>
+            <Button onClick={() => request.mutate()} disabled={request.isPending}>
+              {t('settings.exportRetry')}
+            </Button>
+          </div>
+        ) : running ? (
+          <p className="text-sm text-muted-foreground">{t('settings.exportRunning')}</p>
+        ) : (
+          <Button onClick={() => request.mutate()} disabled={request.isPending}>
+            {request.isPending ? t('app.loading') : t('settings.exportStart')}
+          </Button>
+        )}
+      </CardContent>
+    </Card>
   )
 }
 
