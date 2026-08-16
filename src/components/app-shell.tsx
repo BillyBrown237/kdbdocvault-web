@@ -14,6 +14,7 @@ import {
   FolderClosed,
   Home,
   LogOut,
+  Plug,
   ScrollText,
   Search,
   Settings,
@@ -52,10 +53,11 @@ const NAV_SECONDARY = [
   { to: '/rooms', key: 'nav.rooms', icon: DoorOpen },
   { to: '/imports', key: 'nav.imports', icon: FileArchive },
   { to: '/reports', key: 'nav.reports', icon: BarChart3 },
+  { to: '/integrations', key: 'nav.integrations', icon: Plug },
 ] as const
 
 /** Admin-only entries in NAV_SECONDARY (W20/B47 gating). */
-const ADMIN_ONLY = new Set(['/imports', '/reports'])
+const ADMIN_ONLY = new Set(['/imports', '/reports', '/integrations'])
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { t, i18n } = useTranslation()

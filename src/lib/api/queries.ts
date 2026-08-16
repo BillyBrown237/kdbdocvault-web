@@ -17,7 +17,12 @@ import {
 import type {
   AclEntry,
   AclEntryInput,
+  ApiKeyList,
   AuditAnchor,
+  CreatedApiKey,
+  Webhook,
+  WebhookDelivery,
+  WebhookList,
   AuditEvent,
   CreateImportConnectionResult,
   DriveBrowse,
@@ -807,6 +812,85 @@ export function updateDepartment(
 
 export function deleteDepartment(departmentId: string): Promise<void> {
   return apiFetch<void>(`/departments/${departmentId}`, { method: 'DELETE' })
+}
+
+// --- integrations: API keys (W28 / B59, admin+) -------------------------------
+
+export const apiKeysQuery = queryOptions({
+  queryKey: ['api-keys'],
+  queryFn: () => apiFetch<ApiKeyList>('/api-keys'),
+})
+
+export function createApiKey(input: {
+  name: string
+  scopes: string[]
+  expires_at?: string | null
+}): Promise<CreatedApiKey> {
+  return apiFetch<CreatedApiKey>('/api-keys', { method: 'POST', body: JSON.stringify(input) })
+}
+
+/** Returns a NEW secret; the old one keeps working until grace_until. */
+export function rotateApiKey(keyId: string, graceHours: number): Promise<CreatedApiKey> {
+  return apiFetch<CreatedApiKey>(`/api-keys/${keyId}/rotate`, {
+    method: 'POST',
+    body: JSON.stringify({ grace_hours: graceHours }),
+  })
+}
+
+export function revokeApiKey(keyId: string): Promise<void> {
+  return apiFetch<void>(`/api-keys/${keyId}`, { method: 'DELETE' })
+}
+
+// --- integrations: webhooks (W28 / B60, admin+) -------------------------------
+
+export const webhooksQuery = queryOptions({
+  queryKey: ['webhooks'],
+  queryFn: () => apiFetch<WebhookList>('/webhooks'),
+})
+
+export function createWebhook(input: {
+  url: string
+  events: string[]
+  secret: string
+}): Promise<Webhook> {
+  return apiFetch<Webhook>('/webhooks', { method: 'POST', body: JSON.stringify(input) })
+}
+
+export function updateWebhook(
+  webhookId: string,
+  input: { url?: string; events?: string[]; active?: boolean; secret?: string },
+): Promise<Webhook> {
+  return apiFetch<Webhook>(`/webhooks/${webhookId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
+}
+
+export function deleteWebhook(webhookId: string): Promise<void> {
+  return apiFetch<void>(`/webhooks/${webhookId}`, { method: 'DELETE' })
+}
+
+export function webhookDeliveriesQuery(webhookId: string) {
+  return queryOptions({
+    queryKey: ['webhooks', 'deliveries', webhookId],
+    queryFn: () => apiFetch<Page<WebhookDelivery>>(`/webhooks/${webhookId}/deliveries?limit=50`),
+  })
+}
+
+export function retryDelivery(webhookId: string, deliveryId: string): Promise<void> {
+  return apiFetch<void>(`/webhooks/${webhookId}/deliveries/${deliveryId}/retry`, {
+    method: 'POST',
+  })
+}
+
+export function replayWebhook(
+  webhookId: string,
+  input: { from: string; to: string; events?: string[] },
+): Promise<{ queued: number }> {
+  return apiFetch<{ queued: number }>(`/webhooks/${webhookId}/replay`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 // --- B57 security policy (read admin+, write owner) ---------------------------

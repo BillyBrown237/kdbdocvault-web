@@ -11,6 +11,9 @@ import { cn } from '@/lib/utils'
  */
 const VARIANTS = {
   error: { icon: AlertTriangle, className: 'border-red-200 bg-red-50 text-red-900' },
+  // W28: "act now or lose something" — distinct from error, which reports
+  // something that already went wrong. The one-time secret needed it.
+  warning: { icon: AlertTriangle, className: 'border-amber-200 bg-amber-50 text-amber-900' },
   info: { icon: Info, className: 'border-sky-200 bg-sky-50 text-sky-900' },
   success: { icon: CheckCircle2, className: 'border-emerald-200 bg-emerald-50 text-emerald-900' },
 }

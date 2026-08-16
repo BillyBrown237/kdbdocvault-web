@@ -15,6 +15,7 @@ import { Route as AuditRouteImport } from './routes/audit'
 import { Route as BillingRouteImport } from './routes/billing'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as ImportsRouteImport } from './routes/imports'
+import { Route as IntegrationsRouteImport } from './routes/integrations'
 import { Route as LegalHoldsRouteImport } from './routes/legal-holds'
 import { Route as LifecycleRouteImport } from './routes/lifecycle'
 import { Route as LoginRouteImport } from './routes/login'
@@ -66,6 +67,11 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
 const ImportsRoute = ImportsRouteImport.update({
   id: '/imports',
   path: '/imports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IntegrationsRoute = IntegrationsRouteImport.update({
+  id: '/integrations',
+  path: '/integrations',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LegalHoldsRoute = LegalHoldsRouteImport.update({
@@ -186,6 +192,7 @@ export interface FileRoutesByFullPath {
   '/billing': typeof BillingRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/imports': typeof ImportsRoute
+  '/integrations': typeof IntegrationsRoute
   '/legal-holds': typeof LegalHoldsRoute
   '/lifecycle': typeof LifecycleRoute
   '/login': typeof LoginRoute
@@ -216,6 +223,7 @@ export interface FileRoutesByTo {
   '/billing': typeof BillingRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/imports': typeof ImportsRoute
+  '/integrations': typeof IntegrationsRoute
   '/legal-holds': typeof LegalHoldsRoute
   '/lifecycle': typeof LifecycleRoute
   '/login': typeof LoginRoute
@@ -247,6 +255,7 @@ export interface FileRoutesById {
   '/billing': typeof BillingRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/imports': typeof ImportsRoute
+  '/integrations': typeof IntegrationsRoute
   '/legal-holds': typeof LegalHoldsRoute
   '/lifecycle': typeof LifecycleRoute
   '/login': typeof LoginRoute
@@ -279,6 +288,7 @@ export interface FileRouteTypes {
     | '/billing'
     | '/forgot-password'
     | '/imports'
+    | '/integrations'
     | '/legal-holds'
     | '/lifecycle'
     | '/login'
@@ -309,6 +319,7 @@ export interface FileRouteTypes {
     | '/billing'
     | '/forgot-password'
     | '/imports'
+    | '/integrations'
     | '/legal-holds'
     | '/lifecycle'
     | '/login'
@@ -339,6 +350,7 @@ export interface FileRouteTypes {
     | '/billing'
     | '/forgot-password'
     | '/imports'
+    | '/integrations'
     | '/legal-holds'
     | '/lifecycle'
     | '/login'
@@ -370,6 +382,7 @@ export interface RootRouteChildren {
   BillingRoute: typeof BillingRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   ImportsRoute: typeof ImportsRoute
+  IntegrationsRoute: typeof IntegrationsRoute
   LegalHoldsRoute: typeof LegalHoldsRoute
   LifecycleRoute: typeof LifecycleRoute
   LoginRoute: typeof LoginRoute
@@ -436,6 +449,13 @@ declare module '@tanstack/react-router' {
       path: '/imports'
       fullPath: '/imports'
       preLoaderRoute: typeof ImportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/integrations': {
+      id: '/integrations'
+      path: '/integrations'
+      fullPath: '/integrations'
+      preLoaderRoute: typeof IntegrationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/legal-holds': {
@@ -602,6 +622,7 @@ const rootRouteChildren: RootRouteChildren = {
   BillingRoute: BillingRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   ImportsRoute: ImportsRoute,
+  IntegrationsRoute: IntegrationsRoute,
   LegalHoldsRoute: LegalHoldsRoute,
   LifecycleRoute: LifecycleRoute,
   LoginRoute: LoginRoute,

@@ -494,6 +494,66 @@ export interface DocumentLink {
   created_at: string
 }
 
+// --- integrations (W28 / B59-B60) --------------------------------------------
+
+export interface ApiKey {
+  id: string
+  name: string
+  scopes: string[]
+  expires_at: string | null
+  last_used_at: string | null
+  last_used_ip: string | null
+  rotated_at: string | null
+  /** While in the future, the PREVIOUS secret still works (rotation window). */
+  grace_until: string | null
+  revoked_at: string | null
+  created_at: string
+}
+
+/** The only shape that ever carries a secret — on create and on rotate. */
+export interface CreatedApiKey {
+  key: ApiKey
+  secret: string
+  secret_notice: string
+}
+
+export interface ApiKeyList {
+  data: ApiKey[]
+  available_scopes: { scope: string; description: string }[]
+}
+
+export interface Webhook {
+  id: string
+  url: string
+  events: string[]
+  active: boolean
+  created_at: string
+}
+
+export interface WebhookList {
+  data: Webhook[]
+  available_events: string[]
+  signature: {
+    header: string
+    timestamp_header: string
+    algorithm: string
+    tolerance_seconds: number
+  }
+}
+
+export interface WebhookDelivery {
+  id: string
+  event_id: string
+  event_type: string
+  status: 'pending' | 'delivered' | 'failed'
+  attempt: number
+  response_code: number | null
+  error: string | null
+  delivered_at: string | null
+  next_attempt_at: string | null
+  created_at: string
+}
+
 /** B57. Absent policy row on the server = these defaults, so this is never null. */
 export interface SecurityPolicy {
   require_mfa: boolean

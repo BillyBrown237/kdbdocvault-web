@@ -66,7 +66,9 @@ export function NotificationPreferencesCard() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Callout>{t('notifPrefs.inAppAlwaysOn')}</Callout>
+        {/* Informational, not a failure — Callout defaults to the error
+            variant, which would paint this note red. */}
+        <Callout variant="info">{t('notifPrefs.inAppAlwaysOn')}</Callout>
 
         {prefs.isPending ? (
           <p className="text-sm text-muted-foreground">{t('app.loading')}</p>

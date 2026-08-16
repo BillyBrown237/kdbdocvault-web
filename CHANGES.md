@@ -1,3 +1,50 @@
+# Slice W28 — Integrations page (activates B59/B60)
+
+New admin route `/integrations`, one page for both halves: keys and
+webhooks are the same job from two directions (let a system call us / have
+us call a system), same audience, same conversation.
+
+## API keys
+
+- Scope picker built from the server's `available_scopes` — the catalog
+  ships with the list response, so the UI never hard-codes it and a new
+  scope appears without a frontend release.
+- **The secret modal cannot be dismissed by clicking away.** This is the
+  one moment the secret exists; an accidental outside-click would cost the
+  user something irreversible, so `onPointerDownOutside` and Escape are
+  both prevented and the only exit is "I've saved it".
+- Rotation shows the same modal — and the key row displays the grace
+  window while it's open, because "the old secret also works until X" is
+  the fact an operator needs during a rollout.
+- Revoked keys aren't listed, just counted, with a line explaining they're
+  kept for the audit trail.
+
+## Webhooks
+
+- Create form generates a 32-char secret on request — nobody should have to
+  invent entropy in a text field — and shows the signature scheme returned
+  by the API so verification doesn't need the docs.
+- **The delivery log is the point of the screen.** Anyone can POST a URL
+  into a form; what an integrator needs at 2am is "did it arrive, what came
+  back, can I send it again". Each row shows the event type, response code
+  or the verbatim network error, attempt count and status, with a one-click
+  retry.
+- Time-range replay lives in the log, where the failures are visible.
+
+## Fixed while here
+
+`Callout` defaults to the **error** variant, so the informational notes
+added in W27 (the in-app-bell explanation, the owner-only policy notice)
+were rendering as red alarm boxes. Both now pass `variant="info"`. Added a
+`warning` variant (amber) for "act now or lose something" — distinct from
+error, which reports something that already went wrong; the one-time key
+secret is its first use.
+
+## Nav
+
+`/integrations` joins the admin-gated secondary nav beside Imports and
+Reports.
+
 # Slice W27 — Surfaces for B55–B58
 
 Four backend slices become screens, plus one component the library was

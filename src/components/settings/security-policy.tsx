@@ -78,7 +78,7 @@ export function SecurityPolicyCard({ canEdit }: { canEdit: boolean }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
-        {!canEdit && <Callout>{t('secPolicy.ownerOnly')}</Callout>}
+        {!canEdit && <Callout variant="info">{t('secPolicy.ownerOnly')}</Callout>}
 
         <div className="flex items-start justify-between gap-4">
           <div>
