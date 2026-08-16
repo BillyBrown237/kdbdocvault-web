@@ -293,6 +293,54 @@ export const documentTypesQuery = queryOptions({
   queryFn: () => apiFetch<Page<DocumentType>>('/document-types'),
 })
 
+// B55: types became editable. System types (is_system) reject both calls with
+// a 422 — the UI hides the buttons rather than letting the user find out.
+export function updateDocumentType(
+  typeId: string,
+  input: { name?: string; metadata_schema?: Record<string, unknown> },
+): Promise<DocumentType> {
+  return apiFetch<DocumentType>(`/document-types/${typeId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
+}
+
+export function deleteDocumentType(typeId: string): Promise<void> {
+  return apiFetch<void>(`/document-types/${typeId}`, { method: 'DELETE' })
+}
+
+// B58: typed links. Stored once, returned from both ends with a computed
+// `direction` — 'outgoing' means THIS document is the subject of the verb.
+export function documentLinksQuery(documentId: string) {
+  return queryOptions({
+    queryKey: ['documents', 'links', documentId],
+    queryFn: () => apiFetch<Page<DocumentLink>>(`/documents/${documentId}/links`),
+  })
+}
+
+/** A small, non-infinite search for pickers (link target, and anywhere else a
+ * few matches beat a paginated result set). */
+export function documentPickerQuery(term: string) {
+  return queryOptions({
+    queryKey: ['document-picker', term],
+    queryFn: () => apiFetch<Page<SearchHit>>(`/search${qs({ q: term, limit: 5 })}`),
+  })
+}
+
+export function createDocumentLink(
+  documentId: string,
+  input: { target_id: string; link_type: string },
+): Promise<DocumentLink> {
+  return apiFetch<DocumentLink>(`/documents/${documentId}/links`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export function deleteDocumentLink(documentId: string, linkId: string): Promise<void> {
+  return apiFetch<void>(`/documents/${documentId}/links/${linkId}`, { method: 'DELETE' })
+}
+
 export function createDocumentType(
   name: string,
   metadataSchema: Record<string, unknown> = {},
@@ -745,6 +793,52 @@ export function createDepartment(input: { name: string; parent_id?: string }): P
   return apiFetch<Department>('/departments', { method: 'POST', body: JSON.stringify(input) })
 }
 
+// B55: departments were create-only until now. `parent_id: null` promotes to
+// the top level; omitting the key leaves the parent alone.
+export function updateDepartment(
+  departmentId: string,
+  input: { name?: string; parent_id?: string | null },
+): Promise<Department> {
+  return apiFetch<Department>(`/departments/${departmentId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
+}
+
+export function deleteDepartment(departmentId: string): Promise<void> {
+  return apiFetch<void>(`/departments/${departmentId}`, { method: 'DELETE' })
+}
+
+// --- B57 security policy (read admin+, write owner) ---------------------------
+
+export const securityPolicyQuery = queryOptions({
+  queryKey: ['security-policy'],
+  queryFn: () => apiFetch<SecurityPolicy>('/tenant/security-policy'),
+})
+
+export function setSecurityPolicy(input: Partial<SecurityPolicy>): Promise<SecurityPolicy> {
+  return apiFetch<SecurityPolicy>('/tenant/security-policy', {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
+}
+
+// --- B56 notification preferences --------------------------------------------
+
+export const notificationPrefsQuery = queryOptions({
+  queryKey: ['notification-preferences'],
+  queryFn: () => apiFetch<NotificationPrefs>('/me/notification-preferences'),
+})
+
+export function setNotificationPrefs(
+  preferences: { family: string; channels: Record<string, boolean> }[],
+): Promise<void> {
+  return apiFetch<void>('/me/notification-preferences', {
+    method: 'PUT',
+    body: JSON.stringify({ preferences }),
+  })
+}
+
 export function createInvitation(input: {
   email: string
   role_id: string
@@ -1161,7 +1255,15 @@ export function getDocumentWithEtag(
 export function patchDocument(
   documentId: string,
   etag: string,
-  input: { title?: string; type_id?: string | null; folder_id?: string | null },
+  // B54: `status` accepts draft | active | archived only. The expiry states
+  // (expiring/expired/renewed) are derived from lifecycle rules by a worker
+  // and the API rejects them with a 422 explaining why.
+  input: {
+    title?: string
+    type_id?: string | null
+    folder_id?: string | null
+    status?: 'draft' | 'active' | 'archived'
+  },
 ): Promise<Document> {
   return apiFetch<Document>(`/documents/${documentId}`, {
     method: 'PATCH',

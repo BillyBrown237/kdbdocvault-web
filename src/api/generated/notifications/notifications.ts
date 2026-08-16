@@ -39,6 +39,7 @@ import type {
   ListNotifications200,
   ListNotificationsParams,
   MarkNotificationsReadBody,
+  Problem,
   ProblemResponse,
   RateLimitedResponse,
   RegisterDeviceBody
@@ -408,6 +409,8 @@ export function useGetNotificationDelivery<TData = Awaited<ReturnType<typeof get
 
 
 /**
+ * **NOT YET IMPLEMENTED — answers 501.** Push registration is meaningless until a push target exists — the PWA has no web-push and there is no native app. Notifications deliver in-app and by email.
+<!-- kdb-annotation -->
  * @summary Register mobile push token
  */
 export type registerDeviceResponse201 = {
@@ -420,15 +423,20 @@ export type registerDeviceResponse429 = {
   status: 429
 }
 
+export type registerDeviceResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type registerDeviceResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 201 | 429>
+  status: Exclude<HTTPStatusCodes, 201 | 429 | 501>
 }
     
 export type registerDeviceResponseSuccess = (registerDeviceResponse201) & {
   headers: Headers;
 };
-export type registerDeviceResponseError = (registerDeviceResponse429 | registerDeviceResponseDefault) & {
+export type registerDeviceResponseError = (registerDeviceResponse429 | registerDeviceResponse501 | registerDeviceResponseDefault) & {
   headers: Headers;
 };
 
@@ -457,7 +465,7 @@ export const registerDevice = async (registerDeviceBody: RegisterDeviceBody, opt
 
 
 
-export const getRegisterDeviceMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
+export const getRegisterDeviceMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerDevice>>, TError,{data: RegisterDeviceBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof registerDevice>>, TError,{data: RegisterDeviceBody}, TContext> => {
 
@@ -484,12 +492,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type RegisterDeviceMutationResult = NonNullable<Awaited<ReturnType<typeof registerDevice>>>
     export type RegisterDeviceMutationBody = RegisterDeviceBody
-    export type RegisterDeviceMutationError = RateLimitedResponse | ProblemResponse
+    export type RegisterDeviceMutationError = RateLimitedResponse | Problem | ProblemResponse
 
     /**
  * @summary Register mobile push token
  */
-export const useRegisterDevice = <TError = RateLimitedResponse | ProblemResponse,
+export const useRegisterDevice = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerDevice>>, TError,{data: RegisterDeviceBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof registerDevice>>,
@@ -503,6 +511,8 @@ export const useRegisterDevice = <TError = RateLimitedResponse | ProblemResponse
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **NOT YET IMPLEMENTED — answers 501.** See POST /devices.
+<!-- kdb-annotation -->
  * @summary Unregister device
  */
 export type unregisterDeviceResponse204 = {
@@ -515,15 +525,20 @@ export type unregisterDeviceResponse429 = {
   status: 429
 }
 
+export type unregisterDeviceResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type unregisterDeviceResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 204 | 429>
+  status: Exclude<HTTPStatusCodes, 204 | 429 | 501>
 }
     
 export type unregisterDeviceResponseSuccess = (unregisterDeviceResponse204) & {
   headers: Headers;
 };
-export type unregisterDeviceResponseError = (unregisterDeviceResponse429 | unregisterDeviceResponseDefault) & {
+export type unregisterDeviceResponseError = (unregisterDeviceResponse429 | unregisterDeviceResponse501 | unregisterDeviceResponseDefault) & {
   headers: Headers;
 };
 
@@ -551,7 +566,7 @@ export const unregisterDevice = async (deviceId: string, options?: RequestInit):
 
 
 
-export const getUnregisterDeviceMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
+export const getUnregisterDeviceMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unregisterDevice>>, TError,{deviceId: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof unregisterDevice>>, TError,{deviceId: string}, TContext> => {
 
@@ -578,12 +593,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type UnregisterDeviceMutationResult = NonNullable<Awaited<ReturnType<typeof unregisterDevice>>>
     
-    export type UnregisterDeviceMutationError = RateLimitedResponse | ProblemResponse
+    export type UnregisterDeviceMutationError = RateLimitedResponse | Problem | ProblemResponse
 
     /**
  * @summary Unregister device
  */
-export const useUnregisterDevice = <TError = RateLimitedResponse | ProblemResponse,
+export const useUnregisterDevice = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unregisterDevice>>, TError,{deviceId: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof unregisterDevice>>,

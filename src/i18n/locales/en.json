@@ -157,7 +157,77 @@
     "retry": "Retry",
     "create": "Create",
     "done": "Done",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "rename": "Rename",
+    "delete": "Delete"
+  },
+  "departments": {
+    "title": "Departments",
+    "explainer": "Departments group members and can be used to target permissions and reports. Sub-departments are allowed.",
+    "empty": "No departments yet.",
+    "name": "Name",
+    "parent": "Parent",
+    "topLevel": "Top level",
+    "created": "Department created",
+    "updated": "Department updated",
+    "deleted": "Department deleted"
+  },
+  "links": {
+    "title": "Related documents",
+    "empty": "No related documents.",
+    "add": "Link a document",
+    "remove": "Remove link",
+    "created": "Documents linked",
+    "removed": "Link removed",
+    "relationship": "Relationship",
+    "findDocument": "Document",
+    "searchPlaceholder": "Search by title…",
+    "type": {
+      "amends": { "outgoing": "Amends", "incoming": "Amended by" },
+      "fulfills": { "outgoing": "Fulfills", "incoming": "Fulfilled by" },
+      "supports": { "outgoing": "Supports", "incoming": "Supported by" },
+      "relates_to": { "outgoing": "Relates to", "incoming": "Related to" }
+    }
+  },
+  "notifPrefs": {
+    "tab": "Notifications",
+    "title": "What we email you about",
+    "inAppAlwaysOn": "The in-app bell always shows everything — it's the record of what happened. These switches control email only.",
+    "emailFor": "Email about {{family}}",
+    "family": {
+      "deadlines": "Deadlines and reminders",
+      "approvals": "Approvals",
+      "signatures": "Signatures",
+      "documents": "Documents",
+      "billing": "Billing"
+    },
+    "familyHint": {
+      "deadlines": "A document is approaching or past its key date.",
+      "approvals": "A step is assigned to you, or a circuit falls behind.",
+      "signatures": "An envelope is sent, signed, completed or declined.",
+      "documents": "A document is shared with you, finishes processing, or fails a security scan.",
+      "billing": "Renewal notices and payment problems."
+    }
+  },
+  "secPolicy": {
+    "tab": "Security policy",
+    "title": "Organisation security rules",
+    "ownerOnly": "Only the owner can change these rules. You can see what's in force.",
+    "requireMfa": "Require two-step verification",
+    "requireMfaHint": "Everyone must set up an authenticator app before they can use the vault. People without it keep access to Settings so they can enrol.",
+    "sessionDays": "Sign-in valid for (days)",
+    "sessionDaysHint": "After this many days everyone signs in again, even on a device they use daily.",
+    "ipAllowlist": "Allowed networks",
+    "ipAllowlistHint": "One address or CIDR range per line. Leave empty to allow any network. You cannot save a list that excludes your own current address.",
+    "sharing": "Sharing rules",
+    "externalAllowed": "Allow public share links",
+    "externalAllowedHint": "When off, documents can only be given to members or placed in a data room.",
+    "requirePassword": "Require a password on every link",
+    "requirePasswordHint": "Recipients must enter a password before they see anything.",
+    "shareMaxDays": "Links expire within (days)",
+    "shareMaxDaysHint": "Anyone creating a link must set an expiry no further than this. Leave empty for no limit.",
+    "noLimit": "No limit"
   },
   "billing": {
     "title": "Billing",
@@ -349,6 +419,13 @@
     },
     "edit": "Edit",
     "editConflict": "The document changed in the meantime — reopen the dialog and retry.",
+    "statusField": "Status",
+    "statusDerived": "This status comes from the document's expiry date and updates on its own. To change it, change the deadline under Lifecycle.",
+    "statusHint": {
+      "draft": "Work in progress — visible to your team, but not treated as an official record.",
+      "active": "In force. This is the normal state for a document you rely on.",
+      "archived": "Kept for the record, no longer in use. Stays searchable and exportable."
+    },
     "titleField": "Title",
     "typeField": "Document type",
     "noType": "No type"
@@ -694,10 +771,12 @@
   "docTypes": {
     "tab": "Types",
     "title": "Document types",
-    "explainer": "Types classify your documents and act as a search filter. Assigning a type to an existing document lands when the API supports it.",
+    "explainer": "Types classify your documents and act as a search filter. Change a document's type from its own page. Standard types are shared by every organisation and can't be edited.",
     "name": "Name",
     "namePlaceholder": "Contract, Invoice, Certificate…",
     "created": "Type created",
+    "renamed": "Type renamed",
+    "deleted": "Type deleted",
     "system": "system"
   },
   "imports": {

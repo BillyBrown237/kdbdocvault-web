@@ -54,6 +54,7 @@ import type {
   ListReminders200,
   ListRetentionPolicies200,
   Obligation,
+  Problem,
   ProblemResponse,
   RateLimitedResponse,
   RejectLegalHoldReleaseBody,
@@ -1442,6 +1443,8 @@ export const useCreateObligation = <TError = RateLimitedResponse | ProblemRespon
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **STRONGER THAN DESCRIBED.** Completing a recurring obligation now SPAWNS the next instance from its recurrence rule (B49) — the field's presence had implied this behaviour before it existed.
+<!-- kdb-annotation -->
  * @summary Update status/owner/due date (recurrence spawns next instance on completion)
  */
 export type updateObligationResponse200 = {
@@ -1538,6 +1541,8 @@ export const useUpdateObligation = <TError = RateLimitedResponse | ProblemRespon
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **NOT YET IMPLEMENTED — answers 501.** Schedule-driven retention is not available. Per-document lifecycle rules (/documents/{id}/lifecycle-rules) cover the pilot's needs; the compliance report's "retention coverage" therefore counts LIFECYCLE RULE coverage, not policy coverage.
+<!-- kdb-annotation -->
  * @summary List retention policies
  */
 export type listRetentionPoliciesResponse200 = {
@@ -1550,15 +1555,20 @@ export type listRetentionPoliciesResponse429 = {
   status: 429
 }
 
+export type listRetentionPoliciesResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type listRetentionPoliciesResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 200 | 429>
+  status: Exclude<HTTPStatusCodes, 200 | 429 | 501>
 }
     
 export type listRetentionPoliciesResponseSuccess = (listRetentionPoliciesResponse200) & {
   headers: Headers;
 };
-export type listRetentionPoliciesResponseError = (listRetentionPoliciesResponse429 | listRetentionPoliciesResponseDefault) & {
+export type listRetentionPoliciesResponseError = (listRetentionPoliciesResponse429 | listRetentionPoliciesResponse501 | listRetentionPoliciesResponseDefault) & {
   headers: Headers;
 };
 
@@ -1594,7 +1604,7 @@ export const getListRetentionPoliciesQueryKey = () => {
     }
 
     
-export const getListRetentionPoliciesQueryOptions = <TData = Awaited<ReturnType<typeof listRetentionPolicies>>, TError = RateLimitedResponse | ProblemResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRetentionPolicies>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getListRetentionPoliciesQueryOptions = <TData = Awaited<ReturnType<typeof listRetentionPolicies>>, TError = RateLimitedResponse | Problem | ProblemResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRetentionPolicies>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -1613,10 +1623,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type ListRetentionPoliciesQueryResult = NonNullable<Awaited<ReturnType<typeof listRetentionPolicies>>>
-export type ListRetentionPoliciesQueryError = RateLimitedResponse | ProblemResponse
+export type ListRetentionPoliciesQueryError = RateLimitedResponse | Problem | ProblemResponse
 
 
-export function useListRetentionPolicies<TData = Awaited<ReturnType<typeof listRetentionPolicies>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useListRetentionPolicies<TData = Awaited<ReturnType<typeof listRetentionPolicies>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRetentionPolicies>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof listRetentionPolicies>>,
@@ -1626,7 +1636,7 @@ export function useListRetentionPolicies<TData = Awaited<ReturnType<typeof listR
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListRetentionPolicies<TData = Awaited<ReturnType<typeof listRetentionPolicies>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useListRetentionPolicies<TData = Awaited<ReturnType<typeof listRetentionPolicies>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRetentionPolicies>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof listRetentionPolicies>>,
@@ -1636,7 +1646,7 @@ export function useListRetentionPolicies<TData = Awaited<ReturnType<typeof listR
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListRetentionPolicies<TData = Awaited<ReturnType<typeof listRetentionPolicies>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useListRetentionPolicies<TData = Awaited<ReturnType<typeof listRetentionPolicies>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRetentionPolicies>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -1644,7 +1654,7 @@ export function useListRetentionPolicies<TData = Awaited<ReturnType<typeof listR
  * @summary List retention policies
  */
 
-export function useListRetentionPolicies<TData = Awaited<ReturnType<typeof listRetentionPolicies>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useListRetentionPolicies<TData = Awaited<ReturnType<typeof listRetentionPolicies>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRetentionPolicies>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -1661,6 +1671,8 @@ export function useListRetentionPolicies<TData = Awaited<ReturnType<typeof listR
 
 
 /**
+ * **NOT YET IMPLEMENTED — answers 501.** Schedule-driven retention is not available. Per-document lifecycle rules (/documents/{id}/lifecycle-rules) cover the pilot's needs; the compliance report's "retention coverage" therefore counts LIFECYCLE RULE coverage, not policy coverage.
+<!-- kdb-annotation -->
  * @summary Create policy
  */
 export type createRetentionPolicyResponse201 = {
@@ -1673,15 +1685,20 @@ export type createRetentionPolicyResponse429 = {
   status: 429
 }
 
+export type createRetentionPolicyResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type createRetentionPolicyResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 201 | 429>
+  status: Exclude<HTTPStatusCodes, 201 | 429 | 501>
 }
     
 export type createRetentionPolicyResponseSuccess = (createRetentionPolicyResponse201) & {
   headers: Headers;
 };
-export type createRetentionPolicyResponseError = (createRetentionPolicyResponse429 | createRetentionPolicyResponseDefault) & {
+export type createRetentionPolicyResponseError = (createRetentionPolicyResponse429 | createRetentionPolicyResponse501 | createRetentionPolicyResponseDefault) & {
   headers: Headers;
 };
 
@@ -1710,7 +1727,7 @@ export const createRetentionPolicy = async (createRetentionPolicyBody: CreateRet
 
 
 
-export const getCreateRetentionPolicyMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
+export const getCreateRetentionPolicyMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRetentionPolicy>>, TError,{data: CreateRetentionPolicyBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createRetentionPolicy>>, TError,{data: CreateRetentionPolicyBody}, TContext> => {
 
@@ -1737,12 +1754,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateRetentionPolicyMutationResult = NonNullable<Awaited<ReturnType<typeof createRetentionPolicy>>>
     export type CreateRetentionPolicyMutationBody = CreateRetentionPolicyBody
-    export type CreateRetentionPolicyMutationError = RateLimitedResponse | ProblemResponse
+    export type CreateRetentionPolicyMutationError = RateLimitedResponse | Problem | ProblemResponse
 
     /**
  * @summary Create policy
  */
-export const useCreateRetentionPolicy = <TError = RateLimitedResponse | ProblemResponse,
+export const useCreateRetentionPolicy = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRetentionPolicy>>, TError,{data: CreateRetentionPolicyBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createRetentionPolicy>>,
@@ -1756,6 +1773,8 @@ export const useCreateRetentionPolicy = <TError = RateLimitedResponse | ProblemR
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **NOT YET IMPLEMENTED — answers 501.** See GET /retention-policies.
+<!-- kdb-annotation -->
  * @summary Edit policy
  */
 export type updateRetentionPolicyResponse200 = {
@@ -1768,15 +1787,20 @@ export type updateRetentionPolicyResponse429 = {
   status: 429
 }
 
+export type updateRetentionPolicyResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type updateRetentionPolicyResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 200 | 429>
+  status: Exclude<HTTPStatusCodes, 200 | 429 | 501>
 }
     
 export type updateRetentionPolicyResponseSuccess = (updateRetentionPolicyResponse200) & {
   headers: Headers;
 };
-export type updateRetentionPolicyResponseError = (updateRetentionPolicyResponse429 | updateRetentionPolicyResponseDefault) & {
+export type updateRetentionPolicyResponseError = (updateRetentionPolicyResponse429 | updateRetentionPolicyResponse501 | updateRetentionPolicyResponseDefault) & {
   headers: Headers;
 };
 
@@ -1806,7 +1830,7 @@ export const updateRetentionPolicy = async (policyId: string,
 
 
 
-export const getUpdateRetentionPolicyMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
+export const getUpdateRetentionPolicyMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRetentionPolicy>>, TError,{policyId: string;data: UpdateRetentionPolicyBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateRetentionPolicy>>, TError,{policyId: string;data: UpdateRetentionPolicyBody}, TContext> => {
 
@@ -1833,12 +1857,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type UpdateRetentionPolicyMutationResult = NonNullable<Awaited<ReturnType<typeof updateRetentionPolicy>>>
     export type UpdateRetentionPolicyMutationBody = UpdateRetentionPolicyBody
-    export type UpdateRetentionPolicyMutationError = RateLimitedResponse | ProblemResponse
+    export type UpdateRetentionPolicyMutationError = RateLimitedResponse | Problem | ProblemResponse
 
     /**
  * @summary Edit policy
  */
-export const useUpdateRetentionPolicy = <TError = RateLimitedResponse | ProblemResponse,
+export const useUpdateRetentionPolicy = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRetentionPolicy>>, TError,{policyId: string;data: UpdateRetentionPolicyBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateRetentionPolicy>>,
@@ -1852,6 +1876,8 @@ export const useUpdateRetentionPolicy = <TError = RateLimitedResponse | ProblemR
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **NOT YET IMPLEMENTED — answers 501.** See GET /retention-policies.
+<!-- kdb-annotation -->
  * @summary Delete policy
  */
 export type deleteRetentionPolicyResponse204 = {
@@ -1864,15 +1890,20 @@ export type deleteRetentionPolicyResponse429 = {
   status: 429
 }
 
+export type deleteRetentionPolicyResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type deleteRetentionPolicyResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 204 | 429>
+  status: Exclude<HTTPStatusCodes, 204 | 429 | 501>
 }
     
 export type deleteRetentionPolicyResponseSuccess = (deleteRetentionPolicyResponse204) & {
   headers: Headers;
 };
-export type deleteRetentionPolicyResponseError = (deleteRetentionPolicyResponse429 | deleteRetentionPolicyResponseDefault) & {
+export type deleteRetentionPolicyResponseError = (deleteRetentionPolicyResponse429 | deleteRetentionPolicyResponse501 | deleteRetentionPolicyResponseDefault) & {
   headers: Headers;
 };
 
@@ -1900,7 +1931,7 @@ export const deleteRetentionPolicy = async (policyId: string, options?: RequestI
 
 
 
-export const getDeleteRetentionPolicyMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
+export const getDeleteRetentionPolicyMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRetentionPolicy>>, TError,{policyId: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteRetentionPolicy>>, TError,{policyId: string}, TContext> => {
 
@@ -1927,12 +1958,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeleteRetentionPolicyMutationResult = NonNullable<Awaited<ReturnType<typeof deleteRetentionPolicy>>>
     
-    export type DeleteRetentionPolicyMutationError = RateLimitedResponse | ProblemResponse
+    export type DeleteRetentionPolicyMutationError = RateLimitedResponse | Problem | ProblemResponse
 
     /**
  * @summary Delete policy
  */
-export const useDeleteRetentionPolicy = <TError = RateLimitedResponse | ProblemResponse,
+export const useDeleteRetentionPolicy = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRetentionPolicy>>, TError,{policyId: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteRetentionPolicy>>,
@@ -2356,7 +2387,9 @@ export const useReleaseLegalHoldItem = <TError = RateLimitedResponse | ProblemRe
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * Creates a pending release request. The hold stays fully active until a DIFFERENT admin with the legal_holds:release permission approves via /release/approve. The initiator cannot approve their own request (enforced server-side, 409 LEGAL_HOLD_SELF_APPROVAL). Requests expire after 72 hours. Both steps are audited.
+ * **STRONGER THAN DESCRIBED.** Dual approval is enforced: the requester cannot countersign their own release (LEGAL_HOLD_SELF_APPROVAL).
+<!-- kdb-annotation -->
+Creates a pending release request. The hold stays fully active until a DIFFERENT admin with the legal_holds:release permission approves via /release/approve. The initiator cannot approve their own request (enforced server-side, 409 LEGAL_HOLD_SELF_APPROVAL). Requests expire after 72 hours. Both steps are audited.
  * @summary Initiate release — dual control, step 1 of 2
  */
 export type initiateLegalHoldReleaseResponse202 = {

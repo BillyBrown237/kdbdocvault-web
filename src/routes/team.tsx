@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Check, Copy, Mail, UserPlus, Users } from 'lucide-react'
 
 import { AppShell } from '@/components/app-shell'
+import { DepartmentsCard } from '@/components/settings/departments'
 import { ApiProblem, NetworkError } from '@/lib/api/http'
 import {
   createInvitation,
@@ -78,7 +79,7 @@ function TeamPage() {
           <InvitationsTab />
         </TabsContent>
         <TabsContent value="org">
-          <OrgTab />
+          <OrgTabWithDepartments />
         </TabsContent>
       </Tabs>
     </AppShell>
@@ -417,5 +418,15 @@ function OrgTab() {
         </Button>
       </CardContent>
     </Card>
+  )
+}
+
+/** W27 (B55): the org tab now covers structure, not just the org's name. */
+function OrgTabWithDepartments() {
+  return (
+    <>
+      <OrgTab />
+      <DepartmentsCard />
+    </>
   )
 }

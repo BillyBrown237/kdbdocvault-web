@@ -40,6 +40,7 @@ import type {
   EmergencyContact,
   ListEmergencyContacts200,
   NotificationPreferences,
+  Problem,
   ProblemResponse,
   RateLimitedResponse,
   UpdateMeBody,
@@ -280,6 +281,8 @@ export const useUpdateMe = <TError = RateLimitedResponse | ProblemResponse,
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **DIFFERS FROM THIS DESCRIPTION.** PATCH is correct and accepted (B49). PUT is also accepted during the transition, because the hand-written SPA client shipped against it.
+<!-- kdb-annotation -->
  * @summary Change password (requires current password)
  */
 export type changePasswordResponse204 = {
@@ -498,6 +501,8 @@ export function useGetNotificationPreferences<TData = Awaited<ReturnType<typeof 
 
 
 /**
+ * **DIFFERS FROM THIS DESCRIPTION.** Preferences are per FAMILY (deadlines, approvals, signatures, documents, billing), not per raw event type, and cover external channels only — the in-app bell is the record of what happened and cannot be switched off. Only `email` delivers today; sms, whatsapp and push are accepted but their adapters are log-only.
+<!-- kdb-annotation -->
  * @summary Update preferences
  */
 export type setNotificationPreferencesResponse200 = {
@@ -593,6 +598,8 @@ export const useSetNotificationPreferences = <TError = RateLimitedResponse | Pro
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **NOT YET IMPLEMENTED — answers 501.** Emergency access is a Personal-plan feature; the pilot targets businesses. Schema exists (emergency_contacts, V001); no surface yet.
+<!-- kdb-annotation -->
  * @summary List trusted contacts (Personal plans)
  */
 export type listEmergencyContactsResponse200 = {
@@ -605,15 +612,20 @@ export type listEmergencyContactsResponse429 = {
   status: 429
 }
 
+export type listEmergencyContactsResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type listEmergencyContactsResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 200 | 429>
+  status: Exclude<HTTPStatusCodes, 200 | 429 | 501>
 }
     
 export type listEmergencyContactsResponseSuccess = (listEmergencyContactsResponse200) & {
   headers: Headers;
 };
-export type listEmergencyContactsResponseError = (listEmergencyContactsResponse429 | listEmergencyContactsResponseDefault) & {
+export type listEmergencyContactsResponseError = (listEmergencyContactsResponse429 | listEmergencyContactsResponse501 | listEmergencyContactsResponseDefault) & {
   headers: Headers;
 };
 
@@ -649,7 +661,7 @@ export const getListEmergencyContactsQueryKey = () => {
     }
 
     
-export const getListEmergencyContactsQueryOptions = <TData = Awaited<ReturnType<typeof listEmergencyContacts>>, TError = RateLimitedResponse | ProblemResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEmergencyContacts>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getListEmergencyContactsQueryOptions = <TData = Awaited<ReturnType<typeof listEmergencyContacts>>, TError = RateLimitedResponse | Problem | ProblemResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEmergencyContacts>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -668,10 +680,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type ListEmergencyContactsQueryResult = NonNullable<Awaited<ReturnType<typeof listEmergencyContacts>>>
-export type ListEmergencyContactsQueryError = RateLimitedResponse | ProblemResponse
+export type ListEmergencyContactsQueryError = RateLimitedResponse | Problem | ProblemResponse
 
 
-export function useListEmergencyContacts<TData = Awaited<ReturnType<typeof listEmergencyContacts>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useListEmergencyContacts<TData = Awaited<ReturnType<typeof listEmergencyContacts>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEmergencyContacts>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof listEmergencyContacts>>,
@@ -681,7 +693,7 @@ export function useListEmergencyContacts<TData = Awaited<ReturnType<typeof listE
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListEmergencyContacts<TData = Awaited<ReturnType<typeof listEmergencyContacts>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useListEmergencyContacts<TData = Awaited<ReturnType<typeof listEmergencyContacts>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEmergencyContacts>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof listEmergencyContacts>>,
@@ -691,7 +703,7 @@ export function useListEmergencyContacts<TData = Awaited<ReturnType<typeof listE
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListEmergencyContacts<TData = Awaited<ReturnType<typeof listEmergencyContacts>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useListEmergencyContacts<TData = Awaited<ReturnType<typeof listEmergencyContacts>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEmergencyContacts>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -699,7 +711,7 @@ export function useListEmergencyContacts<TData = Awaited<ReturnType<typeof listE
  * @summary List trusted contacts (Personal plans)
  */
 
-export function useListEmergencyContacts<TData = Awaited<ReturnType<typeof listEmergencyContacts>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useListEmergencyContacts<TData = Awaited<ReturnType<typeof listEmergencyContacts>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEmergencyContacts>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -716,6 +728,8 @@ export function useListEmergencyContacts<TData = Awaited<ReturnType<typeof listE
 
 
 /**
+ * **NOT YET IMPLEMENTED — answers 501.** Emergency access is a Personal-plan feature; the pilot targets businesses. Schema exists (emergency_contacts, V001); no surface yet.
+<!-- kdb-annotation -->
  * @summary Add trusted contact with access conditions and veto window
  */
 export type addEmergencyContactResponse201 = {
@@ -728,15 +742,20 @@ export type addEmergencyContactResponse429 = {
   status: 429
 }
 
+export type addEmergencyContactResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type addEmergencyContactResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 201 | 429>
+  status: Exclude<HTTPStatusCodes, 201 | 429 | 501>
 }
     
 export type addEmergencyContactResponseSuccess = (addEmergencyContactResponse201) & {
   headers: Headers;
 };
-export type addEmergencyContactResponseError = (addEmergencyContactResponse429 | addEmergencyContactResponseDefault) & {
+export type addEmergencyContactResponseError = (addEmergencyContactResponse429 | addEmergencyContactResponse501 | addEmergencyContactResponseDefault) & {
   headers: Headers;
 };
 
@@ -765,7 +784,7 @@ export const addEmergencyContact = async (addEmergencyContactBody: AddEmergencyC
 
 
 
-export const getAddEmergencyContactMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
+export const getAddEmergencyContactMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addEmergencyContact>>, TError,{data: AddEmergencyContactBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof addEmergencyContact>>, TError,{data: AddEmergencyContactBody}, TContext> => {
 
@@ -792,12 +811,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type AddEmergencyContactMutationResult = NonNullable<Awaited<ReturnType<typeof addEmergencyContact>>>
     export type AddEmergencyContactMutationBody = AddEmergencyContactBody
-    export type AddEmergencyContactMutationError = RateLimitedResponse | ProblemResponse
+    export type AddEmergencyContactMutationError = RateLimitedResponse | Problem | ProblemResponse
 
     /**
  * @summary Add trusted contact with access conditions and veto window
  */
-export const useAddEmergencyContact = <TError = RateLimitedResponse | ProblemResponse,
+export const useAddEmergencyContact = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addEmergencyContact>>, TError,{data: AddEmergencyContactBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof addEmergencyContact>>,
@@ -811,6 +830,8 @@ export const useAddEmergencyContact = <TError = RateLimitedResponse | ProblemRes
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **NOT YET IMPLEMENTED — answers 501.** See GET /me/emergency-contacts.
+<!-- kdb-annotation -->
  * @summary Remove trusted contact
  */
 export type removeEmergencyContactResponse204 = {
@@ -823,15 +844,20 @@ export type removeEmergencyContactResponse429 = {
   status: 429
 }
 
+export type removeEmergencyContactResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type removeEmergencyContactResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 204 | 429>
+  status: Exclude<HTTPStatusCodes, 204 | 429 | 501>
 }
     
 export type removeEmergencyContactResponseSuccess = (removeEmergencyContactResponse204) & {
   headers: Headers;
 };
-export type removeEmergencyContactResponseError = (removeEmergencyContactResponse429 | removeEmergencyContactResponseDefault) & {
+export type removeEmergencyContactResponseError = (removeEmergencyContactResponse429 | removeEmergencyContactResponse501 | removeEmergencyContactResponseDefault) & {
   headers: Headers;
 };
 
@@ -859,7 +885,7 @@ export const removeEmergencyContact = async (contactId: string, options?: Reques
 
 
 
-export const getRemoveEmergencyContactMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
+export const getRemoveEmergencyContactMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeEmergencyContact>>, TError,{contactId: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof removeEmergencyContact>>, TError,{contactId: string}, TContext> => {
 
@@ -886,12 +912,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type RemoveEmergencyContactMutationResult = NonNullable<Awaited<ReturnType<typeof removeEmergencyContact>>>
     
-    export type RemoveEmergencyContactMutationError = RateLimitedResponse | ProblemResponse
+    export type RemoveEmergencyContactMutationError = RateLimitedResponse | Problem | ProblemResponse
 
     /**
  * @summary Remove trusted contact
  */
-export const useRemoveEmergencyContact = <TError = RateLimitedResponse | ProblemResponse,
+export const useRemoveEmergencyContact = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeEmergencyContact>>, TError,{contactId: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof removeEmergencyContact>>,
@@ -905,6 +931,8 @@ export const useRemoveEmergencyContact = <TError = RateLimitedResponse | Problem
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **NOT YET IMPLEMENTED — answers 501.** Deferred with the rest of emergency access. When built it joins the public-surface contract (capability token, SECURITY DEFINER peephole, strict per-IP limit) like /shared, /sign and /verify.
+<!-- kdb-annotation -->
  * @summary (Public) Trusted contact requests access; owner notified, veto timer starts
  */
 export type requestEmergencyAccessResponse202 = {
@@ -917,15 +945,20 @@ export type requestEmergencyAccessResponse429 = {
   status: 429
 }
 
+export type requestEmergencyAccessResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type requestEmergencyAccessResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 202 | 429>
+  status: Exclude<HTTPStatusCodes, 202 | 429 | 501>
 }
     
 export type requestEmergencyAccessResponseSuccess = (requestEmergencyAccessResponse202) & {
   headers: Headers;
 };
-export type requestEmergencyAccessResponseError = (requestEmergencyAccessResponse429 | requestEmergencyAccessResponseDefault) & {
+export type requestEmergencyAccessResponseError = (requestEmergencyAccessResponse429 | requestEmergencyAccessResponse501 | requestEmergencyAccessResponseDefault) & {
   headers: Headers;
 };
 
@@ -953,7 +986,7 @@ export const requestEmergencyAccess = async (grantToken: string, options?: Reque
 
 
 
-export const getRequestEmergencyAccessMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
+export const getRequestEmergencyAccessMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestEmergencyAccess>>, TError,{grantToken: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof requestEmergencyAccess>>, TError,{grantToken: string}, TContext> => {
 
@@ -980,12 +1013,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type RequestEmergencyAccessMutationResult = NonNullable<Awaited<ReturnType<typeof requestEmergencyAccess>>>
     
-    export type RequestEmergencyAccessMutationError = RateLimitedResponse | ProblemResponse
+    export type RequestEmergencyAccessMutationError = RateLimitedResponse | Problem | ProblemResponse
 
     /**
  * @summary (Public) Trusted contact requests access; owner notified, veto timer starts
  */
-export const useRequestEmergencyAccess = <TError = RateLimitedResponse | ProblemResponse,
+export const useRequestEmergencyAccess = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestEmergencyAccess>>, TError,{grantToken: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof requestEmergencyAccess>>,

@@ -45,6 +45,7 @@ import type {
   ListWebhookDeliveries200,
   ListWebhookDeliveriesParams,
   ListWebhooks200,
+  Problem,
   ProblemResponse,
   RateLimitedResponse,
   RotateApiKey200,
@@ -72,6 +73,8 @@ export type HTTPStatusCodes = HTTPStatusCode1xx | HTTPStatusCode2xx | HTTPStatus
 
 
 /**
+ * **NOT YET IMPLEMENTED — answers 501.** Machine API keys are not available. All access is user-scoped JWT. The grace-window rotation design survives to implementation.
+<!-- kdb-annotation -->
  * @summary List keys with full audit metadata
  */
 export type listApiKeysResponse200 = {
@@ -84,15 +87,20 @@ export type listApiKeysResponse429 = {
   status: 429
 }
 
-export type listApiKeysResponseDefault = {
-  data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 200 | 429>
+export type listApiKeysResponse501 = {
+  data: Problem
+  status: 501
 }
 
+export type listApiKeysResponseDefault = {
+  data: ProblemResponse
+  status: Exclude<HTTPStatusCodes, 200 | 429 | 501>
+}
+    
 export type listApiKeysResponseSuccess = (listApiKeysResponse200) & {
   headers: Headers;
 };
-export type listApiKeysResponseError = (listApiKeysResponse429 | listApiKeysResponseDefault) & {
+export type listApiKeysResponseError = (listApiKeysResponse429 | listApiKeysResponse501 | listApiKeysResponseDefault) & {
   headers: Headers;
 };
 
@@ -101,90 +109,93 @@ export type listApiKeysResponse = (listApiKeysResponseSuccess | listApiKeysRespo
 export const getListApiKeysUrl = () => {
 
 
-
+  
 
   return `/api-keys`
 }
 
-export const listApiKeys = async (options?: RequestInit): Promise<listApiKeysResponse> => {
-
+export const listApiKeys = async ( options?: RequestInit): Promise<listApiKeysResponse> => {
+  
   return apiFetch<listApiKeysResponse>(getListApiKeysUrl(),
-    {
-      ...options,
-      method: 'GET'
-
-
-    }
-  );
-}
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
 
 
 
 
 
 export const getListApiKeysQueryKey = () => {
-  return [
+    return [
     `/api-keys`
-  ] as const;
-}
+    ] as const;
+    }
 
-
-export const getListApiKeysQueryOptions = <TData = Awaited<ReturnType<typeof listApiKeys>>, TError = RateLimitedResponse | ProblemResponse>(options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listApiKeys>>, TError, TData>>, request?: SecondParameter<typeof apiFetch> }
+    
+export const getListApiKeysQueryOptions = <TData = Awaited<ReturnType<typeof listApiKeys>>, TError = RateLimitedResponse | Problem | ProblemResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listApiKeys>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
-  const { query: queryOptions, request: requestOptions } = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getListApiKeysQueryKey();
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof listApiKeys>>> = ({ signal }) => listApiKeys({ signal, ...requestOptions });
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<Awaited<ReturnType<typeof listApiKeys>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  const queryKey =  queryOptions?.queryKey ?? getListApiKeysQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listApiKeys>>> = ({ signal }) => listApiKeys({ signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listApiKeys>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type ListApiKeysQueryResult = NonNullable<Awaited<ReturnType<typeof listApiKeys>>>
-export type ListApiKeysQueryError = RateLimitedResponse | ProblemResponse
+export type ListApiKeysQueryError = RateLimitedResponse | Problem | ProblemResponse
 
 
-export function useListApiKeys<TData = Awaited<ReturnType<typeof listApiKeys>>, TError = RateLimitedResponse | ProblemResponse>(
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listApiKeys>>, TError, TData>> & Pick<
-      DefinedInitialDataOptions<
-        Awaited<ReturnType<typeof listApiKeys>>,
-        TError,
-        Awaited<ReturnType<typeof listApiKeys>>
-      >, 'initialData'
-    >, request?: SecondParameter<typeof apiFetch>
-  }
-  , queryClient?: QueryClient
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListApiKeys<TData = Awaited<ReturnType<typeof listApiKeys>>, TError = RateLimitedResponse | ProblemResponse>(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listApiKeys>>, TError, TData>> & Pick<
-      UndefinedInitialDataOptions<
-        Awaited<ReturnType<typeof listApiKeys>>,
-        TError,
-        Awaited<ReturnType<typeof listApiKeys>>
-      >, 'initialData'
-    >, request?: SecondParameter<typeof apiFetch>
-  }
-  , queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListApiKeys<TData = Awaited<ReturnType<typeof listApiKeys>>, TError = RateLimitedResponse | ProblemResponse>(
-  options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listApiKeys>>, TError, TData>>, request?: SecondParameter<typeof apiFetch> }
-  , queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListApiKeys<TData = Awaited<ReturnType<typeof listApiKeys>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listApiKeys>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listApiKeys>>,
+          TError,
+          Awaited<ReturnType<typeof listApiKeys>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListApiKeys<TData = Awaited<ReturnType<typeof listApiKeys>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listApiKeys>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listApiKeys>>,
+          TError,
+          Awaited<ReturnType<typeof listApiKeys>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListApiKeys<TData = Awaited<ReturnType<typeof listApiKeys>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listApiKeys>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary List keys with full audit metadata
  */
 
-export function useListApiKeys<TData = Awaited<ReturnType<typeof listApiKeys>>, TError = RateLimitedResponse | ProblemResponse>(
-  options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listApiKeys>>, TError, TData>>, request?: SecondParameter<typeof apiFetch> }
-  , queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useListApiKeys<TData = Awaited<ReturnType<typeof listApiKeys>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listApiKeys>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getListApiKeysQueryOptions(options)
 
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  query.queryKey = queryOptions.queryKey;
+  query.queryKey = queryOptions.queryKey ;
 
   return query;
 }
@@ -192,6 +203,8 @@ export function useListApiKeys<TData = Awaited<ReturnType<typeof listApiKeys>>, 
 
 
 /**
+ * **NOT YET IMPLEMENTED — answers 501.** Machine API keys are not available. All access is user-scoped JWT. The grace-window rotation design survives to implementation.
+<!-- kdb-annotation -->
  * @summary Create key (secret shown once)
  */
 export type createApiKeyResponse201 = {
@@ -204,15 +217,20 @@ export type createApiKeyResponse429 = {
   status: 429
 }
 
-export type createApiKeyResponseDefault = {
-  data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 201 | 429>
+export type createApiKeyResponse501 = {
+  data: Problem
+  status: 501
 }
 
+export type createApiKeyResponseDefault = {
+  data: ProblemResponse
+  status: Exclude<HTTPStatusCodes, 201 | 429 | 501>
+}
+    
 export type createApiKeyResponseSuccess = (createApiKeyResponse201) & {
   headers: Headers;
 };
-export type createApiKeyResponseError = (createApiKeyResponse429 | createApiKeyResponseDefault) & {
+export type createApiKeyResponseError = (createApiKeyResponse429 | createApiKeyResponse501 | createApiKeyResponseDefault) & {
   headers: Headers;
 };
 
@@ -221,76 +239,76 @@ export type createApiKeyResponse = (createApiKeyResponseSuccess | createApiKeyRe
 export const getCreateApiKeyUrl = () => {
 
 
-
+  
 
   return `/api-keys`
 }
 
 export const createApiKey = async (createApiKeyBody: CreateApiKeyBody, options?: RequestInit): Promise<createApiKeyResponse> => {
-
+  
   return apiFetch<createApiKeyResponse>(getCreateApiKeyUrl(),
-    {
-      ...options,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...options?.headers },
-      body: JSON.stringify(
-        createApiKeyBody,)
-    }
-  );
-}
-
-
-
-
-export const getCreateApiKeyMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof createApiKey>>, TError, { data: CreateApiKeyBody }, TContext>, request?: SecondParameter<typeof apiFetch> }
-  ): UseMutationOptions<Awaited<ReturnType<typeof createApiKey>>, TError, { data: CreateApiKeyBody }, TContext> => {
-
-  const mutationKey = ['createApiKey'];
-  const { mutation: mutationOptions, request: requestOptions } = options ?
-    options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey, }, request: undefined };
-
-
-
-
-  const mutationFn: MutationFunction<Awaited<ReturnType<typeof createApiKey>>, { data: CreateApiKeyBody }> = (props) => {
-    const { data } = props ?? {};
-
-    return createApiKey(data, requestOptions)
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createApiKeyBody,)
   }
+);}
 
 
 
 
-  return { mutationFn, ...mutationOptions }
-}
+export const getCreateApiKeyMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createApiKey>>, TError,{data: CreateApiKeyBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createApiKey>>, TError,{data: CreateApiKeyBody}, TContext> => {
 
-export type CreateApiKeyMutationResult = NonNullable<Awaited<ReturnType<typeof createApiKey>>>
-export type CreateApiKeyMutationBody = CreateApiKeyBody
-export type CreateApiKeyMutationError = RateLimitedResponse | ProblemResponse
+const mutationKey = ['createApiKey'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
-/**
-* @summary Create key (secret shown once)
-*/
-export const useCreateApiKey = <TError = RateLimitedResponse | ProblemResponse,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof createApiKey>>, TError, { data: CreateApiKeyBody }, TContext>, request?: SecondParameter<typeof apiFetch> }
-    , queryClient?: QueryClient): UseMutationResult<
-      Awaited<ReturnType<typeof createApiKey>>,
-      TError,
-      { data: CreateApiKeyBody },
-      TContext
-    > => {
+      
 
-  const mutationOptions = getCreateApiKeyMutationOptions(options);
 
-  return useMutation(mutationOptions, queryClient);
-}
-/**
-* @summary Revoke immediately
-*/
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createApiKey>>, {data: CreateApiKeyBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createApiKey(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateApiKeyMutationResult = NonNullable<Awaited<ReturnType<typeof createApiKey>>>
+    export type CreateApiKeyMutationBody = CreateApiKeyBody
+    export type CreateApiKeyMutationError = RateLimitedResponse | Problem | ProblemResponse
+
+    /**
+ * @summary Create key (secret shown once)
+ */
+export const useCreateApiKey = <TError = RateLimitedResponse | Problem | ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createApiKey>>, TError,{data: CreateApiKeyBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createApiKey>>,
+        TError,
+        {data: CreateApiKeyBody},
+        TContext
+      > => {
+
+      const mutationOptions = getCreateApiKeyMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * **NOT YET IMPLEMENTED — answers 501.** See GET /api-keys.
+<!-- kdb-annotation -->
+ * @summary Revoke immediately
+ */
 export type revokeApiKeyResponse204 = {
   data: void
   status: 204
@@ -301,15 +319,20 @@ export type revokeApiKeyResponse429 = {
   status: 429
 }
 
-export type revokeApiKeyResponseDefault = {
-  data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 204 | 429>
+export type revokeApiKeyResponse501 = {
+  data: Problem
+  status: 501
 }
 
+export type revokeApiKeyResponseDefault = {
+  data: ProblemResponse
+  status: Exclude<HTTPStatusCodes, 204 | 429 | 501>
+}
+    
 export type revokeApiKeyResponseSuccess = (revokeApiKeyResponse204) & {
   headers: Headers;
 };
-export type revokeApiKeyResponseError = (revokeApiKeyResponse429 | revokeApiKeyResponseDefault) & {
+export type revokeApiKeyResponseError = (revokeApiKeyResponse429 | revokeApiKeyResponse501 | revokeApiKeyResponseDefault) & {
   headers: Headers;
 };
 
@@ -318,75 +341,75 @@ export type revokeApiKeyResponse = (revokeApiKeyResponseSuccess | revokeApiKeyRe
 export const getRevokeApiKeyUrl = (keyId: string,) => {
 
 
-
+  
 
   return `/api-keys/${keyId}`
 }
 
 export const revokeApiKey = async (keyId: string, options?: RequestInit): Promise<revokeApiKeyResponse> => {
-
+  
   return apiFetch<revokeApiKeyResponse>(getRevokeApiKeyUrl(keyId),
-    {
-      ...options,
-      method: 'DELETE'
-
-
-    }
-  );
-}
-
-
-
-
-export const getRevokeApiKeyMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof revokeApiKey>>, TError, { keyId: string }, TContext>, request?: SecondParameter<typeof apiFetch> }
-  ): UseMutationOptions<Awaited<ReturnType<typeof revokeApiKey>>, TError, { keyId: string }, TContext> => {
-
-  const mutationKey = ['revokeApiKey'];
-  const { mutation: mutationOptions, request: requestOptions } = options ?
-    options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey, }, request: undefined };
-
-
-
-
-  const mutationFn: MutationFunction<Awaited<ReturnType<typeof revokeApiKey>>, { keyId: string }> = (props) => {
-    const { keyId } = props ?? {};
-
-    return revokeApiKey(keyId, requestOptions)
+  {      
+    ...options,
+    method: 'DELETE'
+    
+    
   }
+);}
 
 
 
 
-  return { mutationFn, ...mutationOptions }
-}
+export const getRevokeApiKeyMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeApiKey>>, TError,{keyId: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof revokeApiKey>>, TError,{keyId: string}, TContext> => {
 
-export type RevokeApiKeyMutationResult = NonNullable<Awaited<ReturnType<typeof revokeApiKey>>>
+const mutationKey = ['revokeApiKey'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
-export type RevokeApiKeyMutationError = RateLimitedResponse | ProblemResponse
+      
 
-/**
-* @summary Revoke immediately
-*/
-export const useRevokeApiKey = <TError = RateLimitedResponse | ProblemResponse,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof revokeApiKey>>, TError, { keyId: string }, TContext>, request?: SecondParameter<typeof apiFetch> }
-    , queryClient?: QueryClient): UseMutationResult<
-      Awaited<ReturnType<typeof revokeApiKey>>,
-      TError,
-      { keyId: string },
-      TContext
-    > => {
 
-  const mutationOptions = getRevokeApiKeyMutationOptions(options);
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof revokeApiKey>>, {keyId: string}> = (props) => {
+          const {keyId} = props ?? {};
 
-  return useMutation(mutationOptions, queryClient);
-}
-/**
-* @summary Issue new secret; old valid for grace window (zero-downtime)
-*/
+          return  revokeApiKey(keyId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RevokeApiKeyMutationResult = NonNullable<Awaited<ReturnType<typeof revokeApiKey>>>
+    
+    export type RevokeApiKeyMutationError = RateLimitedResponse | Problem | ProblemResponse
+
+    /**
+ * @summary Revoke immediately
+ */
+export const useRevokeApiKey = <TError = RateLimitedResponse | Problem | ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeApiKey>>, TError,{keyId: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof revokeApiKey>>,
+        TError,
+        {keyId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getRevokeApiKeyMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * **NOT YET IMPLEMENTED — answers 501.** See GET /api-keys.
+<!-- kdb-annotation -->
+ * @summary Issue new secret; old valid for grace window (zero-downtime)
+ */
 export type rotateApiKeyResponse200 = {
   data: RotateApiKey200
   status: 200
@@ -397,15 +420,20 @@ export type rotateApiKeyResponse429 = {
   status: 429
 }
 
-export type rotateApiKeyResponseDefault = {
-  data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 200 | 429>
+export type rotateApiKeyResponse501 = {
+  data: Problem
+  status: 501
 }
 
+export type rotateApiKeyResponseDefault = {
+  data: ProblemResponse
+  status: Exclude<HTTPStatusCodes, 200 | 429 | 501>
+}
+    
 export type rotateApiKeyResponseSuccess = (rotateApiKeyResponse200) & {
   headers: Headers;
 };
-export type rotateApiKeyResponseError = (rotateApiKeyResponse429 | rotateApiKeyResponseDefault) & {
+export type rotateApiKeyResponseError = (rotateApiKeyResponse429 | rotateApiKeyResponse501 | rotateApiKeyResponseDefault) & {
   headers: Headers;
 };
 
@@ -414,77 +442,77 @@ export type rotateApiKeyResponse = (rotateApiKeyResponseSuccess | rotateApiKeyRe
 export const getRotateApiKeyUrl = (keyId: string,) => {
 
 
-
+  
 
   return `/api-keys/${keyId}/rotate`
 }
 
 export const rotateApiKey = async (keyId: string,
-  rotateApiKeyBody: RotateApiKeyBody, options?: RequestInit): Promise<rotateApiKeyResponse> => {
-
+    rotateApiKeyBody: RotateApiKeyBody, options?: RequestInit): Promise<rotateApiKeyResponse> => {
+  
   return apiFetch<rotateApiKeyResponse>(getRotateApiKeyUrl(keyId),
-    {
-      ...options,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...options?.headers },
-      body: JSON.stringify(
-        rotateApiKeyBody,)
-    }
-  );
-}
-
-
-
-
-export const getRotateApiKeyMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof rotateApiKey>>, TError, { keyId: string; data: RotateApiKeyBody }, TContext>, request?: SecondParameter<typeof apiFetch> }
-  ): UseMutationOptions<Awaited<ReturnType<typeof rotateApiKey>>, TError, { keyId: string; data: RotateApiKeyBody }, TContext> => {
-
-  const mutationKey = ['rotateApiKey'];
-  const { mutation: mutationOptions, request: requestOptions } = options ?
-    options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey, }, request: undefined };
-
-
-
-
-  const mutationFn: MutationFunction<Awaited<ReturnType<typeof rotateApiKey>>, { keyId: string; data: RotateApiKeyBody }> = (props) => {
-    const { keyId, data } = props ?? {};
-
-    return rotateApiKey(keyId, data, requestOptions)
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      rotateApiKeyBody,)
   }
+);}
 
 
 
 
-  return { mutationFn, ...mutationOptions }
-}
+export const getRotateApiKeyMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rotateApiKey>>, TError,{keyId: string;data: RotateApiKeyBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof rotateApiKey>>, TError,{keyId: string;data: RotateApiKeyBody}, TContext> => {
 
-export type RotateApiKeyMutationResult = NonNullable<Awaited<ReturnType<typeof rotateApiKey>>>
-export type RotateApiKeyMutationBody = RotateApiKeyBody
-export type RotateApiKeyMutationError = RateLimitedResponse | ProblemResponse
+const mutationKey = ['rotateApiKey'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
-/**
-* @summary Issue new secret; old valid for grace window (zero-downtime)
-*/
-export const useRotateApiKey = <TError = RateLimitedResponse | ProblemResponse,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof rotateApiKey>>, TError, { keyId: string; data: RotateApiKeyBody }, TContext>, request?: SecondParameter<typeof apiFetch> }
-    , queryClient?: QueryClient): UseMutationResult<
-      Awaited<ReturnType<typeof rotateApiKey>>,
-      TError,
-      { keyId: string; data: RotateApiKeyBody },
-      TContext
-    > => {
+      
 
-  const mutationOptions = getRotateApiKeyMutationOptions(options);
 
-  return useMutation(mutationOptions, queryClient);
-}
-/**
-* @summary List subscriptions
-*/
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rotateApiKey>>, {keyId: string;data: RotateApiKeyBody}> = (props) => {
+          const {keyId,data} = props ?? {};
+
+          return  rotateApiKey(keyId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RotateApiKeyMutationResult = NonNullable<Awaited<ReturnType<typeof rotateApiKey>>>
+    export type RotateApiKeyMutationBody = RotateApiKeyBody
+    export type RotateApiKeyMutationError = RateLimitedResponse | Problem | ProblemResponse
+
+    /**
+ * @summary Issue new secret; old valid for grace window (zero-downtime)
+ */
+export const useRotateApiKey = <TError = RateLimitedResponse | Problem | ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rotateApiKey>>, TError,{keyId: string;data: RotateApiKeyBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof rotateApiKey>>,
+        TError,
+        {keyId: string;data: RotateApiKeyBody},
+        TContext
+      > => {
+
+      const mutationOptions = getRotateApiKeyMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * **NOT YET IMPLEMENTED — answers 501.** Outbound webhooks are not available. Domain events ARE recorded (outbox_messages) so nothing is lost in the meantime — subscriptions created later can be replayed from the event log.
+<!-- kdb-annotation -->
+ * @summary List subscriptions
+ */
 export type listWebhooksResponse200 = {
   data: ListWebhooks200
   status: 200
@@ -495,15 +523,20 @@ export type listWebhooksResponse429 = {
   status: 429
 }
 
-export type listWebhooksResponseDefault = {
-  data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 200 | 429>
+export type listWebhooksResponse501 = {
+  data: Problem
+  status: 501
 }
 
+export type listWebhooksResponseDefault = {
+  data: ProblemResponse
+  status: Exclude<HTTPStatusCodes, 200 | 429 | 501>
+}
+    
 export type listWebhooksResponseSuccess = (listWebhooksResponse200) & {
   headers: Headers;
 };
-export type listWebhooksResponseError = (listWebhooksResponse429 | listWebhooksResponseDefault) & {
+export type listWebhooksResponseError = (listWebhooksResponse429 | listWebhooksResponse501 | listWebhooksResponseDefault) & {
   headers: Headers;
 };
 
@@ -512,98 +545,93 @@ export type listWebhooksResponse = (listWebhooksResponseSuccess | listWebhooksRe
 export const getListWebhooksUrl = () => {
 
 
-
+  
 
   return `/webhooks`
 }
 
-export const listWebhooks = async (options?: RequestInit): Promise<listWebhooksResponse> => {
-
+export const listWebhooks = async ( options?: RequestInit): Promise<listWebhooksResponse> => {
+  
   return apiFetch<listWebhooksResponse>(getListWebhooksUrl(),
-    {
-      ...options,
-      method: 'GET'
-
-
-    }
-  );
-}
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
 
 
 
 
 
 export const getListWebhooksQueryKey = () => {
-  return [
+    return [
     `/webhooks`
-  ] as const;
-}
+    ] as const;
+    }
 
-
-export const getListWebhooksQueryOptions = <TData = Awaited<ReturnType<typeof listWebhooks>>, TError = RateLimitedResponse | ProblemResponse>(options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listWebhooks>>, TError, TData>>, request?: SecondParameter<typeof apiFetch> }
+    
+export const getListWebhooksQueryOptions = <TData = Awaited<ReturnType<typeof listWebhooks>>, TError = RateLimitedResponse | Problem | ProblemResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWebhooks>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
-  const { query: queryOptions, request: requestOptions } = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getListWebhooksQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getListWebhooksQueryKey();
 
+  
 
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listWebhooks>>> = ({ signal }) => listWebhooks({ signal, ...requestOptions });
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof listWebhooks>>> = ({ signal }) => listWebhooks({ signal, ...requestOptions });
+      
 
+      
 
-
-
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<Awaited<ReturnType<typeof listWebhooks>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listWebhooks>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type ListWebhooksQueryResult = NonNullable<Awaited<ReturnType<typeof listWebhooks>>>
-export type ListWebhooksQueryError = RateLimitedResponse | ProblemResponse
+export type ListWebhooksQueryError = RateLimitedResponse | Problem | ProblemResponse
 
 
-export function useListWebhooks<TData = Awaited<ReturnType<typeof listWebhooks>>, TError = RateLimitedResponse | ProblemResponse>(
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listWebhooks>>, TError, TData>> & Pick<
-      DefinedInitialDataOptions<
-        Awaited<ReturnType<typeof listWebhooks>>,
-        TError,
-        Awaited<ReturnType<typeof listWebhooks>>
-      >, 'initialData'
-    >, request?: SecondParameter<typeof apiFetch>
-  }
-  , queryClient?: QueryClient
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListWebhooks<TData = Awaited<ReturnType<typeof listWebhooks>>, TError = RateLimitedResponse | ProblemResponse>(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listWebhooks>>, TError, TData>> & Pick<
-      UndefinedInitialDataOptions<
-        Awaited<ReturnType<typeof listWebhooks>>,
-        TError,
-        Awaited<ReturnType<typeof listWebhooks>>
-      >, 'initialData'
-    >, request?: SecondParameter<typeof apiFetch>
-  }
-  , queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListWebhooks<TData = Awaited<ReturnType<typeof listWebhooks>>, TError = RateLimitedResponse | ProblemResponse>(
-  options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listWebhooks>>, TError, TData>>, request?: SecondParameter<typeof apiFetch> }
-  , queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListWebhooks<TData = Awaited<ReturnType<typeof listWebhooks>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWebhooks>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listWebhooks>>,
+          TError,
+          Awaited<ReturnType<typeof listWebhooks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListWebhooks<TData = Awaited<ReturnType<typeof listWebhooks>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWebhooks>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listWebhooks>>,
+          TError,
+          Awaited<ReturnType<typeof listWebhooks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListWebhooks<TData = Awaited<ReturnType<typeof listWebhooks>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWebhooks>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary List subscriptions
  */
 
-export function useListWebhooks<TData = Awaited<ReturnType<typeof listWebhooks>>, TError = RateLimitedResponse | ProblemResponse>(
-  options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listWebhooks>>, TError, TData>>, request?: SecondParameter<typeof apiFetch> }
-  , queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useListWebhooks<TData = Awaited<ReturnType<typeof listWebhooks>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWebhooks>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getListWebhooksQueryOptions(options)
 
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  query.queryKey = queryOptions.queryKey;
+  query.queryKey = queryOptions.queryKey ;
 
   return query;
 }
@@ -611,6 +639,8 @@ export function useListWebhooks<TData = Awaited<ReturnType<typeof listWebhooks>>
 
 
 /**
+ * **NOT YET IMPLEMENTED — answers 501.** Outbound webhooks are not available. Domain events ARE recorded (outbox_messages) so nothing is lost in the meantime — subscriptions created later can be replayed from the event log.
+<!-- kdb-annotation -->
  * @summary Create subscription
  */
 export type createWebhookResponse201 = {
@@ -623,15 +653,20 @@ export type createWebhookResponse429 = {
   status: 429
 }
 
-export type createWebhookResponseDefault = {
-  data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 201 | 429>
+export type createWebhookResponse501 = {
+  data: Problem
+  status: 501
 }
 
+export type createWebhookResponseDefault = {
+  data: ProblemResponse
+  status: Exclude<HTTPStatusCodes, 201 | 429 | 501>
+}
+    
 export type createWebhookResponseSuccess = (createWebhookResponse201) & {
   headers: Headers;
 };
-export type createWebhookResponseError = (createWebhookResponse429 | createWebhookResponseDefault) & {
+export type createWebhookResponseError = (createWebhookResponse429 | createWebhookResponse501 | createWebhookResponseDefault) & {
   headers: Headers;
 };
 
@@ -640,76 +675,76 @@ export type createWebhookResponse = (createWebhookResponseSuccess | createWebhoo
 export const getCreateWebhookUrl = () => {
 
 
-
+  
 
   return `/webhooks`
 }
 
 export const createWebhook = async (createWebhookBody: CreateWebhookBody, options?: RequestInit): Promise<createWebhookResponse> => {
-
+  
   return apiFetch<createWebhookResponse>(getCreateWebhookUrl(),
-    {
-      ...options,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...options?.headers },
-      body: JSON.stringify(
-        createWebhookBody,)
-    }
-  );
-}
-
-
-
-
-export const getCreateWebhookMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof createWebhook>>, TError, { data: CreateWebhookBody }, TContext>, request?: SecondParameter<typeof apiFetch> }
-  ): UseMutationOptions<Awaited<ReturnType<typeof createWebhook>>, TError, { data: CreateWebhookBody }, TContext> => {
-
-  const mutationKey = ['createWebhook'];
-  const { mutation: mutationOptions, request: requestOptions } = options ?
-    options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey, }, request: undefined };
-
-
-
-
-  const mutationFn: MutationFunction<Awaited<ReturnType<typeof createWebhook>>, { data: CreateWebhookBody }> = (props) => {
-    const { data } = props ?? {};
-
-    return createWebhook(data, requestOptions)
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createWebhookBody,)
   }
+);}
 
 
 
 
-  return { mutationFn, ...mutationOptions }
-}
+export const getCreateWebhookMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWebhook>>, TError,{data: CreateWebhookBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createWebhook>>, TError,{data: CreateWebhookBody}, TContext> => {
 
-export type CreateWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof createWebhook>>>
-export type CreateWebhookMutationBody = CreateWebhookBody
-export type CreateWebhookMutationError = RateLimitedResponse | ProblemResponse
+const mutationKey = ['createWebhook'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
-/**
-* @summary Create subscription
-*/
-export const useCreateWebhook = <TError = RateLimitedResponse | ProblemResponse,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof createWebhook>>, TError, { data: CreateWebhookBody }, TContext>, request?: SecondParameter<typeof apiFetch> }
-    , queryClient?: QueryClient): UseMutationResult<
-      Awaited<ReturnType<typeof createWebhook>>,
-      TError,
-      { data: CreateWebhookBody },
-      TContext
-    > => {
+      
 
-  const mutationOptions = getCreateWebhookMutationOptions(options);
 
-  return useMutation(mutationOptions, queryClient);
-}
-/**
-* @summary Pause/edit subscription
-*/
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createWebhook>>, {data: CreateWebhookBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createWebhook(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof createWebhook>>>
+    export type CreateWebhookMutationBody = CreateWebhookBody
+    export type CreateWebhookMutationError = RateLimitedResponse | Problem | ProblemResponse
+
+    /**
+ * @summary Create subscription
+ */
+export const useCreateWebhook = <TError = RateLimitedResponse | Problem | ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWebhook>>, TError,{data: CreateWebhookBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createWebhook>>,
+        TError,
+        {data: CreateWebhookBody},
+        TContext
+      > => {
+
+      const mutationOptions = getCreateWebhookMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * **NOT YET IMPLEMENTED — answers 501.** See GET /webhooks.
+<!-- kdb-annotation -->
+ * @summary Pause/edit subscription
+ */
 export type updateWebhookResponse200 = {
   data: WebhookSubscription
   status: 200
@@ -720,15 +755,20 @@ export type updateWebhookResponse429 = {
   status: 429
 }
 
-export type updateWebhookResponseDefault = {
-  data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 200 | 429>
+export type updateWebhookResponse501 = {
+  data: Problem
+  status: 501
 }
 
+export type updateWebhookResponseDefault = {
+  data: ProblemResponse
+  status: Exclude<HTTPStatusCodes, 200 | 429 | 501>
+}
+    
 export type updateWebhookResponseSuccess = (updateWebhookResponse200) & {
   headers: Headers;
 };
-export type updateWebhookResponseError = (updateWebhookResponse429 | updateWebhookResponseDefault) & {
+export type updateWebhookResponseError = (updateWebhookResponse429 | updateWebhookResponse501 | updateWebhookResponseDefault) & {
   headers: Headers;
 };
 
@@ -737,77 +777,77 @@ export type updateWebhookResponse = (updateWebhookResponseSuccess | updateWebhoo
 export const getUpdateWebhookUrl = (webhookId: string,) => {
 
 
-
+  
 
   return `/webhooks/${webhookId}`
 }
 
 export const updateWebhook = async (webhookId: string,
-  updateWebhookBody: UpdateWebhookBody, options?: RequestInit): Promise<updateWebhookResponse> => {
-
+    updateWebhookBody: UpdateWebhookBody, options?: RequestInit): Promise<updateWebhookResponse> => {
+  
   return apiFetch<updateWebhookResponse>(getUpdateWebhookUrl(webhookId),
-    {
-      ...options,
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', ...options?.headers },
-      body: JSON.stringify(
-        updateWebhookBody,)
-    }
-  );
-}
-
-
-
-
-export const getUpdateWebhookMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof updateWebhook>>, TError, { webhookId: string; data: UpdateWebhookBody }, TContext>, request?: SecondParameter<typeof apiFetch> }
-  ): UseMutationOptions<Awaited<ReturnType<typeof updateWebhook>>, TError, { webhookId: string; data: UpdateWebhookBody }, TContext> => {
-
-  const mutationKey = ['updateWebhook'];
-  const { mutation: mutationOptions, request: requestOptions } = options ?
-    options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey, }, request: undefined };
-
-
-
-
-  const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateWebhook>>, { webhookId: string; data: UpdateWebhookBody }> = (props) => {
-    const { webhookId, data } = props ?? {};
-
-    return updateWebhook(webhookId, data, requestOptions)
+  {      
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateWebhookBody,)
   }
+);}
 
 
 
 
-  return { mutationFn, ...mutationOptions }
-}
+export const getUpdateWebhookMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWebhook>>, TError,{webhookId: string;data: UpdateWebhookBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateWebhook>>, TError,{webhookId: string;data: UpdateWebhookBody}, TContext> => {
 
-export type UpdateWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof updateWebhook>>>
-export type UpdateWebhookMutationBody = UpdateWebhookBody
-export type UpdateWebhookMutationError = RateLimitedResponse | ProblemResponse
+const mutationKey = ['updateWebhook'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
-/**
-* @summary Pause/edit subscription
-*/
-export const useUpdateWebhook = <TError = RateLimitedResponse | ProblemResponse,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof updateWebhook>>, TError, { webhookId: string; data: UpdateWebhookBody }, TContext>, request?: SecondParameter<typeof apiFetch> }
-    , queryClient?: QueryClient): UseMutationResult<
-      Awaited<ReturnType<typeof updateWebhook>>,
-      TError,
-      { webhookId: string; data: UpdateWebhookBody },
-      TContext
-    > => {
+      
 
-  const mutationOptions = getUpdateWebhookMutationOptions(options);
 
-  return useMutation(mutationOptions, queryClient);
-}
-/**
-* @summary Delete subscription
-*/
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateWebhook>>, {webhookId: string;data: UpdateWebhookBody}> = (props) => {
+          const {webhookId,data} = props ?? {};
+
+          return  updateWebhook(webhookId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof updateWebhook>>>
+    export type UpdateWebhookMutationBody = UpdateWebhookBody
+    export type UpdateWebhookMutationError = RateLimitedResponse | Problem | ProblemResponse
+
+    /**
+ * @summary Pause/edit subscription
+ */
+export const useUpdateWebhook = <TError = RateLimitedResponse | Problem | ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWebhook>>, TError,{webhookId: string;data: UpdateWebhookBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateWebhook>>,
+        TError,
+        {webhookId: string;data: UpdateWebhookBody},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateWebhookMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * **NOT YET IMPLEMENTED — answers 501.** See GET /webhooks.
+<!-- kdb-annotation -->
+ * @summary Delete subscription
+ */
 export type deleteWebhookResponse204 = {
   data: void
   status: 204
@@ -818,15 +858,20 @@ export type deleteWebhookResponse429 = {
   status: 429
 }
 
-export type deleteWebhookResponseDefault = {
-  data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 204 | 429>
+export type deleteWebhookResponse501 = {
+  data: Problem
+  status: 501
 }
 
+export type deleteWebhookResponseDefault = {
+  data: ProblemResponse
+  status: Exclude<HTTPStatusCodes, 204 | 429 | 501>
+}
+    
 export type deleteWebhookResponseSuccess = (deleteWebhookResponse204) & {
   headers: Headers;
 };
-export type deleteWebhookResponseError = (deleteWebhookResponse429 | deleteWebhookResponseDefault) & {
+export type deleteWebhookResponseError = (deleteWebhookResponse429 | deleteWebhookResponse501 | deleteWebhookResponseDefault) & {
   headers: Headers;
 };
 
@@ -835,75 +880,75 @@ export type deleteWebhookResponse = (deleteWebhookResponseSuccess | deleteWebhoo
 export const getDeleteWebhookUrl = (webhookId: string,) => {
 
 
-
+  
 
   return `/webhooks/${webhookId}`
 }
 
 export const deleteWebhook = async (webhookId: string, options?: RequestInit): Promise<deleteWebhookResponse> => {
-
+  
   return apiFetch<deleteWebhookResponse>(getDeleteWebhookUrl(webhookId),
-    {
-      ...options,
-      method: 'DELETE'
-
-
-    }
-  );
-}
-
-
-
-
-export const getDeleteWebhookMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof deleteWebhook>>, TError, { webhookId: string }, TContext>, request?: SecondParameter<typeof apiFetch> }
-  ): UseMutationOptions<Awaited<ReturnType<typeof deleteWebhook>>, TError, { webhookId: string }, TContext> => {
-
-  const mutationKey = ['deleteWebhook'];
-  const { mutation: mutationOptions, request: requestOptions } = options ?
-    options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey, }, request: undefined };
-
-
-
-
-  const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteWebhook>>, { webhookId: string }> = (props) => {
-    const { webhookId } = props ?? {};
-
-    return deleteWebhook(webhookId, requestOptions)
+  {      
+    ...options,
+    method: 'DELETE'
+    
+    
   }
+);}
 
 
 
 
-  return { mutationFn, ...mutationOptions }
-}
+export const getDeleteWebhookMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteWebhook>>, TError,{webhookId: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteWebhook>>, TError,{webhookId: string}, TContext> => {
 
-export type DeleteWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof deleteWebhook>>>
+const mutationKey = ['deleteWebhook'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
-export type DeleteWebhookMutationError = RateLimitedResponse | ProblemResponse
+      
 
-/**
-* @summary Delete subscription
-*/
-export const useDeleteWebhook = <TError = RateLimitedResponse | ProblemResponse,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof deleteWebhook>>, TError, { webhookId: string }, TContext>, request?: SecondParameter<typeof apiFetch> }
-    , queryClient?: QueryClient): UseMutationResult<
-      Awaited<ReturnType<typeof deleteWebhook>>,
-      TError,
-      { webhookId: string },
-      TContext
-    > => {
 
-  const mutationOptions = getDeleteWebhookMutationOptions(options);
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteWebhook>>, {webhookId: string}> = (props) => {
+          const {webhookId} = props ?? {};
 
-  return useMutation(mutationOptions, queryClient);
-}
-/**
-* @summary Recent deliveries with response codes
-*/
+          return  deleteWebhook(webhookId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof deleteWebhook>>>
+    
+    export type DeleteWebhookMutationError = RateLimitedResponse | Problem | ProblemResponse
+
+    /**
+ * @summary Delete subscription
+ */
+export const useDeleteWebhook = <TError = RateLimitedResponse | Problem | ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteWebhook>>, TError,{webhookId: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteWebhook>>,
+        TError,
+        {webhookId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getDeleteWebhookMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * **NOT YET IMPLEMENTED — answers 501.** See GET /webhooks.
+<!-- kdb-annotation -->
+ * @summary Recent deliveries with response codes
+ */
 export type listWebhookDeliveriesResponse200 = {
   data: ListWebhookDeliveries200
   status: 200
@@ -914,26 +959,31 @@ export type listWebhookDeliveriesResponse429 = {
   status: 429
 }
 
-export type listWebhookDeliveriesResponseDefault = {
-  data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 200 | 429>
+export type listWebhookDeliveriesResponse501 = {
+  data: Problem
+  status: 501
 }
 
+export type listWebhookDeliveriesResponseDefault = {
+  data: ProblemResponse
+  status: Exclude<HTTPStatusCodes, 200 | 429 | 501>
+}
+    
 export type listWebhookDeliveriesResponseSuccess = (listWebhookDeliveriesResponse200) & {
   headers: Headers;
 };
-export type listWebhookDeliveriesResponseError = (listWebhookDeliveriesResponse429 | listWebhookDeliveriesResponseDefault) & {
+export type listWebhookDeliveriesResponseError = (listWebhookDeliveriesResponse429 | listWebhookDeliveriesResponse501 | listWebhookDeliveriesResponseDefault) & {
   headers: Headers;
 };
 
 export type listWebhookDeliveriesResponse = (listWebhookDeliveriesResponseSuccess | listWebhookDeliveriesResponseError)
 
 export const getListWebhookDeliveriesUrl = (webhookId: string,
-  params?: ListWebhookDeliveriesParams,) => {
+    params?: ListWebhookDeliveriesParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
+    
     if (value !== undefined) {
       normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
@@ -945,99 +995,94 @@ export const getListWebhookDeliveriesUrl = (webhookId: string,
 }
 
 export const listWebhookDeliveries = async (webhookId: string,
-  params?: ListWebhookDeliveriesParams, options?: RequestInit): Promise<listWebhookDeliveriesResponse> => {
-
-  return apiFetch<listWebhookDeliveriesResponse>(getListWebhookDeliveriesUrl(webhookId, params),
-    {
-      ...options,
-      method: 'GET'
-
-
-    }
-  );
-}
+    params?: ListWebhookDeliveriesParams, options?: RequestInit): Promise<listWebhookDeliveriesResponse> => {
+  
+  return apiFetch<listWebhookDeliveriesResponse>(getListWebhookDeliveriesUrl(webhookId,params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
 
 
 
 
 
 export const getListWebhookDeliveriesQueryKey = (webhookId?: string,
-  params?: ListWebhookDeliveriesParams,) => {
-  return [
-    `/webhooks/${webhookId}/deliveries`, ...(params ? [params] : [])
-  ] as const;
-}
+    params?: ListWebhookDeliveriesParams,) => {
+    return [
+    `/webhooks/${webhookId}/deliveries`, ...(params ? [params]: [])
+    ] as const;
+    }
 
-
-export const getListWebhookDeliveriesQueryOptions = <TData = Awaited<ReturnType<typeof listWebhookDeliveries>>, TError = RateLimitedResponse | ProblemResponse>(webhookId: string,
-  params?: ListWebhookDeliveriesParams, options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listWebhookDeliveries>>, TError, TData>>, request?: SecondParameter<typeof apiFetch> }
+    
+export const getListWebhookDeliveriesQueryOptions = <TData = Awaited<ReturnType<typeof listWebhookDeliveries>>, TError = RateLimitedResponse | Problem | ProblemResponse>(webhookId: string,
+    params?: ListWebhookDeliveriesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWebhookDeliveries>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
-  const { query: queryOptions, request: requestOptions } = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getListWebhookDeliveriesQueryKey(webhookId, params);
+  const queryKey =  queryOptions?.queryKey ?? getListWebhookDeliveriesQueryKey(webhookId,params);
 
+  
 
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listWebhookDeliveries>>> = ({ signal }) => listWebhookDeliveries(webhookId,params, { signal, ...requestOptions });
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof listWebhookDeliveries>>> = ({ signal }) => listWebhookDeliveries(webhookId, params, { signal, ...requestOptions });
+      
 
+      
 
-
-
-
-  return { queryKey, queryFn, enabled: !!(webhookId), ...queryOptions } as UseQueryOptions<Awaited<ReturnType<typeof listWebhookDeliveries>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(webhookId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listWebhookDeliveries>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type ListWebhookDeliveriesQueryResult = NonNullable<Awaited<ReturnType<typeof listWebhookDeliveries>>>
-export type ListWebhookDeliveriesQueryError = RateLimitedResponse | ProblemResponse
+export type ListWebhookDeliveriesQueryError = RateLimitedResponse | Problem | ProblemResponse
 
 
-export function useListWebhookDeliveries<TData = Awaited<ReturnType<typeof listWebhookDeliveries>>, TError = RateLimitedResponse | ProblemResponse>(
-  webhookId: string,
-  params: undefined | ListWebhookDeliveriesParams, options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listWebhookDeliveries>>, TError, TData>> & Pick<
-      DefinedInitialDataOptions<
-        Awaited<ReturnType<typeof listWebhookDeliveries>>,
-        TError,
-        Awaited<ReturnType<typeof listWebhookDeliveries>>
-      >, 'initialData'
-    >, request?: SecondParameter<typeof apiFetch>
-  }
-  , queryClient?: QueryClient
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListWebhookDeliveries<TData = Awaited<ReturnType<typeof listWebhookDeliveries>>, TError = RateLimitedResponse | ProblemResponse>(
-  webhookId: string,
-  params?: ListWebhookDeliveriesParams, options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listWebhookDeliveries>>, TError, TData>> & Pick<
-      UndefinedInitialDataOptions<
-        Awaited<ReturnType<typeof listWebhookDeliveries>>,
-        TError,
-        Awaited<ReturnType<typeof listWebhookDeliveries>>
-      >, 'initialData'
-    >, request?: SecondParameter<typeof apiFetch>
-  }
-  , queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListWebhookDeliveries<TData = Awaited<ReturnType<typeof listWebhookDeliveries>>, TError = RateLimitedResponse | ProblemResponse>(
-  webhookId: string,
-  params?: ListWebhookDeliveriesParams, options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listWebhookDeliveries>>, TError, TData>>, request?: SecondParameter<typeof apiFetch> }
-  , queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListWebhookDeliveries<TData = Awaited<ReturnType<typeof listWebhookDeliveries>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
+ webhookId: string,
+    params: undefined |  ListWebhookDeliveriesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWebhookDeliveries>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listWebhookDeliveries>>,
+          TError,
+          Awaited<ReturnType<typeof listWebhookDeliveries>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListWebhookDeliveries<TData = Awaited<ReturnType<typeof listWebhookDeliveries>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
+ webhookId: string,
+    params?: ListWebhookDeliveriesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWebhookDeliveries>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listWebhookDeliveries>>,
+          TError,
+          Awaited<ReturnType<typeof listWebhookDeliveries>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListWebhookDeliveries<TData = Awaited<ReturnType<typeof listWebhookDeliveries>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
+ webhookId: string,
+    params?: ListWebhookDeliveriesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWebhookDeliveries>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Recent deliveries with response codes
  */
 
-export function useListWebhookDeliveries<TData = Awaited<ReturnType<typeof listWebhookDeliveries>>, TError = RateLimitedResponse | ProblemResponse>(
-  webhookId: string,
-  params?: ListWebhookDeliveriesParams, options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listWebhookDeliveries>>, TError, TData>>, request?: SecondParameter<typeof apiFetch> }
-  , queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useListWebhookDeliveries<TData = Awaited<ReturnType<typeof listWebhookDeliveries>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
+ webhookId: string,
+    params?: ListWebhookDeliveriesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWebhookDeliveries>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getListWebhookDeliveriesQueryOptions(webhookId, params, options)
+  const queryOptions = getListWebhookDeliveriesQueryOptions(webhookId,params,options)
 
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  query.queryKey = queryOptions.queryKey;
+  query.queryKey = queryOptions.queryKey ;
 
   return query;
 }
@@ -1045,6 +1090,8 @@ export function useListWebhookDeliveries<TData = Awaited<ReturnType<typeof listW
 
 
 /**
+ * **NOT YET IMPLEMENTED — answers 501.** See GET /webhooks.
+<!-- kdb-annotation -->
  * @summary Retry a single delivery
  */
 export type retryWebhookDeliveryResponse202 = {
@@ -1057,94 +1104,99 @@ export type retryWebhookDeliveryResponse429 = {
   status: 429
 }
 
-export type retryWebhookDeliveryResponseDefault = {
-  data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 202 | 429>
+export type retryWebhookDeliveryResponse501 = {
+  data: Problem
+  status: 501
 }
 
+export type retryWebhookDeliveryResponseDefault = {
+  data: ProblemResponse
+  status: Exclude<HTTPStatusCodes, 202 | 429 | 501>
+}
+    
 export type retryWebhookDeliveryResponseSuccess = (retryWebhookDeliveryResponse202) & {
   headers: Headers;
 };
-export type retryWebhookDeliveryResponseError = (retryWebhookDeliveryResponse429 | retryWebhookDeliveryResponseDefault) & {
+export type retryWebhookDeliveryResponseError = (retryWebhookDeliveryResponse429 | retryWebhookDeliveryResponse501 | retryWebhookDeliveryResponseDefault) & {
   headers: Headers;
 };
 
 export type retryWebhookDeliveryResponse = (retryWebhookDeliveryResponseSuccess | retryWebhookDeliveryResponseError)
 
 export const getRetryWebhookDeliveryUrl = (webhookId: string,
-  deliveryId: string,) => {
+    deliveryId: string,) => {
 
 
-
+  
 
   return `/webhooks/${webhookId}/deliveries/${deliveryId}/retry`
 }
 
 export const retryWebhookDelivery = async (webhookId: string,
-  deliveryId: string, options?: RequestInit): Promise<retryWebhookDeliveryResponse> => {
-
-  return apiFetch<retryWebhookDeliveryResponse>(getRetryWebhookDeliveryUrl(webhookId, deliveryId),
-    {
-      ...options,
-      method: 'POST'
-
-
-    }
-  );
-}
-
-
-
-
-export const getRetryWebhookDeliveryMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof retryWebhookDelivery>>, TError, { webhookId: string; deliveryId: string }, TContext>, request?: SecondParameter<typeof apiFetch> }
-  ): UseMutationOptions<Awaited<ReturnType<typeof retryWebhookDelivery>>, TError, { webhookId: string; deliveryId: string }, TContext> => {
-
-  const mutationKey = ['retryWebhookDelivery'];
-  const { mutation: mutationOptions, request: requestOptions } = options ?
-    options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey, }, request: undefined };
-
-
-
-
-  const mutationFn: MutationFunction<Awaited<ReturnType<typeof retryWebhookDelivery>>, { webhookId: string; deliveryId: string }> = (props) => {
-    const { webhookId, deliveryId } = props ?? {};
-
-    return retryWebhookDelivery(webhookId, deliveryId, requestOptions)
+    deliveryId: string, options?: RequestInit): Promise<retryWebhookDeliveryResponse> => {
+  
+  return apiFetch<retryWebhookDeliveryResponse>(getRetryWebhookDeliveryUrl(webhookId,deliveryId),
+  {      
+    ...options,
+    method: 'POST'
+    
+    
   }
+);}
 
 
 
 
-  return { mutationFn, ...mutationOptions }
-}
+export const getRetryWebhookDeliveryMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retryWebhookDelivery>>, TError,{webhookId: string;deliveryId: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof retryWebhookDelivery>>, TError,{webhookId: string;deliveryId: string}, TContext> => {
 
-export type RetryWebhookDeliveryMutationResult = NonNullable<Awaited<ReturnType<typeof retryWebhookDelivery>>>
+const mutationKey = ['retryWebhookDelivery'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
-export type RetryWebhookDeliveryMutationError = RateLimitedResponse | ProblemResponse
+      
 
-/**
-* @summary Retry a single delivery
-*/
-export const useRetryWebhookDelivery = <TError = RateLimitedResponse | ProblemResponse,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof retryWebhookDelivery>>, TError, { webhookId: string; deliveryId: string }, TContext>, request?: SecondParameter<typeof apiFetch> }
-    , queryClient?: QueryClient): UseMutationResult<
-      Awaited<ReturnType<typeof retryWebhookDelivery>>,
-      TError,
-      { webhookId: string; deliveryId: string },
-      TContext
-    > => {
 
-  const mutationOptions = getRetryWebhookDeliveryMutationOptions(options);
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof retryWebhookDelivery>>, {webhookId: string;deliveryId: string}> = (props) => {
+          const {webhookId,deliveryId} = props ?? {};
 
-  return useMutation(mutationOptions, queryClient);
-}
-/**
-* @summary Re-deliver a single event to all matching subscriptions
-*/
+          return  retryWebhookDelivery(webhookId,deliveryId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RetryWebhookDeliveryMutationResult = NonNullable<Awaited<ReturnType<typeof retryWebhookDelivery>>>
+    
+    export type RetryWebhookDeliveryMutationError = RateLimitedResponse | Problem | ProblemResponse
+
+    /**
+ * @summary Retry a single delivery
+ */
+export const useRetryWebhookDelivery = <TError = RateLimitedResponse | Problem | ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retryWebhookDelivery>>, TError,{webhookId: string;deliveryId: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof retryWebhookDelivery>>,
+        TError,
+        {webhookId: string;deliveryId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getRetryWebhookDeliveryMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * **NOT YET IMPLEMENTED — answers 501.** See GET /webhooks.
+<!-- kdb-annotation -->
+ * @summary Re-deliver a single event to all matching subscriptions
+ */
 export type replayWebhookEventResponse202 = {
   data: void
   status: 202
@@ -1155,15 +1207,20 @@ export type replayWebhookEventResponse429 = {
   status: 429
 }
 
-export type replayWebhookEventResponseDefault = {
-  data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 202 | 429>
+export type replayWebhookEventResponse501 = {
+  data: Problem
+  status: 501
 }
 
+export type replayWebhookEventResponseDefault = {
+  data: ProblemResponse
+  status: Exclude<HTTPStatusCodes, 202 | 429 | 501>
+}
+    
 export type replayWebhookEventResponseSuccess = (replayWebhookEventResponse202) & {
   headers: Headers;
 };
-export type replayWebhookEventResponseError = (replayWebhookEventResponse429 | replayWebhookEventResponseDefault) & {
+export type replayWebhookEventResponseError = (replayWebhookEventResponse429 | replayWebhookEventResponse501 | replayWebhookEventResponseDefault) & {
   headers: Headers;
 };
 
@@ -1172,75 +1229,75 @@ export type replayWebhookEventResponse = (replayWebhookEventResponseSuccess | re
 export const getReplayWebhookEventUrl = (eventId: string,) => {
 
 
-
+  
 
   return `/webhooks/events/${eventId}/replay`
 }
 
 export const replayWebhookEvent = async (eventId: string, options?: RequestInit): Promise<replayWebhookEventResponse> => {
-
+  
   return apiFetch<replayWebhookEventResponse>(getReplayWebhookEventUrl(eventId),
-    {
-      ...options,
-      method: 'POST'
-
-
-    }
-  );
-}
-
-
-
-
-export const getReplayWebhookEventMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof replayWebhookEvent>>, TError, { eventId: string }, TContext>, request?: SecondParameter<typeof apiFetch> }
-  ): UseMutationOptions<Awaited<ReturnType<typeof replayWebhookEvent>>, TError, { eventId: string }, TContext> => {
-
-  const mutationKey = ['replayWebhookEvent'];
-  const { mutation: mutationOptions, request: requestOptions } = options ?
-    options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey, }, request: undefined };
-
-
-
-
-  const mutationFn: MutationFunction<Awaited<ReturnType<typeof replayWebhookEvent>>, { eventId: string }> = (props) => {
-    const { eventId } = props ?? {};
-
-    return replayWebhookEvent(eventId, requestOptions)
+  {      
+    ...options,
+    method: 'POST'
+    
+    
   }
+);}
 
 
 
 
-  return { mutationFn, ...mutationOptions }
-}
+export const getReplayWebhookEventMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replayWebhookEvent>>, TError,{eventId: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof replayWebhookEvent>>, TError,{eventId: string}, TContext> => {
 
-export type ReplayWebhookEventMutationResult = NonNullable<Awaited<ReturnType<typeof replayWebhookEvent>>>
+const mutationKey = ['replayWebhookEvent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
-export type ReplayWebhookEventMutationError = RateLimitedResponse | ProblemResponse
+      
 
-/**
-* @summary Re-deliver a single event to all matching subscriptions
-*/
-export const useReplayWebhookEvent = <TError = RateLimitedResponse | ProblemResponse,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof replayWebhookEvent>>, TError, { eventId: string }, TContext>, request?: SecondParameter<typeof apiFetch> }
-    , queryClient?: QueryClient): UseMutationResult<
-      Awaited<ReturnType<typeof replayWebhookEvent>>,
-      TError,
-      { eventId: string },
-      TContext
-    > => {
 
-  const mutationOptions = getReplayWebhookEventMutationOptions(options);
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replayWebhookEvent>>, {eventId: string}> = (props) => {
+          const {eventId} = props ?? {};
 
-  return useMutation(mutationOptions, queryClient);
-}
-/**
-* @summary Bulk replay by time range — recovery after receiver downtime
-*/
+          return  replayWebhookEvent(eventId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReplayWebhookEventMutationResult = NonNullable<Awaited<ReturnType<typeof replayWebhookEvent>>>
+    
+    export type ReplayWebhookEventMutationError = RateLimitedResponse | Problem | ProblemResponse
+
+    /**
+ * @summary Re-deliver a single event to all matching subscriptions
+ */
+export const useReplayWebhookEvent = <TError = RateLimitedResponse | Problem | ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replayWebhookEvent>>, TError,{eventId: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof replayWebhookEvent>>,
+        TError,
+        {eventId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getReplayWebhookEventMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * **NOT YET IMPLEMENTED — answers 501.** See GET /webhooks.
+<!-- kdb-annotation -->
+ * @summary Bulk replay by time range — recovery after receiver downtime
+ */
 export type bulkReplayWebhookResponse202 = {
   data: Job
   status: 202
@@ -1251,15 +1308,20 @@ export type bulkReplayWebhookResponse429 = {
   status: 429
 }
 
-export type bulkReplayWebhookResponseDefault = {
-  data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 202 | 429>
+export type bulkReplayWebhookResponse501 = {
+  data: Problem
+  status: 501
 }
 
+export type bulkReplayWebhookResponseDefault = {
+  data: ProblemResponse
+  status: Exclude<HTTPStatusCodes, 202 | 429 | 501>
+}
+    
 export type bulkReplayWebhookResponseSuccess = (bulkReplayWebhookResponse202) & {
   headers: Headers;
 };
-export type bulkReplayWebhookResponseError = (bulkReplayWebhookResponse429 | bulkReplayWebhookResponseDefault) & {
+export type bulkReplayWebhookResponseError = (bulkReplayWebhookResponse429 | bulkReplayWebhookResponse501 | bulkReplayWebhookResponseDefault) & {
   headers: Headers;
 };
 
@@ -1268,77 +1330,75 @@ export type bulkReplayWebhookResponse = (bulkReplayWebhookResponseSuccess | bulk
 export const getBulkReplayWebhookUrl = (webhookId: string,) => {
 
 
-
+  
 
   return `/webhooks/${webhookId}/replay`
 }
 
 export const bulkReplayWebhook = async (webhookId: string,
-  bulkReplayWebhookBody: BulkReplayWebhookBody, options?: RequestInit): Promise<bulkReplayWebhookResponse> => {
-
+    bulkReplayWebhookBody: BulkReplayWebhookBody, options?: RequestInit): Promise<bulkReplayWebhookResponse> => {
+  
   return apiFetch<bulkReplayWebhookResponse>(getBulkReplayWebhookUrl(webhookId),
-    {
-      ...options,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...options?.headers },
-      body: JSON.stringify(
-        bulkReplayWebhookBody,)
-    }
-  );
-}
-
-
-
-
-export const getBulkReplayWebhookMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof bulkReplayWebhook>>, TError, { webhookId: string; data: BulkReplayWebhookBody }, TContext>, request?: SecondParameter<typeof apiFetch> }
-  ): UseMutationOptions<Awaited<ReturnType<typeof bulkReplayWebhook>>, TError, { webhookId: string; data: BulkReplayWebhookBody }, TContext> => {
-
-  const mutationKey = ['bulkReplayWebhook'];
-  const { mutation: mutationOptions, request: requestOptions } = options ?
-    options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey, }, request: undefined };
-
-
-
-
-  const mutationFn: MutationFunction<Awaited<ReturnType<typeof bulkReplayWebhook>>, { webhookId: string; data: BulkReplayWebhookBody }> = (props) => {
-    const { webhookId, data } = props ?? {};
-
-    return bulkReplayWebhook(webhookId, data, requestOptions)
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      bulkReplayWebhookBody,)
   }
+);}
 
 
 
 
-  return { mutationFn, ...mutationOptions }
-}
+export const getBulkReplayWebhookMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkReplayWebhook>>, TError,{webhookId: string;data: BulkReplayWebhookBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof bulkReplayWebhook>>, TError,{webhookId: string;data: BulkReplayWebhookBody}, TContext> => {
 
-export type BulkReplayWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof bulkReplayWebhook>>>
-export type BulkReplayWebhookMutationBody = BulkReplayWebhookBody
-export type BulkReplayWebhookMutationError = RateLimitedResponse | ProblemResponse
+const mutationKey = ['bulkReplayWebhook'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
-/**
-* @summary Bulk replay by time range — recovery after receiver downtime
-*/
-export const useBulkReplayWebhook = <TError = RateLimitedResponse | ProblemResponse,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof bulkReplayWebhook>>, TError, { webhookId: string; data: BulkReplayWebhookBody }, TContext>, request?: SecondParameter<typeof apiFetch> }
-    , queryClient?: QueryClient): UseMutationResult<
-      Awaited<ReturnType<typeof bulkReplayWebhook>>,
-      TError,
-      { webhookId: string; data: BulkReplayWebhookBody },
-      TContext
-    > => {
+      
 
-  const mutationOptions = getBulkReplayWebhookMutationOptions(options);
 
-  return useMutation(mutationOptions, queryClient);
-}
-/**
-* @summary MFA enforcement, session length, IP allowlist, sharing rules
-*/
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof bulkReplayWebhook>>, {webhookId: string;data: BulkReplayWebhookBody}> = (props) => {
+          const {webhookId,data} = props ?? {};
+
+          return  bulkReplayWebhook(webhookId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BulkReplayWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof bulkReplayWebhook>>>
+    export type BulkReplayWebhookMutationBody = BulkReplayWebhookBody
+    export type BulkReplayWebhookMutationError = RateLimitedResponse | Problem | ProblemResponse
+
+    /**
+ * @summary Bulk replay by time range — recovery after receiver downtime
+ */
+export const useBulkReplayWebhook = <TError = RateLimitedResponse | Problem | ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkReplayWebhook>>, TError,{webhookId: string;data: BulkReplayWebhookBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof bulkReplayWebhook>>,
+        TError,
+        {webhookId: string;data: BulkReplayWebhookBody},
+        TContext
+      > => {
+
+      const mutationOptions = getBulkReplayWebhookMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary MFA enforcement, session length, IP allowlist, sharing rules
+ */
 export type getSecurityPolicyResponse200 = {
   data: SecurityPolicy
   status: 200
@@ -1353,7 +1413,7 @@ export type getSecurityPolicyResponseDefault = {
   data: ProblemResponse
   status: Exclude<HTTPStatusCodes, 200 | 429>
 }
-
+    
 export type getSecurityPolicyResponseSuccess = (getSecurityPolicyResponse200) & {
   headers: Headers;
 };
@@ -1366,50 +1426,49 @@ export type getSecurityPolicyResponse = (getSecurityPolicyResponseSuccess | getS
 export const getGetSecurityPolicyUrl = () => {
 
 
-
+  
 
   return `/tenant/security-policy`
 }
 
-export const getSecurityPolicy = async (options?: RequestInit): Promise<getSecurityPolicyResponse> => {
-
+export const getSecurityPolicy = async ( options?: RequestInit): Promise<getSecurityPolicyResponse> => {
+  
   return apiFetch<getSecurityPolicyResponse>(getGetSecurityPolicyUrl(),
-    {
-      ...options,
-      method: 'GET'
-
-
-    }
-  );
-}
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
 
 
 
 
 
 export const getGetSecurityPolicyQueryKey = () => {
-  return [
+    return [
     `/tenant/security-policy`
-  ] as const;
-}
+    ] as const;
+    }
 
-
-export const getGetSecurityPolicyQueryOptions = <TData = Awaited<ReturnType<typeof getSecurityPolicy>>, TError = RateLimitedResponse | ProblemResponse>(options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSecurityPolicy>>, TError, TData>>, request?: SecondParameter<typeof apiFetch> }
+    
+export const getGetSecurityPolicyQueryOptions = <TData = Awaited<ReturnType<typeof getSecurityPolicy>>, TError = RateLimitedResponse | ProblemResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSecurityPolicy>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
-  const { query: queryOptions, request: requestOptions } = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetSecurityPolicyQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetSecurityPolicyQueryKey();
 
+  
 
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSecurityPolicy>>> = ({ signal }) => getSecurityPolicy({ signal, ...requestOptions });
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSecurityPolicy>>> = ({ signal }) => getSecurityPolicy({ signal, ...requestOptions });
+      
 
+      
 
-
-
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<Awaited<ReturnType<typeof getSecurityPolicy>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSecurityPolicy>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetSecurityPolicyQueryResult = NonNullable<Awaited<ReturnType<typeof getSecurityPolicy>>>
@@ -1417,47 +1476,43 @@ export type GetSecurityPolicyQueryError = RateLimitedResponse | ProblemResponse
 
 
 export function useGetSecurityPolicy<TData = Awaited<ReturnType<typeof getSecurityPolicy>>, TError = RateLimitedResponse | ProblemResponse>(
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSecurityPolicy>>, TError, TData>> & Pick<
-      DefinedInitialDataOptions<
-        Awaited<ReturnType<typeof getSecurityPolicy>>,
-        TError,
-        Awaited<ReturnType<typeof getSecurityPolicy>>
-      >, 'initialData'
-    >, request?: SecondParameter<typeof apiFetch>
-  }
-  , queryClient?: QueryClient
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSecurityPolicy>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSecurityPolicy>>,
+          TError,
+          Awaited<ReturnType<typeof getSecurityPolicy>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetSecurityPolicy<TData = Awaited<ReturnType<typeof getSecurityPolicy>>, TError = RateLimitedResponse | ProblemResponse>(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSecurityPolicy>>, TError, TData>> & Pick<
-      UndefinedInitialDataOptions<
-        Awaited<ReturnType<typeof getSecurityPolicy>>,
-        TError,
-        Awaited<ReturnType<typeof getSecurityPolicy>>
-      >, 'initialData'
-    >, request?: SecondParameter<typeof apiFetch>
-  }
-  , queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSecurityPolicy>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSecurityPolicy>>,
+          TError,
+          Awaited<ReturnType<typeof getSecurityPolicy>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetSecurityPolicy<TData = Awaited<ReturnType<typeof getSecurityPolicy>>, TError = RateLimitedResponse | ProblemResponse>(
-  options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSecurityPolicy>>, TError, TData>>, request?: SecondParameter<typeof apiFetch> }
-  , queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSecurityPolicy>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary MFA enforcement, session length, IP allowlist, sharing rules
  */
 
 export function useGetSecurityPolicy<TData = Awaited<ReturnType<typeof getSecurityPolicy>>, TError = RateLimitedResponse | ProblemResponse>(
-  options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSecurityPolicy>>, TError, TData>>, request?: SecondParameter<typeof apiFetch> }
-  , queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSecurityPolicy>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetSecurityPolicyQueryOptions(options)
 
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  query.queryKey = queryOptions.queryKey;
+  query.queryKey = queryOptions.queryKey ;
 
   return query;
 }
@@ -1465,6 +1520,8 @@ export function useGetSecurityPolicy<TData = Awaited<ReturnType<typeof getSecuri
 
 
 /**
+ * **STRONGER THAN DESCRIBED.** Owner-only (GET is admin+). Refuses an ip_allowlist that excludes the caller's own current address, so the setting cannot lock its author out. MFA and allowlist rules exempt /auth and /me, so a user newly caught by a policy can still enrol.
+<!-- kdb-annotation -->
  * @summary Update security policy
  */
 export type setSecurityPolicyResponse200 = {
@@ -1481,7 +1538,7 @@ export type setSecurityPolicyResponseDefault = {
   data: ProblemResponse
   status: Exclude<HTTPStatusCodes, 200 | 429>
 }
-
+    
 export type setSecurityPolicyResponseSuccess = (setSecurityPolicyResponse200) & {
   headers: Headers;
 };
@@ -1494,76 +1551,76 @@ export type setSecurityPolicyResponse = (setSecurityPolicyResponseSuccess | setS
 export const getSetSecurityPolicyUrl = () => {
 
 
-
+  
 
   return `/tenant/security-policy`
 }
 
 export const setSecurityPolicy = async (securityPolicy: SecurityPolicy, options?: RequestInit): Promise<setSecurityPolicyResponse> => {
-
+  
   return apiFetch<setSecurityPolicyResponse>(getSetSecurityPolicyUrl(),
-    {
-      ...options,
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', ...options?.headers },
-      body: JSON.stringify(
-        securityPolicy,)
-    }
-  );
-}
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      securityPolicy,)
+  }
+);}
 
 
 
 
 export const getSetSecurityPolicyMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof setSecurityPolicy>>, TError, { data: SecurityPolicy }, TContext>, request?: SecondParameter<typeof apiFetch> }
-  ): UseMutationOptions<Awaited<ReturnType<typeof setSecurityPolicy>>, TError, { data: SecurityPolicy }, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setSecurityPolicy>>, TError,{data: SecurityPolicy}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setSecurityPolicy>>, TError,{data: SecurityPolicy}, TContext> => {
 
-  const mutationKey = ['setSecurityPolicy'];
-  const { mutation: mutationOptions, request: requestOptions } = options ?
-    options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+const mutationKey = ['setSecurityPolicy'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey, }, request: undefined };
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setSecurityPolicy>>, {data: SecurityPolicy}> = (props) => {
+          const {data} = props ?? {};
+
+          return  setSecurityPolicy(data,requestOptions)
+        }
+
+        
 
 
-  const mutationFn: MutationFunction<Awaited<ReturnType<typeof setSecurityPolicy>>, { data: SecurityPolicy }> = (props) => {
-    const { data } = props ?? {};
+  return  { mutationFn, ...mutationOptions }}
 
-    return setSecurityPolicy(data, requestOptions)
-  }
+    export type SetSecurityPolicyMutationResult = NonNullable<Awaited<ReturnType<typeof setSecurityPolicy>>>
+    export type SetSecurityPolicyMutationBody = SecurityPolicy
+    export type SetSecurityPolicyMutationError = RateLimitedResponse | ProblemResponse
 
-
-
-
-  return { mutationFn, ...mutationOptions }
-}
-
-export type SetSecurityPolicyMutationResult = NonNullable<Awaited<ReturnType<typeof setSecurityPolicy>>>
-export type SetSecurityPolicyMutationBody = SecurityPolicy
-export type SetSecurityPolicyMutationError = RateLimitedResponse | ProblemResponse
-
-/**
-* @summary Update security policy
-*/
+    /**
+ * @summary Update security policy
+ */
 export const useSetSecurityPolicy = <TError = RateLimitedResponse | ProblemResponse,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof setSecurityPolicy>>, TError, { data: SecurityPolicy }, TContext>, request?: SecondParameter<typeof apiFetch> }
-    , queryClient?: QueryClient): UseMutationResult<
-      Awaited<ReturnType<typeof setSecurityPolicy>>,
-      TError,
-      { data: SecurityPolicy },
-      TContext
-    > => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setSecurityPolicy>>, TError,{data: SecurityPolicy}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof setSecurityPolicy>>,
+        TError,
+        {data: SecurityPolicy},
+        TContext
+      > => {
 
-  const mutationOptions = getSetSecurityPolicyMutationOptions(options);
+      const mutationOptions = getSetSecurityPolicyMutationOptions(options);
 
-  return useMutation(mutationOptions, queryClient);
-}
-/**
-* @summary SAML/OIDC configuration (Enterprise)
-*/
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * **NOT YET IMPLEMENTED — answers 501.** SSO configuration lands with SSO itself (Enterprise tier).
+<!-- kdb-annotation -->
+ * @summary SAML/OIDC configuration (Enterprise)
+ */
 export type getSsoConfigResponse200 = {
   data: GetSsoConfig200
   status: 200
@@ -1574,15 +1631,20 @@ export type getSsoConfigResponse429 = {
   status: 429
 }
 
-export type getSsoConfigResponseDefault = {
-  data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 200 | 429>
+export type getSsoConfigResponse501 = {
+  data: Problem
+  status: 501
 }
 
+export type getSsoConfigResponseDefault = {
+  data: ProblemResponse
+  status: Exclude<HTTPStatusCodes, 200 | 429 | 501>
+}
+    
 export type getSsoConfigResponseSuccess = (getSsoConfigResponse200) & {
   headers: Headers;
 };
-export type getSsoConfigResponseError = (getSsoConfigResponse429 | getSsoConfigResponseDefault) & {
+export type getSsoConfigResponseError = (getSsoConfigResponse429 | getSsoConfigResponse501 | getSsoConfigResponseDefault) & {
   headers: Headers;
 };
 
@@ -1591,98 +1653,93 @@ export type getSsoConfigResponse = (getSsoConfigResponseSuccess | getSsoConfigRe
 export const getGetSsoConfigUrl = () => {
 
 
-
+  
 
   return `/tenant/sso`
 }
 
-export const getSsoConfig = async (options?: RequestInit): Promise<getSsoConfigResponse> => {
-
+export const getSsoConfig = async ( options?: RequestInit): Promise<getSsoConfigResponse> => {
+  
   return apiFetch<getSsoConfigResponse>(getGetSsoConfigUrl(),
-    {
-      ...options,
-      method: 'GET'
-
-
-    }
-  );
-}
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
 
 
 
 
 
 export const getGetSsoConfigQueryKey = () => {
-  return [
+    return [
     `/tenant/sso`
-  ] as const;
-}
+    ] as const;
+    }
 
-
-export const getGetSsoConfigQueryOptions = <TData = Awaited<ReturnType<typeof getSsoConfig>>, TError = RateLimitedResponse | ProblemResponse>(options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSsoConfig>>, TError, TData>>, request?: SecondParameter<typeof apiFetch> }
+    
+export const getGetSsoConfigQueryOptions = <TData = Awaited<ReturnType<typeof getSsoConfig>>, TError = RateLimitedResponse | Problem | ProblemResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSsoConfig>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
-  const { query: queryOptions, request: requestOptions } = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetSsoConfigQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetSsoConfigQueryKey();
 
+  
 
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSsoConfig>>> = ({ signal }) => getSsoConfig({ signal, ...requestOptions });
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSsoConfig>>> = ({ signal }) => getSsoConfig({ signal, ...requestOptions });
+      
 
+      
 
-
-
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<Awaited<ReturnType<typeof getSsoConfig>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSsoConfig>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetSsoConfigQueryResult = NonNullable<Awaited<ReturnType<typeof getSsoConfig>>>
-export type GetSsoConfigQueryError = RateLimitedResponse | ProblemResponse
+export type GetSsoConfigQueryError = RateLimitedResponse | Problem | ProblemResponse
 
 
-export function useGetSsoConfig<TData = Awaited<ReturnType<typeof getSsoConfig>>, TError = RateLimitedResponse | ProblemResponse>(
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSsoConfig>>, TError, TData>> & Pick<
-      DefinedInitialDataOptions<
-        Awaited<ReturnType<typeof getSsoConfig>>,
-        TError,
-        Awaited<ReturnType<typeof getSsoConfig>>
-      >, 'initialData'
-    >, request?: SecondParameter<typeof apiFetch>
-  }
-  , queryClient?: QueryClient
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetSsoConfig<TData = Awaited<ReturnType<typeof getSsoConfig>>, TError = RateLimitedResponse | ProblemResponse>(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSsoConfig>>, TError, TData>> & Pick<
-      UndefinedInitialDataOptions<
-        Awaited<ReturnType<typeof getSsoConfig>>,
-        TError,
-        Awaited<ReturnType<typeof getSsoConfig>>
-      >, 'initialData'
-    >, request?: SecondParameter<typeof apiFetch>
-  }
-  , queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetSsoConfig<TData = Awaited<ReturnType<typeof getSsoConfig>>, TError = RateLimitedResponse | ProblemResponse>(
-  options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSsoConfig>>, TError, TData>>, request?: SecondParameter<typeof apiFetch> }
-  , queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSsoConfig<TData = Awaited<ReturnType<typeof getSsoConfig>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSsoConfig>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSsoConfig>>,
+          TError,
+          Awaited<ReturnType<typeof getSsoConfig>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSsoConfig<TData = Awaited<ReturnType<typeof getSsoConfig>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSsoConfig>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSsoConfig>>,
+          TError,
+          Awaited<ReturnType<typeof getSsoConfig>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSsoConfig<TData = Awaited<ReturnType<typeof getSsoConfig>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSsoConfig>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary SAML/OIDC configuration (Enterprise)
  */
 
-export function useGetSsoConfig<TData = Awaited<ReturnType<typeof getSsoConfig>>, TError = RateLimitedResponse | ProblemResponse>(
-  options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSsoConfig>>, TError, TData>>, request?: SecondParameter<typeof apiFetch> }
-  , queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useGetSsoConfig<TData = Awaited<ReturnType<typeof getSsoConfig>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSsoConfig>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetSsoConfigQueryOptions(options)
 
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  query.queryKey = queryOptions.queryKey;
+  query.queryKey = queryOptions.queryKey ;
 
   return query;
 }
@@ -1690,6 +1747,8 @@ export function useGetSsoConfig<TData = Awaited<ReturnType<typeof getSsoConfig>>
 
 
 /**
+ * **NOT YET IMPLEMENTED — answers 501.** SSO configuration lands with SSO itself (Enterprise tier).
+<!-- kdb-annotation -->
  * @summary Update SSO configuration
  */
 export type setSsoConfigResponse200 = {
@@ -1702,15 +1761,20 @@ export type setSsoConfigResponse429 = {
   status: 429
 }
 
-export type setSsoConfigResponseDefault = {
-  data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 200 | 429>
+export type setSsoConfigResponse501 = {
+  data: Problem
+  status: 501
 }
 
+export type setSsoConfigResponseDefault = {
+  data: ProblemResponse
+  status: Exclude<HTTPStatusCodes, 200 | 429 | 501>
+}
+    
 export type setSsoConfigResponseSuccess = (setSsoConfigResponse200) & {
   headers: Headers;
 };
-export type setSsoConfigResponseError = (setSsoConfigResponse429 | setSsoConfigResponseDefault) & {
+export type setSsoConfigResponseError = (setSsoConfigResponse429 | setSsoConfigResponse501 | setSsoConfigResponseDefault) & {
   headers: Headers;
 };
 
@@ -1719,76 +1783,76 @@ export type setSsoConfigResponse = (setSsoConfigResponseSuccess | setSsoConfigRe
 export const getSetSsoConfigUrl = () => {
 
 
-
+  
 
   return `/tenant/sso`
 }
 
 export const setSsoConfig = async (setSsoConfigBody: SetSsoConfigBody, options?: RequestInit): Promise<setSsoConfigResponse> => {
-
+  
   return apiFetch<setSsoConfigResponse>(getSetSsoConfigUrl(),
-    {
-      ...options,
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', ...options?.headers },
-      body: JSON.stringify(
-        setSsoConfigBody,)
-    }
-  );
-}
-
-
-
-
-export const getSetSsoConfigMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof setSsoConfig>>, TError, { data: SetSsoConfigBody }, TContext>, request?: SecondParameter<typeof apiFetch> }
-  ): UseMutationOptions<Awaited<ReturnType<typeof setSsoConfig>>, TError, { data: SetSsoConfigBody }, TContext> => {
-
-  const mutationKey = ['setSsoConfig'];
-  const { mutation: mutationOptions, request: requestOptions } = options ?
-    options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey, }, request: undefined };
-
-
-
-
-  const mutationFn: MutationFunction<Awaited<ReturnType<typeof setSsoConfig>>, { data: SetSsoConfigBody }> = (props) => {
-    const { data } = props ?? {};
-
-    return setSsoConfig(data, requestOptions)
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      setSsoConfigBody,)
   }
+);}
 
 
 
 
-  return { mutationFn, ...mutationOptions }
-}
+export const getSetSsoConfigMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setSsoConfig>>, TError,{data: SetSsoConfigBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setSsoConfig>>, TError,{data: SetSsoConfigBody}, TContext> => {
 
-export type SetSsoConfigMutationResult = NonNullable<Awaited<ReturnType<typeof setSsoConfig>>>
-export type SetSsoConfigMutationBody = SetSsoConfigBody
-export type SetSsoConfigMutationError = RateLimitedResponse | ProblemResponse
+const mutationKey = ['setSsoConfig'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
-/**
-* @summary Update SSO configuration
-*/
-export const useSetSsoConfig = <TError = RateLimitedResponse | ProblemResponse,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof setSsoConfig>>, TError, { data: SetSsoConfigBody }, TContext>, request?: SecondParameter<typeof apiFetch> }
-    , queryClient?: QueryClient): UseMutationResult<
-      Awaited<ReturnType<typeof setSsoConfig>>,
-      TError,
-      { data: SetSsoConfigBody },
-      TContext
-    > => {
+      
 
-  const mutationOptions = getSetSsoConfigMutationOptions(options);
 
-  return useMutation(mutationOptions, queryClient);
-}
-/**
-* @summary Full tenant export in open formats — the no-lock-in guarantee
-*/
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setSsoConfig>>, {data: SetSsoConfigBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  setSsoConfig(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetSsoConfigMutationResult = NonNullable<Awaited<ReturnType<typeof setSsoConfig>>>
+    export type SetSsoConfigMutationBody = SetSsoConfigBody
+    export type SetSsoConfigMutationError = RateLimitedResponse | Problem | ProblemResponse
+
+    /**
+ * @summary Update SSO configuration
+ */
+export const useSetSsoConfig = <TError = RateLimitedResponse | Problem | ProblemResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setSsoConfig>>, TError,{data: SetSsoConfigBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof setSsoConfig>>,
+        TError,
+        {data: SetSsoConfigBody},
+        TContext
+      > => {
+
+      const mutationOptions = getSetSsoConfigMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * **STRONGER THAN DESCRIBED.** Returns the EXISTING job if one is already queued or running for the tenant, rather than stacking multi-gigabyte builds. Archive contents: files/ (current versions, original bytes, folder tree preserved), metadata.csv, audit.jsonl (full hash chain), evidence/ and manifest.json — all readable without KDB DocVault software.
+<!-- kdb-annotation -->
+ * @summary Full tenant export in open formats — the no-lock-in guarantee
+ */
 export type exportTenantResponse202 = {
   data: Job
   status: 202
@@ -1803,7 +1867,7 @@ export type exportTenantResponseDefault = {
   data: ProblemResponse
   status: Exclude<HTTPStatusCodes, 202 | 429>
 }
-
+    
 export type exportTenantResponseSuccess = (exportTenantResponse202) & {
   headers: Headers;
 };
@@ -1816,75 +1880,75 @@ export type exportTenantResponse = (exportTenantResponseSuccess | exportTenantRe
 export const getExportTenantUrl = () => {
 
 
-
+  
 
   return `/tenant/export`
 }
 
-export const exportTenant = async (options?: RequestInit): Promise<exportTenantResponse> => {
-
+export const exportTenant = async ( options?: RequestInit): Promise<exportTenantResponse> => {
+  
   return apiFetch<exportTenantResponse>(getExportTenantUrl(),
-    {
-      ...options,
-      method: 'POST'
-
-
-    }
-  );
-}
+  {      
+    ...options,
+    method: 'POST'
+    
+    
+  }
+);}
 
 
 
 
 export const getExportTenantMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof exportTenant>>, TError, void, TContext>, request?: SecondParameter<typeof apiFetch> }
-  ): UseMutationOptions<Awaited<ReturnType<typeof exportTenant>>, TError, void, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof exportTenant>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof exportTenant>>, TError,void, TContext> => {
 
-  const mutationKey = ['exportTenant'];
-  const { mutation: mutationOptions, request: requestOptions } = options ?
-    options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+const mutationKey = ['exportTenant'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey, }, request: undefined };
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof exportTenant>>, void> = () => {
+          
+
+          return  exportTenant(requestOptions)
+        }
+
+        
 
 
-  const mutationFn: MutationFunction<Awaited<ReturnType<typeof exportTenant>>, void> = () => {
+  return  { mutationFn, ...mutationOptions }}
 
+    export type ExportTenantMutationResult = NonNullable<Awaited<ReturnType<typeof exportTenant>>>
+    
+    export type ExportTenantMutationError = RateLimitedResponse | ProblemResponse
 
-    return exportTenant(requestOptions)
-  }
-
-
-
-
-  return { mutationFn, ...mutationOptions }
-}
-
-export type ExportTenantMutationResult = NonNullable<Awaited<ReturnType<typeof exportTenant>>>
-
-export type ExportTenantMutationError = RateLimitedResponse | ProblemResponse
-
-/**
-* @summary Full tenant export in open formats — the no-lock-in guarantee
-*/
+    /**
+ * @summary Full tenant export in open formats — the no-lock-in guarantee
+ */
 export const useExportTenant = <TError = RateLimitedResponse | ProblemResponse,
-  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof exportTenant>>, TError, void, TContext>, request?: SecondParameter<typeof apiFetch> }
-    , queryClient?: QueryClient): UseMutationResult<
-      Awaited<ReturnType<typeof exportTenant>>,
-      TError,
-      void,
-      TContext
-    > => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof exportTenant>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof exportTenant>>,
+        TError,
+        void,
+        TContext
+      > => {
 
-  const mutationOptions = getExportTenantMutationOptions(options);
+      const mutationOptions = getExportTenantMutationOptions(options);
 
-  return useMutation(mutationOptions, queryClient);
-}
-/**
-* @summary Status of any async job
-*/
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * **NOT IMPLEMENTED AS SPECIFIED.** There is no generic job endpoint. Poll the URL the 202 response gave you: GET /imports/{importId} for imports, GET /audit/exports/{jobId} for every export kind.
+<!-- kdb-annotation -->
+ * @summary Status of any async job
+ */
 export type getJobResponse200 = {
   data: Job
   status: 200
@@ -1899,7 +1963,7 @@ export type getJobResponseDefault = {
   data: ProblemResponse
   status: Exclude<HTTPStatusCodes, 200 | 429>
 }
-
+    
 export type getJobResponseSuccess = (getJobResponse200) & {
   headers: Headers;
 };
@@ -1912,50 +1976,49 @@ export type getJobResponse = (getJobResponseSuccess | getJobResponseError)
 export const getGetJobUrl = (jobId: string,) => {
 
 
-
+  
 
   return `/jobs/${jobId}`
 }
 
 export const getJob = async (jobId: string, options?: RequestInit): Promise<getJobResponse> => {
-
+  
   return apiFetch<getJobResponse>(getGetJobUrl(jobId),
-    {
-      ...options,
-      method: 'GET'
-
-
-    }
-  );
-}
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
 
 
 
 
 
 export const getGetJobQueryKey = (jobId?: string,) => {
-  return [
+    return [
     `/jobs/${jobId}`
-  ] as const;
-}
+    ] as const;
+    }
 
-
-export const getGetJobQueryOptions = <TData = Awaited<ReturnType<typeof getJob>>, TError = RateLimitedResponse | ProblemResponse>(jobId: string, options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJob>>, TError, TData>>, request?: SecondParameter<typeof apiFetch> }
+    
+export const getGetJobQueryOptions = <TData = Awaited<ReturnType<typeof getJob>>, TError = RateLimitedResponse | ProblemResponse>(jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJob>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
-  const { query: queryOptions, request: requestOptions } = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetJobQueryKey(jobId);
+  const queryKey =  queryOptions?.queryKey ?? getGetJobQueryKey(jobId);
 
+  
 
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getJob>>> = ({ signal }) => getJob(jobId, { signal, ...requestOptions });
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getJob>>> = ({ signal }) => getJob(jobId, { signal, ...requestOptions });
+      
 
+      
 
-
-
-
-  return { queryKey, queryFn, enabled: !!(jobId), ...queryOptions } as UseQueryOptions<Awaited<ReturnType<typeof getJob>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(jobId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getJob>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetJobQueryResult = NonNullable<Awaited<ReturnType<typeof getJob>>>
@@ -1963,47 +2026,43 @@ export type GetJobQueryError = RateLimitedResponse | ProblemResponse
 
 
 export function useGetJob<TData = Awaited<ReturnType<typeof getJob>>, TError = RateLimitedResponse | ProblemResponse>(
-  jobId: string, options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJob>>, TError, TData>> & Pick<
-      DefinedInitialDataOptions<
-        Awaited<ReturnType<typeof getJob>>,
-        TError,
-        Awaited<ReturnType<typeof getJob>>
-      >, 'initialData'
-    >, request?: SecondParameter<typeof apiFetch>
-  }
-  , queryClient?: QueryClient
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+ jobId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJob>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getJob>>,
+          TError,
+          Awaited<ReturnType<typeof getJob>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetJob<TData = Awaited<ReturnType<typeof getJob>>, TError = RateLimitedResponse | ProblemResponse>(
-  jobId: string, options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJob>>, TError, TData>> & Pick<
-      UndefinedInitialDataOptions<
-        Awaited<ReturnType<typeof getJob>>,
-        TError,
-        Awaited<ReturnType<typeof getJob>>
-      >, 'initialData'
-    >, request?: SecondParameter<typeof apiFetch>
-  }
-  , queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+ jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJob>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getJob>>,
+          TError,
+          Awaited<ReturnType<typeof getJob>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetJob<TData = Awaited<ReturnType<typeof getJob>>, TError = RateLimitedResponse | ProblemResponse>(
-  jobId: string, options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJob>>, TError, TData>>, request?: SecondParameter<typeof apiFetch> }
-  , queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+ jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJob>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Status of any async job
  */
 
 export function useGetJob<TData = Awaited<ReturnType<typeof getJob>>, TError = RateLimitedResponse | ProblemResponse>(
-  jobId: string, options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJob>>, TError, TData>>, request?: SecondParameter<typeof apiFetch> }
-  , queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+ jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJob>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetJobQueryOptions(jobId, options)
+  const queryOptions = getGetJobQueryOptions(jobId,options)
 
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-  query.queryKey = queryOptions.queryKey;
+  query.queryKey = queryOptions.queryKey ;
 
   return query;
 }

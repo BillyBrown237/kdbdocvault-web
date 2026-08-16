@@ -151,13 +151,83 @@
     "done": "Mot de passe réinitialisé — connectez-vous",
     "invalid": "Code invalide ou expiré"
   },
+  "departments": {
+    "title": "Services",
+    "explainer": "Les services regroupent les membres et servent à cibler les permissions et les rapports. Les sous-services sont possibles.",
+    "empty": "Aucun service pour l'instant.",
+    "name": "Nom",
+    "parent": "Rattaché à",
+    "topLevel": "Niveau supérieur",
+    "created": "Service créé",
+    "updated": "Service mis à jour",
+    "deleted": "Service supprimé"
+  },
+  "links": {
+    "title": "Documents liés",
+    "empty": "Aucun document lié.",
+    "add": "Lier un document",
+    "remove": "Retirer le lien",
+    "created": "Documents liés",
+    "removed": "Lien retiré",
+    "relationship": "Relation",
+    "findDocument": "Document",
+    "searchPlaceholder": "Rechercher par titre…",
+    "type": {
+      "amends": { "outgoing": "Modifie", "incoming": "Modifié par" },
+      "fulfills": { "outgoing": "Exécute", "incoming": "Exécuté par" },
+      "supports": { "outgoing": "Appuie", "incoming": "Appuyé par" },
+      "relates_to": { "outgoing": "En lien avec", "incoming": "En lien avec" }
+    }
+  },
+  "notifPrefs": {
+    "tab": "Notifications",
+    "title": "Ce que nous vous envoyons par e-mail",
+    "inAppAlwaysOn": "La cloche dans l'application affiche toujours tout — c'est le registre de ce qui s'est passé. Ces interrupteurs ne concernent que l'e-mail.",
+    "emailFor": "E-mail concernant {{family}}",
+    "family": {
+      "deadlines": "Échéances et rappels",
+      "approvals": "Approbations",
+      "signatures": "Signatures",
+      "documents": "Documents",
+      "billing": "Facturation"
+    },
+    "familyHint": {
+      "deadlines": "Un document approche de sa date clé ou l'a dépassée.",
+      "approvals": "Une étape vous est assignée, ou un circuit prend du retard.",
+      "signatures": "Une enveloppe est envoyée, signée, complétée ou refusée.",
+      "documents": "Un document vous est partagé, termine son traitement ou échoue à l'analyse de sécurité.",
+      "billing": "Avis de renouvellement et problèmes de paiement."
+    }
+  },
+  "secPolicy": {
+    "tab": "Politique de sécurité",
+    "title": "Règles de sécurité de l'organisation",
+    "ownerOnly": "Seul le propriétaire peut modifier ces règles. Vous pouvez consulter ce qui s'applique.",
+    "requireMfa": "Exiger la vérification en deux étapes",
+    "requireMfaHint": "Chacun doit configurer une application d'authentification avant d'utiliser le coffre. Les personnes sans configuration gardent accès aux Paramètres pour pouvoir s'inscrire.",
+    "sessionDays": "Connexion valable (jours)",
+    "sessionDaysHint": "Passé ce délai, chacun se reconnecte, même sur un appareil utilisé tous les jours.",
+    "ipAllowlist": "Réseaux autorisés",
+    "ipAllowlistHint": "Une adresse ou plage CIDR par ligne. Laissez vide pour autoriser tous les réseaux. Vous ne pouvez pas enregistrer une liste qui exclut votre propre adresse actuelle.",
+    "sharing": "Règles de partage",
+    "externalAllowed": "Autoriser les liens de partage publics",
+    "externalAllowedHint": "Désactivé, les documents ne peuvent être donnés qu'aux membres ou placés dans une salle de données.",
+    "requirePassword": "Exiger un mot de passe sur chaque lien",
+    "requirePasswordHint": "Les destinataires doivent saisir un mot de passe avant de voir quoi que ce soit.",
+    "shareMaxDays": "Les liens expirent sous (jours)",
+    "shareMaxDaysHint": "Toute personne créant un lien doit fixer une expiration au plus tard à ce délai. Laissez vide pour aucune limite.",
+    "noLimit": "Aucune limite"
+  },
   "common": {
     "back": "Retour",
     "loadMore": "Afficher plus",
     "retry": "Réessayer",
     "create": "Créer",
     "done": "Terminé",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "edit": "Modifier",
+    "rename": "Renommer",
+    "delete": "Supprimer"
   },
   "billing": {
     "title": "Facturation",
@@ -349,6 +419,13 @@
     },
     "edit": "Modifier",
     "editConflict": "Le document a changé entre-temps — rouvrez la fenêtre et réessayez.",
+    "statusField": "Statut",
+    "statusDerived": "Ce statut provient de la date d'échéance du document et se met à jour tout seul. Pour le changer, modifiez l'échéance dans Échéances.",
+    "statusHint": {
+      "draft": "Travail en cours — visible par votre équipe, mais pas traité comme un document officiel.",
+      "active": "En vigueur. C'est l'état normal d'un document sur lequel vous vous appuyez.",
+      "archived": "Conservé pour mémoire, plus en usage. Reste consultable et exportable."
+    },
     "titleField": "Titre",
     "typeField": "Type de document",
     "noType": "Sans type"
@@ -695,10 +772,12 @@
   "docTypes": {
     "tab": "Types",
     "title": "Types de documents",
-    "explainer": "Les types classent vos documents et servent de filtre de recherche. L'affectation d'un type à un document existant arrivera avec l'API correspondante.",
+    "explainer": "Les types classent vos documents et servent de filtre de recherche. Changez le type d'un document depuis sa page. Les types standard sont partagés par toutes les organisations et ne sont pas modifiables.",
     "name": "Nom",
     "namePlaceholder": "Contrat, Facture, Attestation…",
     "created": "Type créé",
+    "renamed": "Type renommé",
+    "deleted": "Type supprimé",
     "system": "système"
   },
   "imports": {

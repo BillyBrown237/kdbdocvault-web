@@ -36,6 +36,9 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { toast } from '@/components/ui/sonner'
 
+/** B54: the statuses a person owns. The rest are derived from expiry dates. */
+const USER_STATUSES = ['draft', 'active', 'archived']
+
 /** Tag chips + move + trash for the document detail page. */
 export function DocumentActions({ document }: { document: Document }) {
   const { t } = useTranslation()
@@ -53,12 +56,17 @@ export function DocumentActions({ document }: { document: Document }) {
   const [editEtag, setEditEtag] = useState<string | null>(null)
   const [editTitle, setEditTitle] = useState(document.title)
   const [editType, setEditType] = useState<string>(document.type_id ?? '__none__')
+  // W26 (B54): only these three are a person's to choose. expiring/expired/
+  // renewed come from the document's expiry date and are shown, not offered.
+  const [editStatus, setEditStatus] = useState<string>(document.status)
+  const statusIsDerived = !USER_STATUSES.includes(document.status)
 
   async function openEdit() {
     try {
       const { data, etag } = await getDocumentWithEtag(document.id)
       setEditTitle(data.title)
       setEditType(data.type_id ?? '__none__')
+      setEditStatus(data.status)
       setEditEtag(etag)
       setEditOpen(true)
     } catch {
@@ -71,6 +79,10 @@ export function DocumentActions({ document }: { document: Document }) {
       patchDocument(document.id, editEtag ?? '*', {
         title: editTitle.trim(),
         type_id: editType === '__none__' ? null : editType,
+        // Only send status when it's ours to send AND it actually changed.
+        ...(statusIsDerived || editStatus === document.status
+          ? {}
+          : { status: editStatus as 'draft' | 'active' | 'archived' }),
       }),
     onSuccess: async () => {
       toast.success(t('document.updated'))
@@ -254,6 +266,39 @@ export function DocumentActions({ document }: { document: Document }) {
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
                 />
+              </div>
+              <div className="space-y-1.5">
+                <Label>{t('document.statusField')}</Label>
+                {statusIsDerived ? (
+                  // Don't offer a control that would be rejected — explain the
+                  // state instead. The user's lever is the expiry date.
+                  <div className="rounded-md border bg-muted/40 px-3 py-2">
+                    <div className="text-sm font-medium">
+                      {t(`document.status.${document.status}`)}
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {t('document.statusDerived')}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <Select value={editStatus} onValueChange={setEditStatus}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {USER_STATUSES.map((s) => (
+                          <SelectItem key={s} value={s}>
+                            {t(`document.status.${s}`)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      {t(`document.statusHint.${editStatus}`)}
+                    </p>
+                  </>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label>{t('document.typeField')}</Label>

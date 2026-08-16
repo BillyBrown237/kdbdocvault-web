@@ -271,6 +271,8 @@ export function useReadiness<TData = Awaited<ReturnType<typeof readiness>>, TErr
 
 
 /**
+ * **NOT IMPLEMENTED AS SPECIFIED.** Tiered health detail was not built. Use GET /live (process up) and GET /ready (dependencies checked — database and object store), which are also the container probes.
+<!-- kdb-annotation -->
  * @summary Aggregated component status (detail requires auth)
  */
 export type healthResponse200 = {

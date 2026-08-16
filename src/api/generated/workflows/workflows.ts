@@ -51,6 +51,7 @@ import type {
   ListWorkflowTemplates200,
   ListWorkflows200,
   ListWorkflowsParams,
+  Problem,
   ProblemResponse,
   RateLimitedResponse,
   StartWorkflowBody,
@@ -1890,6 +1891,8 @@ export const useUpdateTask = <TError = RateLimitedResponse | ProblemResponse,
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **NOT YET IMPLEMENTED — answers 501.** Document comment threads are not available. The approval flow's per-step comment covers the workflow conversation.
+<!-- kdb-annotation -->
  * @summary Threaded comments
  */
 export type listCommentsResponse200 = {
@@ -1902,15 +1905,20 @@ export type listCommentsResponse429 = {
   status: 429
 }
 
+export type listCommentsResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type listCommentsResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 200 | 429>
+  status: Exclude<HTTPStatusCodes, 200 | 429 | 501>
 }
     
 export type listCommentsResponseSuccess = (listCommentsResponse200) & {
   headers: Headers;
 };
-export type listCommentsResponseError = (listCommentsResponse429 | listCommentsResponseDefault) & {
+export type listCommentsResponseError = (listCommentsResponse429 | listCommentsResponse501 | listCommentsResponseDefault) & {
   headers: Headers;
 };
 
@@ -1956,7 +1964,7 @@ export const getListCommentsQueryKey = (documentId?: string,
     }
 
     
-export const getListCommentsQueryOptions = <TData = Awaited<ReturnType<typeof listComments>>, TError = RateLimitedResponse | ProblemResponse>(documentId: string,
+export const getListCommentsQueryOptions = <TData = Awaited<ReturnType<typeof listComments>>, TError = RateLimitedResponse | Problem | ProblemResponse>(documentId: string,
     params?: ListCommentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listComments>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
@@ -1976,10 +1984,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type ListCommentsQueryResult = NonNullable<Awaited<ReturnType<typeof listComments>>>
-export type ListCommentsQueryError = RateLimitedResponse | ProblemResponse
+export type ListCommentsQueryError = RateLimitedResponse | Problem | ProblemResponse
 
 
-export function useListComments<TData = Awaited<ReturnType<typeof listComments>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useListComments<TData = Awaited<ReturnType<typeof listComments>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
  documentId: string,
     params: undefined |  ListCommentsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listComments>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -1990,7 +1998,7 @@ export function useListComments<TData = Awaited<ReturnType<typeof listComments>>
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListComments<TData = Awaited<ReturnType<typeof listComments>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useListComments<TData = Awaited<ReturnType<typeof listComments>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
  documentId: string,
     params?: ListCommentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listComments>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -2001,7 +2009,7 @@ export function useListComments<TData = Awaited<ReturnType<typeof listComments>>
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListComments<TData = Awaited<ReturnType<typeof listComments>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useListComments<TData = Awaited<ReturnType<typeof listComments>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
  documentId: string,
     params?: ListCommentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listComments>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -2010,7 +2018,7 @@ export function useListComments<TData = Awaited<ReturnType<typeof listComments>>
  * @summary Threaded comments
  */
 
-export function useListComments<TData = Awaited<ReturnType<typeof listComments>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useListComments<TData = Awaited<ReturnType<typeof listComments>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
  documentId: string,
     params?: ListCommentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listComments>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient 
@@ -2028,6 +2036,8 @@ export function useListComments<TData = Awaited<ReturnType<typeof listComments>>
 
 
 /**
+ * **NOT YET IMPLEMENTED — answers 501.** Document comment threads are not available. The approval flow's per-step comment covers the workflow conversation.
+<!-- kdb-annotation -->
  * @summary Comment with @mentions
  */
 export type createCommentResponse201 = {
@@ -2040,15 +2050,20 @@ export type createCommentResponse429 = {
   status: 429
 }
 
+export type createCommentResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type createCommentResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 201 | 429>
+  status: Exclude<HTTPStatusCodes, 201 | 429 | 501>
 }
     
 export type createCommentResponseSuccess = (createCommentResponse201) & {
   headers: Headers;
 };
-export type createCommentResponseError = (createCommentResponse429 | createCommentResponseDefault) & {
+export type createCommentResponseError = (createCommentResponse429 | createCommentResponse501 | createCommentResponseDefault) & {
   headers: Headers;
 };
 
@@ -2078,7 +2093,7 @@ export const createComment = async (documentId: string,
 
 
 
-export const getCreateCommentMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
+export const getCreateCommentMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createComment>>, TError,{documentId: string;data: CreateCommentBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createComment>>, TError,{documentId: string;data: CreateCommentBody}, TContext> => {
 
@@ -2105,12 +2120,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateCommentMutationResult = NonNullable<Awaited<ReturnType<typeof createComment>>>
     export type CreateCommentMutationBody = CreateCommentBody
-    export type CreateCommentMutationError = RateLimitedResponse | ProblemResponse
+    export type CreateCommentMutationError = RateLimitedResponse | Problem | ProblemResponse
 
     /**
  * @summary Comment with @mentions
  */
-export const useCreateComment = <TError = RateLimitedResponse | ProblemResponse,
+export const useCreateComment = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createComment>>, TError,{documentId: string;data: CreateCommentBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createComment>>,
@@ -2124,6 +2139,8 @@ export const useCreateComment = <TError = RateLimitedResponse | ProblemResponse,
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **NOT YET IMPLEMENTED — answers 501.** See GET /documents/{documentId}/comments.
+<!-- kdb-annotation -->
  * @summary Edit (window-limited)
  */
 export type updateCommentResponse200 = {
@@ -2136,15 +2153,20 @@ export type updateCommentResponse429 = {
   status: 429
 }
 
+export type updateCommentResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type updateCommentResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 200 | 429>
+  status: Exclude<HTTPStatusCodes, 200 | 429 | 501>
 }
     
 export type updateCommentResponseSuccess = (updateCommentResponse200) & {
   headers: Headers;
 };
-export type updateCommentResponseError = (updateCommentResponse429 | updateCommentResponseDefault) & {
+export type updateCommentResponseError = (updateCommentResponse429 | updateCommentResponse501 | updateCommentResponseDefault) & {
   headers: Headers;
 };
 
@@ -2174,7 +2196,7 @@ export const updateComment = async (commentId: string,
 
 
 
-export const getUpdateCommentMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
+export const getUpdateCommentMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateComment>>, TError,{commentId: string;data: UpdateCommentBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateComment>>, TError,{commentId: string;data: UpdateCommentBody}, TContext> => {
 
@@ -2201,12 +2223,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type UpdateCommentMutationResult = NonNullable<Awaited<ReturnType<typeof updateComment>>>
     export type UpdateCommentMutationBody = UpdateCommentBody
-    export type UpdateCommentMutationError = RateLimitedResponse | ProblemResponse
+    export type UpdateCommentMutationError = RateLimitedResponse | Problem | ProblemResponse
 
     /**
  * @summary Edit (window-limited)
  */
-export const useUpdateComment = <TError = RateLimitedResponse | ProblemResponse,
+export const useUpdateComment = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateComment>>, TError,{commentId: string;data: UpdateCommentBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateComment>>,
@@ -2220,6 +2242,8 @@ export const useUpdateComment = <TError = RateLimitedResponse | ProblemResponse,
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **NOT YET IMPLEMENTED — answers 501.** See GET /documents/{documentId}/comments.
+<!-- kdb-annotation -->
  * @summary Delete comment
  */
 export type deleteCommentResponse204 = {
@@ -2232,15 +2256,20 @@ export type deleteCommentResponse429 = {
   status: 429
 }
 
+export type deleteCommentResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type deleteCommentResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 204 | 429>
+  status: Exclude<HTTPStatusCodes, 204 | 429 | 501>
 }
     
 export type deleteCommentResponseSuccess = (deleteCommentResponse204) & {
   headers: Headers;
 };
-export type deleteCommentResponseError = (deleteCommentResponse429 | deleteCommentResponseDefault) & {
+export type deleteCommentResponseError = (deleteCommentResponse429 | deleteCommentResponse501 | deleteCommentResponseDefault) & {
   headers: Headers;
 };
 
@@ -2268,7 +2297,7 @@ export const deleteComment = async (commentId: string, options?: RequestInit): P
 
 
 
-export const getDeleteCommentMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
+export const getDeleteCommentMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteComment>>, TError,{commentId: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteComment>>, TError,{commentId: string}, TContext> => {
 
@@ -2295,12 +2324,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeleteCommentMutationResult = NonNullable<Awaited<ReturnType<typeof deleteComment>>>
     
-    export type DeleteCommentMutationError = RateLimitedResponse | ProblemResponse
+    export type DeleteCommentMutationError = RateLimitedResponse | Problem | ProblemResponse
 
     /**
  * @summary Delete comment
  */
-export const useDeleteComment = <TError = RateLimitedResponse | ProblemResponse,
+export const useDeleteComment = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteComment>>, TError,{commentId: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteComment>>,

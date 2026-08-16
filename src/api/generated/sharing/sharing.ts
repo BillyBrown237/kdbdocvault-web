@@ -419,6 +419,8 @@ export function useListDocumentShareLinks<TData = Awaited<ReturnType<typeof list
 
 
 /**
+ * **STRONGER THAN DESCRIBED.** Subject to the tenant security policy (GET /tenant/security-policy): public links may be disabled entirely (403), a password may be mandatory (422), and a maximum lifetime may be enforced (422).
+<!-- kdb-annotation -->
  * @summary Create secure link (returns URL + optional QR)
  */
 export type createShareLinkResponse201ApplicationJson = {

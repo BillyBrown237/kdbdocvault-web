@@ -7,6 +7,7 @@ import { ChevronLeft, Download, Pin, Star } from 'lucide-react'
 import { AclPanel } from '@/components/acl-panel'
 import { AppShell } from '@/components/app-shell'
 import { DocumentActions } from '@/components/document-actions'
+import { DocumentLinks } from '@/components/document-links'
 import { DocumentTrailPanel } from '@/components/document-trail-panel'
 import { ExtractionPanel } from '@/components/extraction-panel'
 import { SharePanel } from '@/components/share-panel'
@@ -152,6 +153,10 @@ function DocumentDetail() {
 
           <ExtractionPanel documentId={d.id} />
           <DocumentActions document={d} />
+          {/* W27 (B58): relationships sit next to the document's own facts,
+              above the process panels — "what is this connected to" is a
+              question about the document, not about a workflow. */}
+          <DocumentLinks documentId={d.id} />
           <LifecyclePanel documentId={d.id} />
           <WorkflowPanel documentId={d.id} />
           <AclPanel documentId={d.id} />

@@ -67,6 +67,8 @@ export type HTTPStatusCodes = HTTPStatusCode1xx | HTTPStatusCode2xx | HTTPStatus
 
 
 /**
+ * **DIFFERS FROM THIS DESCRIPTION.** `verify_method: sms_otp` is REJECTED with 422 until an SMS provider is integrated — accepting it would create an envelope whose signer can never receive a code. Use `email_otp` or `none`.
+<!-- kdb-annotation -->
  * @summary Create envelope pinned to an exact version
  */
 export type createEnvelopeResponse201 = {

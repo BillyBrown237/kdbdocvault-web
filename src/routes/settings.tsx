@@ -6,12 +6,16 @@ import QRCode from 'qrcode'
 import { Download, Monitor, ShieldCheck } from 'lucide-react'
 
 import { AppShell } from '@/components/app-shell'
+import { NotificationPreferencesCard } from '@/components/settings/notification-preferences'
+import { SecurityPolicyCard } from '@/components/settings/security-policy'
 import { ApiProblem, NetworkError } from '@/lib/api/http'
 import {
   changePassword,
   createDocumentType,
   createTenantExport,
+  deleteDocumentType,
   documentTypesQuery,
+  updateDocumentType,
   meQuery,
   revokeSession,
   sessionsQuery,
@@ -51,6 +55,8 @@ function SettingsPage() {
   // Same courtesy gating as the app shell (B47): backend enforces, UI hides.
   const role = me.data?.memberships.find((m) => m.tenant_id === tenant.data?.id)?.role
   const isOwner = role === 'Owner'
+  // Admins READ the security policy; only owners can change it (B57).
+  const isAdmin = isOwner || role === 'Admin'
 
   return (
     <AppShell>
@@ -61,6 +67,8 @@ function SettingsPage() {
           <TabsTrigger value="security">{t('settings.security')}</TabsTrigger>
           <TabsTrigger value="sessions">{t('settings.sessions')}</TabsTrigger>
           <TabsTrigger value="types">{t('docTypes.tab')}</TabsTrigger>
+          <TabsTrigger value="notifications">{t('notifPrefs.tab')}</TabsTrigger>
+          {isAdmin && <TabsTrigger value="policy">{t('secPolicy.tab')}</TabsTrigger>}
           {isOwner && <TabsTrigger value="export">{t('settings.exportTab')}</TabsTrigger>}
         </TabsList>
         <TabsContent value="profile">
@@ -76,6 +84,14 @@ function SettingsPage() {
         <TabsContent value="types">
           <DocumentTypesCard />
         </TabsContent>
+        <TabsContent value="notifications">
+          <NotificationPreferencesCard />
+        </TabsContent>
+        {isAdmin && (
+          <TabsContent value="policy">
+            <SecurityPolicyCard canEdit={isOwner} />
+          </TabsContent>
+        )}
         {isOwner && (
           <TabsContent value="export">
             <TenantExportCard />
@@ -395,13 +411,40 @@ function DocumentTypesCard() {
   const queryClient = useQueryClient()
   const types = useQuery(documentTypesQuery)
   const [name, setName] = useState('')
+  const [renaming, setRenaming] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState('')
+
+  const invalidateTypes = () =>
+    queryClient.invalidateQueries({ queryKey: ['document-types'] })
 
   const create = useMutation({
     mutationFn: () => createDocumentType(name.trim()),
     onSuccess: async () => {
       setName('')
       toast.success(t('docTypes.created'))
-      await queryClient.invalidateQueries({ queryKey: ['document-types'] })
+      await invalidateTypes()
+    },
+    onError: (err) => fail(err, t),
+  })
+
+  // B55: rename + delete-if-unused. The 409 carries the count of documents
+  // still using the type, so surfacing the server's detail beats a generic
+  // "couldn't delete".
+  const rename = useMutation({
+    mutationFn: (typeId: string) => updateDocumentType(typeId, { name: renameValue.trim() }),
+    onSuccess: async () => {
+      setRenaming(null)
+      toast.success(t('docTypes.renamed'))
+      await invalidateTypes()
+    },
+    onError: (err) => fail(err, t),
+  })
+
+  const remove = useMutation({
+    mutationFn: deleteDocumentType,
+    onSuccess: async () => {
+      toast.success(t('docTypes.deleted'))
+      await invalidateTypes()
     },
     onError: (err) => fail(err, t),
   })
@@ -415,14 +458,62 @@ function DocumentTypesCard() {
         <p className="text-sm text-muted-foreground">{t('docTypes.explainer')}</p>
 
         {types.data && types.data.data.length > 0 && (
-          <div className="flex flex-wrap gap-2">
+          <div className="space-y-2">
             {types.data.data.map((ty) => (
-              <Badge key={ty.id} variant={ty.is_system ? 'secondary' : 'outline'}>
-                {ty.name}
-                {ty.is_system && (
-                  <span className="ml-1 text-[10px] opacity-70">{t('docTypes.system')}</span>
-                )}
-              </Badge>
+              <div key={ty.id} className="flex items-center justify-between gap-2">
+                <Badge variant={ty.is_system ? 'secondary' : 'outline'}>
+                  {ty.name}
+                  {ty.is_system && (
+                    <span className="ml-1 text-[10px] opacity-70">{t('docTypes.system')}</span>
+                  )}
+                </Badge>
+                {/* B55: system types are shared across every organisation, so
+                    they have no controls at all — better than showing buttons
+                    that answer 422. */}
+                {!ty.is_system &&
+                  (renaming === ty.id ? (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        autoFocus
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        className="h-8 w-48"
+                      />
+                      <Button
+                        size="sm"
+                        disabled={rename.isPending || !renameValue.trim()}
+                        onClick={() => rename.mutate(ty.id)}
+                      >
+                        {t('common.done')}
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setRenaming(null)}>
+                        {t('common.cancel')}
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setRenaming(ty.id)
+                          setRenameValue(ty.name)
+                        }}
+                      >
+                        {t('common.rename')}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-red-600 hover:text-red-600"
+                        disabled={remove.isPending}
+                        onClick={() => remove.mutate(ty.id)}
+                      >
+                        {t('common.delete')}
+                      </Button>
+                    </div>
+                  ))}
+              </div>
             ))}
           </div>
         )}

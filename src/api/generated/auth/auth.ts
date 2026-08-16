@@ -49,6 +49,7 @@ import type {
   AuthTotpSetup200,
   AuthVerifyBody,
   AuthWebauthnRegisterBody,
+  Problem,
   ProblemResponse,
   RateLimitedResponse,
   User
@@ -1520,6 +1521,8 @@ export const useAuthTotpDisable = <TError = RateLimitedResponse | ProblemRespons
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **NOT YET IMPLEMENTED — answers 501.** Passkeys are not available. Use password + authenticator app (TOTP).
+<!-- kdb-annotation -->
  * @summary Register passkey/security key
  */
 export type authWebauthnRegisterResponse201 = {
@@ -1532,15 +1535,20 @@ export type authWebauthnRegisterResponse429 = {
   status: 429
 }
 
+export type authWebauthnRegisterResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type authWebauthnRegisterResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 201 | 429>
+  status: Exclude<HTTPStatusCodes, 201 | 429 | 501>
 }
     
 export type authWebauthnRegisterResponseSuccess = (authWebauthnRegisterResponse201) & {
   headers: Headers;
 };
-export type authWebauthnRegisterResponseError = (authWebauthnRegisterResponse429 | authWebauthnRegisterResponseDefault) & {
+export type authWebauthnRegisterResponseError = (authWebauthnRegisterResponse429 | authWebauthnRegisterResponse501 | authWebauthnRegisterResponseDefault) & {
   headers: Headers;
 };
 
@@ -1569,7 +1577,7 @@ export const authWebauthnRegister = async (authWebauthnRegisterBody: AuthWebauth
 
 
 
-export const getAuthWebauthnRegisterMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
+export const getAuthWebauthnRegisterMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authWebauthnRegister>>, TError,{data: AuthWebauthnRegisterBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof authWebauthnRegister>>, TError,{data: AuthWebauthnRegisterBody}, TContext> => {
 
@@ -1596,12 +1604,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type AuthWebauthnRegisterMutationResult = NonNullable<Awaited<ReturnType<typeof authWebauthnRegister>>>
     export type AuthWebauthnRegisterMutationBody = AuthWebauthnRegisterBody
-    export type AuthWebauthnRegisterMutationError = RateLimitedResponse | ProblemResponse
+    export type AuthWebauthnRegisterMutationError = RateLimitedResponse | Problem | ProblemResponse
 
     /**
  * @summary Register passkey/security key
  */
-export const useAuthWebauthnRegister = <TError = RateLimitedResponse | ProblemResponse,
+export const useAuthWebauthnRegister = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authWebauthnRegister>>, TError,{data: AuthWebauthnRegisterBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof authWebauthnRegister>>,
@@ -1615,6 +1623,8 @@ export const useAuthWebauthnRegister = <TError = RateLimitedResponse | ProblemRe
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **NOT YET IMPLEMENTED — answers 501.** Enterprise SSO (SAML/OIDC) is not available. Sign in with email + password.
+<!-- kdb-annotation -->
  * @summary Begin SSO flow (SAML/OIDC) — Enterprise
  */
 export type authSsoStartResponse302 = {
@@ -1627,13 +1637,18 @@ export type authSsoStartResponse429 = {
   status: 429
 }
 
+export type authSsoStartResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type authSsoStartResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 302 | 429>
+  status: Exclude<HTTPStatusCodes, 302 | 429 | 501>
 }
     
 ;
-export type authSsoStartResponseError = (authSsoStartResponse302 | authSsoStartResponse429 | authSsoStartResponseDefault) & {
+export type authSsoStartResponseError = (authSsoStartResponse302 | authSsoStartResponse429 | authSsoStartResponse501 | authSsoStartResponseDefault) & {
   headers: Headers;
 };
 
@@ -1669,7 +1684,7 @@ export const getAuthSsoStartQueryKey = (provider?: string,) => {
     }
 
     
-export const getAuthSsoStartQueryOptions = <TData = Awaited<ReturnType<typeof authSsoStart>>, TError = void | RateLimitedResponse | ProblemResponse>(provider: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof authSsoStart>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getAuthSsoStartQueryOptions = <TData = Awaited<ReturnType<typeof authSsoStart>>, TError = void | RateLimitedResponse | Problem | ProblemResponse>(provider: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof authSsoStart>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -1688,10 +1703,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type AuthSsoStartQueryResult = NonNullable<Awaited<ReturnType<typeof authSsoStart>>>
-export type AuthSsoStartQueryError = void | RateLimitedResponse | ProblemResponse
+export type AuthSsoStartQueryError = void | RateLimitedResponse | Problem | ProblemResponse
 
 
-export function useAuthSsoStart<TData = Awaited<ReturnType<typeof authSsoStart>>, TError = void | RateLimitedResponse | ProblemResponse>(
+export function useAuthSsoStart<TData = Awaited<ReturnType<typeof authSsoStart>>, TError = void | RateLimitedResponse | Problem | ProblemResponse>(
  provider: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof authSsoStart>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof authSsoStart>>,
@@ -1701,7 +1716,7 @@ export function useAuthSsoStart<TData = Awaited<ReturnType<typeof authSsoStart>>
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAuthSsoStart<TData = Awaited<ReturnType<typeof authSsoStart>>, TError = void | RateLimitedResponse | ProblemResponse>(
+export function useAuthSsoStart<TData = Awaited<ReturnType<typeof authSsoStart>>, TError = void | RateLimitedResponse | Problem | ProblemResponse>(
  provider: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof authSsoStart>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof authSsoStart>>,
@@ -1711,7 +1726,7 @@ export function useAuthSsoStart<TData = Awaited<ReturnType<typeof authSsoStart>>
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAuthSsoStart<TData = Awaited<ReturnType<typeof authSsoStart>>, TError = void | RateLimitedResponse | ProblemResponse>(
+export function useAuthSsoStart<TData = Awaited<ReturnType<typeof authSsoStart>>, TError = void | RateLimitedResponse | Problem | ProblemResponse>(
  provider: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof authSsoStart>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -1719,7 +1734,7 @@ export function useAuthSsoStart<TData = Awaited<ReturnType<typeof authSsoStart>>
  * @summary Begin SSO flow (SAML/OIDC) — Enterprise
  */
 
-export function useAuthSsoStart<TData = Awaited<ReturnType<typeof authSsoStart>>, TError = void | RateLimitedResponse | ProblemResponse>(
+export function useAuthSsoStart<TData = Awaited<ReturnType<typeof authSsoStart>>, TError = void | RateLimitedResponse | Problem | ProblemResponse>(
  provider: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof authSsoStart>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -1736,6 +1751,8 @@ export function useAuthSsoStart<TData = Awaited<ReturnType<typeof authSsoStart>>
 
 
 /**
+ * **NOT YET IMPLEMENTED — answers 501.** Enterprise SSO (SAML/OIDC) is not available.
+<!-- kdb-annotation -->
  * @summary SSO assertion callback
  */
 export type authSsoCallbackResponse200 = {
@@ -1748,15 +1765,20 @@ export type authSsoCallbackResponse429 = {
   status: 429
 }
 
+export type authSsoCallbackResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type authSsoCallbackResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 200 | 429>
+  status: Exclude<HTTPStatusCodes, 200 | 429 | 501>
 }
     
 export type authSsoCallbackResponseSuccess = (authSsoCallbackResponse200) & {
   headers: Headers;
 };
-export type authSsoCallbackResponseError = (authSsoCallbackResponse429 | authSsoCallbackResponseDefault) & {
+export type authSsoCallbackResponseError = (authSsoCallbackResponse429 | authSsoCallbackResponse501 | authSsoCallbackResponseDefault) & {
   headers: Headers;
 };
 
@@ -1784,7 +1806,7 @@ export const authSsoCallback = async (provider: string, options?: RequestInit): 
 
 
 
-export const getAuthSsoCallbackMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
+export const getAuthSsoCallbackMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authSsoCallback>>, TError,{provider: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof authSsoCallback>>, TError,{provider: string}, TContext> => {
 
@@ -1811,12 +1833,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type AuthSsoCallbackMutationResult = NonNullable<Awaited<ReturnType<typeof authSsoCallback>>>
     
-    export type AuthSsoCallbackMutationError = RateLimitedResponse | ProblemResponse
+    export type AuthSsoCallbackMutationError = RateLimitedResponse | Problem | ProblemResponse
 
     /**
  * @summary SSO assertion callback
  */
-export const useAuthSsoCallback = <TError = RateLimitedResponse | ProblemResponse,
+export const useAuthSsoCallback = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authSsoCallback>>, TError,{provider: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof authSsoCallback>>,

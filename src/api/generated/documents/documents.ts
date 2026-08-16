@@ -76,6 +76,7 @@ import type {
   LockedResponse,
   MoveDocumentBody,
   PreviewDocumentParams,
+  Problem,
   ProblemResponse,
   RateLimitedResponse,
   SetDocumentTags200,
@@ -390,6 +391,8 @@ export const useCompleteUpload = <TError = RateLimitedResponse | ProblemResponse
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **DIFFERS FROM THIS DESCRIPTION.** Implements `folder_id`, `q` and cursor pagination only. The richer filters (type_id, tag, status, owner_id, expiring_before) live on GET /search, which is the faceted surface — list is for browsing, search is for filtering.
+<!-- kdb-annotation -->
  * @summary List/filter documents
  */
 export type listDocumentsResponse200 = {
@@ -520,6 +523,8 @@ export function useListDocuments<TData = Awaited<ReturnType<typeof listDocuments
 
 
 /**
+ * **NOT IMPLEMENTED AS SPECIFIED.** Direct multipart upload for small files was never built and should be struck: every upload takes the presigned path (POST /documents/uploads → PUT to storage → POST .../complete), including small ones. One ingest path means one place to size-limit, virus-scan and audit.
+<!-- kdb-annotation -->
  * @summary Direct small upload (< 10 MB, multipart)
  */
 export type createDocumentDirectResponse201 = {
@@ -626,6 +631,8 @@ export const useCreateDocumentDirect = <TError = RateLimitedResponse | ProblemRe
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **NOT YET IMPLEMENTED — answers 501.** Batch operations are not available. Per-document move / copy / tag / trash all work; act per document.
+<!-- kdb-annotation -->
  * @summary Bulk move/tag/delete/change_type — async job
  */
 export type bulkDocumentActionResponse202 = {
@@ -638,15 +645,20 @@ export type bulkDocumentActionResponse429 = {
   status: 429
 }
 
+export type bulkDocumentActionResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type bulkDocumentActionResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 202 | 429>
+  status: Exclude<HTTPStatusCodes, 202 | 429 | 501>
 }
     
 export type bulkDocumentActionResponseSuccess = (bulkDocumentActionResponse202) & {
   headers: Headers;
 };
-export type bulkDocumentActionResponseError = (bulkDocumentActionResponse429 | bulkDocumentActionResponseDefault) & {
+export type bulkDocumentActionResponseError = (bulkDocumentActionResponse429 | bulkDocumentActionResponse501 | bulkDocumentActionResponseDefault) & {
   headers: Headers;
 };
 
@@ -675,7 +687,7 @@ export const bulkDocumentAction = async (bulkDocumentActionBody: BulkDocumentAct
 
 
 
-export const getBulkDocumentActionMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
+export const getBulkDocumentActionMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkDocumentAction>>, TError,{data: BulkDocumentActionBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof bulkDocumentAction>>, TError,{data: BulkDocumentActionBody}, TContext> => {
 
@@ -702,12 +714,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type BulkDocumentActionMutationResult = NonNullable<Awaited<ReturnType<typeof bulkDocumentAction>>>
     export type BulkDocumentActionMutationBody = BulkDocumentActionBody
-    export type BulkDocumentActionMutationError = RateLimitedResponse | ProblemResponse
+    export type BulkDocumentActionMutationError = RateLimitedResponse | Problem | ProblemResponse
 
     /**
  * @summary Bulk move/tag/delete/change_type — async job
  */
-export const useBulkDocumentAction = <TError = RateLimitedResponse | ProblemResponse,
+export const useBulkDocumentAction = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkDocumentAction>>, TError,{data: BulkDocumentActionBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof bulkDocumentAction>>,
@@ -844,6 +856,8 @@ export function useGetDocument<TData = Awaited<ReturnType<typeof getDocument>>, 
 
 
 /**
+ * **STRONGER THAN DESCRIBED.** If-Match is REQUIRED, not optional: a missing precondition answers 428 and a stale one 409. Also accepts `status` for the editorial values (draft / active / archived); the expiry-driven values (expiring / expired / renewed) are derived from lifecycle rules by a worker and are rejected with 422 if sent.
+<!-- kdb-annotation -->
  * @summary Update title, folder, type, metadata (requires If-Match)
  */
 export type updateDocumentResponse200 = {
@@ -1039,6 +1053,8 @@ export const useTrashDocument = <TError = LockedResponse | RateLimitedResponse |
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **STRONGER THAN DESCRIBED.** Answers 423 FILE_QUARANTINED when the version failed a malware scan. The same guard covers version downloads, share links, data rooms and the watermark pipeline.
+<!-- kdb-annotation -->
  * @summary 302 redirect to short-lived signed URL for current version
  */
 export type downloadDocumentResponse302 = {
@@ -1175,6 +1191,8 @@ export function useDownloadDocument<TData = Awaited<ReturnType<typeof downloadDo
 
 
 /**
+ * **DIFFERS FROM THIS DESCRIPTION.** No paged-image renderer. Preview is served as an inline-disposition download of the file itself, which means a previewer receives a URL capable of downloading — the spec's "preview without download rights" nuance is NOT held. Use a data room with watermarking when that distinction matters.
+<!-- kdb-annotation -->
  * @summary Rendered paged preview for view-only access
  */
 export type previewDocumentResponse200 = {
@@ -4732,6 +4750,8 @@ export const useUnpinDocument = <TError = RateLimitedResponse | ProblemResponse,
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **NOT YET IMPLEMENTED — answers 501.** Document generation from templates is not available. Upload the finished file instead.
+<!-- kdb-annotation -->
  * @summary List document templates
  */
 export type listTemplatesResponse200 = {
@@ -4744,15 +4764,20 @@ export type listTemplatesResponse429 = {
   status: 429
 }
 
+export type listTemplatesResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type listTemplatesResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 200 | 429>
+  status: Exclude<HTTPStatusCodes, 200 | 429 | 501>
 }
     
 export type listTemplatesResponseSuccess = (listTemplatesResponse200) & {
   headers: Headers;
 };
-export type listTemplatesResponseError = (listTemplatesResponse429 | listTemplatesResponseDefault) & {
+export type listTemplatesResponseError = (listTemplatesResponse429 | listTemplatesResponse501 | listTemplatesResponseDefault) & {
   headers: Headers;
 };
 
@@ -4788,7 +4813,7 @@ export const getListTemplatesQueryKey = () => {
     }
 
     
-export const getListTemplatesQueryOptions = <TData = Awaited<ReturnType<typeof listTemplates>>, TError = RateLimitedResponse | ProblemResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTemplates>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getListTemplatesQueryOptions = <TData = Awaited<ReturnType<typeof listTemplates>>, TError = RateLimitedResponse | Problem | ProblemResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTemplates>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -4807,10 +4832,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type ListTemplatesQueryResult = NonNullable<Awaited<ReturnType<typeof listTemplates>>>
-export type ListTemplatesQueryError = RateLimitedResponse | ProblemResponse
+export type ListTemplatesQueryError = RateLimitedResponse | Problem | ProblemResponse
 
 
-export function useListTemplates<TData = Awaited<ReturnType<typeof listTemplates>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useListTemplates<TData = Awaited<ReturnType<typeof listTemplates>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTemplates>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof listTemplates>>,
@@ -4820,7 +4845,7 @@ export function useListTemplates<TData = Awaited<ReturnType<typeof listTemplates
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListTemplates<TData = Awaited<ReturnType<typeof listTemplates>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useListTemplates<TData = Awaited<ReturnType<typeof listTemplates>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTemplates>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof listTemplates>>,
@@ -4830,7 +4855,7 @@ export function useListTemplates<TData = Awaited<ReturnType<typeof listTemplates
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListTemplates<TData = Awaited<ReturnType<typeof listTemplates>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useListTemplates<TData = Awaited<ReturnType<typeof listTemplates>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTemplates>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -4838,7 +4863,7 @@ export function useListTemplates<TData = Awaited<ReturnType<typeof listTemplates
  * @summary List document templates
  */
 
-export function useListTemplates<TData = Awaited<ReturnType<typeof listTemplates>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useListTemplates<TData = Awaited<ReturnType<typeof listTemplates>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTemplates>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -4855,6 +4880,8 @@ export function useListTemplates<TData = Awaited<ReturnType<typeof listTemplates
 
 
 /**
+ * **NOT YET IMPLEMENTED — answers 501.** Document generation from templates is not available. Upload the finished file instead.
+<!-- kdb-annotation -->
  * @summary Create template (file + merge fields)
  */
 export type createTemplateResponse201 = {
@@ -4867,15 +4894,20 @@ export type createTemplateResponse429 = {
   status: 429
 }
 
+export type createTemplateResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type createTemplateResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 201 | 429>
+  status: Exclude<HTTPStatusCodes, 201 | 429 | 501>
 }
     
 export type createTemplateResponseSuccess = (createTemplateResponse201) & {
   headers: Headers;
 };
-export type createTemplateResponseError = (createTemplateResponse429 | createTemplateResponseDefault) & {
+export type createTemplateResponseError = (createTemplateResponse429 | createTemplateResponse501 | createTemplateResponseDefault) & {
   headers: Headers;
 };
 
@@ -4904,7 +4936,7 @@ export const createTemplate = async (createTemplateBody: CreateTemplateBody, opt
 
 
 
-export const getCreateTemplateMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
+export const getCreateTemplateMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTemplate>>, TError,{data: CreateTemplateBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createTemplate>>, TError,{data: CreateTemplateBody}, TContext> => {
 
@@ -4931,12 +4963,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateTemplateMutationResult = NonNullable<Awaited<ReturnType<typeof createTemplate>>>
     export type CreateTemplateMutationBody = CreateTemplateBody
-    export type CreateTemplateMutationError = RateLimitedResponse | ProblemResponse
+    export type CreateTemplateMutationError = RateLimitedResponse | Problem | ProblemResponse
 
     /**
  * @summary Create template (file + merge fields)
  */
-export const useCreateTemplate = <TError = RateLimitedResponse | ProblemResponse,
+export const useCreateTemplate = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTemplate>>, TError,{data: CreateTemplateBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createTemplate>>,
@@ -4950,6 +4982,8 @@ export const useCreateTemplate = <TError = RateLimitedResponse | ProblemResponse
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **NOT YET IMPLEMENTED — answers 501.** See GET /templates.
+<!-- kdb-annotation -->
  * @summary Template detail
  */
 export type getTemplateResponse200 = {
@@ -4962,15 +4996,20 @@ export type getTemplateResponse429 = {
   status: 429
 }
 
+export type getTemplateResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type getTemplateResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 200 | 429>
+  status: Exclude<HTTPStatusCodes, 200 | 429 | 501>
 }
     
 export type getTemplateResponseSuccess = (getTemplateResponse200) & {
   headers: Headers;
 };
-export type getTemplateResponseError = (getTemplateResponse429 | getTemplateResponseDefault) & {
+export type getTemplateResponseError = (getTemplateResponse429 | getTemplateResponse501 | getTemplateResponseDefault) & {
   headers: Headers;
 };
 
@@ -5006,7 +5045,7 @@ export const getGetTemplateQueryKey = (templateId?: string,) => {
     }
 
     
-export const getGetTemplateQueryOptions = <TData = Awaited<ReturnType<typeof getTemplate>>, TError = RateLimitedResponse | ProblemResponse>(templateId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTemplate>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getGetTemplateQueryOptions = <TData = Awaited<ReturnType<typeof getTemplate>>, TError = RateLimitedResponse | Problem | ProblemResponse>(templateId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTemplate>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -5025,10 +5064,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetTemplateQueryResult = NonNullable<Awaited<ReturnType<typeof getTemplate>>>
-export type GetTemplateQueryError = RateLimitedResponse | ProblemResponse
+export type GetTemplateQueryError = RateLimitedResponse | Problem | ProblemResponse
 
 
-export function useGetTemplate<TData = Awaited<ReturnType<typeof getTemplate>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useGetTemplate<TData = Awaited<ReturnType<typeof getTemplate>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
  templateId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTemplate>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getTemplate>>,
@@ -5038,7 +5077,7 @@ export function useGetTemplate<TData = Awaited<ReturnType<typeof getTemplate>>, 
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetTemplate<TData = Awaited<ReturnType<typeof getTemplate>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useGetTemplate<TData = Awaited<ReturnType<typeof getTemplate>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
  templateId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTemplate>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getTemplate>>,
@@ -5048,7 +5087,7 @@ export function useGetTemplate<TData = Awaited<ReturnType<typeof getTemplate>>, 
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetTemplate<TData = Awaited<ReturnType<typeof getTemplate>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useGetTemplate<TData = Awaited<ReturnType<typeof getTemplate>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
  templateId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTemplate>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -5056,7 +5095,7 @@ export function useGetTemplate<TData = Awaited<ReturnType<typeof getTemplate>>, 
  * @summary Template detail
  */
 
-export function useGetTemplate<TData = Awaited<ReturnType<typeof getTemplate>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useGetTemplate<TData = Awaited<ReturnType<typeof getTemplate>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
  templateId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTemplate>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -5073,6 +5112,8 @@ export function useGetTemplate<TData = Awaited<ReturnType<typeof getTemplate>>, 
 
 
 /**
+ * **NOT YET IMPLEMENTED — answers 501.** See GET /templates.
+<!-- kdb-annotation -->
  * @summary Update fields or replace file (versioned)
  */
 export type updateTemplateResponse200 = {
@@ -5085,15 +5126,20 @@ export type updateTemplateResponse429 = {
   status: 429
 }
 
+export type updateTemplateResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type updateTemplateResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 200 | 429>
+  status: Exclude<HTTPStatusCodes, 200 | 429 | 501>
 }
     
 export type updateTemplateResponseSuccess = (updateTemplateResponse200) & {
   headers: Headers;
 };
-export type updateTemplateResponseError = (updateTemplateResponse429 | updateTemplateResponseDefault) & {
+export type updateTemplateResponseError = (updateTemplateResponse429 | updateTemplateResponse501 | updateTemplateResponseDefault) & {
   headers: Headers;
 };
 
@@ -5123,7 +5169,7 @@ export const updateTemplate = async (templateId: string,
 
 
 
-export const getUpdateTemplateMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
+export const getUpdateTemplateMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTemplate>>, TError,{templateId: string;data: UpdateTemplateBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateTemplate>>, TError,{templateId: string;data: UpdateTemplateBody}, TContext> => {
 
@@ -5150,12 +5196,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type UpdateTemplateMutationResult = NonNullable<Awaited<ReturnType<typeof updateTemplate>>>
     export type UpdateTemplateMutationBody = UpdateTemplateBody
-    export type UpdateTemplateMutationError = RateLimitedResponse | ProblemResponse
+    export type UpdateTemplateMutationError = RateLimitedResponse | Problem | ProblemResponse
 
     /**
  * @summary Update fields or replace file (versioned)
  */
-export const useUpdateTemplate = <TError = RateLimitedResponse | ProblemResponse,
+export const useUpdateTemplate = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTemplate>>, TError,{templateId: string;data: UpdateTemplateBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateTemplate>>,
@@ -5169,6 +5215,8 @@ export const useUpdateTemplate = <TError = RateLimitedResponse | ProblemResponse
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **NOT YET IMPLEMENTED — answers 501.** See GET /templates.
+<!-- kdb-annotation -->
  * @summary Retire template
  */
 export type retireTemplateResponse204 = {
@@ -5181,15 +5229,20 @@ export type retireTemplateResponse429 = {
   status: 429
 }
 
+export type retireTemplateResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type retireTemplateResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 204 | 429>
+  status: Exclude<HTTPStatusCodes, 204 | 429 | 501>
 }
     
 export type retireTemplateResponseSuccess = (retireTemplateResponse204) & {
   headers: Headers;
 };
-export type retireTemplateResponseError = (retireTemplateResponse429 | retireTemplateResponseDefault) & {
+export type retireTemplateResponseError = (retireTemplateResponse429 | retireTemplateResponse501 | retireTemplateResponseDefault) & {
   headers: Headers;
 };
 
@@ -5217,7 +5270,7 @@ export const retireTemplate = async (templateId: string, options?: RequestInit):
 
 
 
-export const getRetireTemplateMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
+export const getRetireTemplateMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retireTemplate>>, TError,{templateId: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof retireTemplate>>, TError,{templateId: string}, TContext> => {
 
@@ -5244,12 +5297,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type RetireTemplateMutationResult = NonNullable<Awaited<ReturnType<typeof retireTemplate>>>
     
-    export type RetireTemplateMutationError = RateLimitedResponse | ProblemResponse
+    export type RetireTemplateMutationError = RateLimitedResponse | Problem | ProblemResponse
 
     /**
  * @summary Retire template
  */
-export const useRetireTemplate = <TError = RateLimitedResponse | ProblemResponse,
+export const useRetireTemplate = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retireTemplate>>, TError,{templateId: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof retireTemplate>>,
@@ -5263,6 +5316,8 @@ export const useRetireTemplate = <TError = RateLimitedResponse | ProblemResponse
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **NOT YET IMPLEMENTED — answers 501.** See GET /templates.
+<!-- kdb-annotation -->
  * @summary Rendered preview with sample values
  */
 export type previewTemplateResponse200 = {
@@ -5275,15 +5330,20 @@ export type previewTemplateResponse429 = {
   status: 429
 }
 
+export type previewTemplateResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type previewTemplateResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 200 | 429>
+  status: Exclude<HTTPStatusCodes, 200 | 429 | 501>
 }
     
 export type previewTemplateResponseSuccess = (previewTemplateResponse200) & {
   headers: Headers;
 };
-export type previewTemplateResponseError = (previewTemplateResponse429 | previewTemplateResponseDefault) & {
+export type previewTemplateResponseError = (previewTemplateResponse429 | previewTemplateResponse501 | previewTemplateResponseDefault) & {
   headers: Headers;
 };
 
@@ -5319,7 +5379,7 @@ export const getPreviewTemplateQueryKey = (templateId?: string,) => {
     }
 
     
-export const getPreviewTemplateQueryOptions = <TData = Awaited<ReturnType<typeof previewTemplate>>, TError = RateLimitedResponse | ProblemResponse>(templateId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof previewTemplate>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getPreviewTemplateQueryOptions = <TData = Awaited<ReturnType<typeof previewTemplate>>, TError = RateLimitedResponse | Problem | ProblemResponse>(templateId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof previewTemplate>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -5338,10 +5398,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type PreviewTemplateQueryResult = NonNullable<Awaited<ReturnType<typeof previewTemplate>>>
-export type PreviewTemplateQueryError = RateLimitedResponse | ProblemResponse
+export type PreviewTemplateQueryError = RateLimitedResponse | Problem | ProblemResponse
 
 
-export function usePreviewTemplate<TData = Awaited<ReturnType<typeof previewTemplate>>, TError = RateLimitedResponse | ProblemResponse>(
+export function usePreviewTemplate<TData = Awaited<ReturnType<typeof previewTemplate>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
  templateId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof previewTemplate>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof previewTemplate>>,
@@ -5351,7 +5411,7 @@ export function usePreviewTemplate<TData = Awaited<ReturnType<typeof previewTemp
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function usePreviewTemplate<TData = Awaited<ReturnType<typeof previewTemplate>>, TError = RateLimitedResponse | ProblemResponse>(
+export function usePreviewTemplate<TData = Awaited<ReturnType<typeof previewTemplate>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
  templateId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof previewTemplate>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof previewTemplate>>,
@@ -5361,7 +5421,7 @@ export function usePreviewTemplate<TData = Awaited<ReturnType<typeof previewTemp
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function usePreviewTemplate<TData = Awaited<ReturnType<typeof previewTemplate>>, TError = RateLimitedResponse | ProblemResponse>(
+export function usePreviewTemplate<TData = Awaited<ReturnType<typeof previewTemplate>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
  templateId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof previewTemplate>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -5369,7 +5429,7 @@ export function usePreviewTemplate<TData = Awaited<ReturnType<typeof previewTemp
  * @summary Rendered preview with sample values
  */
 
-export function usePreviewTemplate<TData = Awaited<ReturnType<typeof previewTemplate>>, TError = RateLimitedResponse | ProblemResponse>(
+export function usePreviewTemplate<TData = Awaited<ReturnType<typeof previewTemplate>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
  templateId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof previewTemplate>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -5386,6 +5446,8 @@ export function usePreviewTemplate<TData = Awaited<ReturnType<typeof previewTemp
 
 
 /**
+ * **NOT YET IMPLEMENTED — answers 501.** See GET /templates.
+<!-- kdb-annotation -->
  * @summary Create document from template with merge values
  */
 export type generateFromTemplateResponse201 = {
@@ -5398,15 +5460,20 @@ export type generateFromTemplateResponse429 = {
   status: 429
 }
 
+export type generateFromTemplateResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type generateFromTemplateResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 201 | 429>
+  status: Exclude<HTTPStatusCodes, 201 | 429 | 501>
 }
     
 export type generateFromTemplateResponseSuccess = (generateFromTemplateResponse201) & {
   headers: Headers;
 };
-export type generateFromTemplateResponseError = (generateFromTemplateResponse429 | generateFromTemplateResponseDefault) & {
+export type generateFromTemplateResponseError = (generateFromTemplateResponse429 | generateFromTemplateResponse501 | generateFromTemplateResponseDefault) & {
   headers: Headers;
 };
 
@@ -5436,7 +5503,7 @@ export const generateFromTemplate = async (templateId: string,
 
 
 
-export const getGenerateFromTemplateMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
+export const getGenerateFromTemplateMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateFromTemplate>>, TError,{templateId: string;data: GenerateFromTemplateBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof generateFromTemplate>>, TError,{templateId: string;data: GenerateFromTemplateBody}, TContext> => {
 
@@ -5463,12 +5530,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type GenerateFromTemplateMutationResult = NonNullable<Awaited<ReturnType<typeof generateFromTemplate>>>
     export type GenerateFromTemplateMutationBody = GenerateFromTemplateBody
-    export type GenerateFromTemplateMutationError = RateLimitedResponse | ProblemResponse
+    export type GenerateFromTemplateMutationError = RateLimitedResponse | Problem | ProblemResponse
 
     /**
  * @summary Create document from template with merge values
  */
-export const useGenerateFromTemplate = <TError = RateLimitedResponse | ProblemResponse,
+export const useGenerateFromTemplate = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateFromTemplate>>, TError,{templateId: string;data: GenerateFromTemplateBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof generateFromTemplate>>,

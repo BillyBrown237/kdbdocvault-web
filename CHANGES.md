@@ -1,3 +1,76 @@
+# Slice W27 — Surfaces for B55–B58
+
+Four backend slices become screens, plus one component the library was
+missing.
+
+## New: `ui/switch.tsx`
+
+A native `<button role="switch">`, not a styled div: keyboard behaviour and
+focus come from the element, and `aria-checked` on a switch role is what
+screen readers announce as on/off.
+
+## Departments (B55) — `settings/departments.tsx`, on Team → Organisation
+
+Departments had NO management UI at all — they existed only as a picker in
+the ACL panel. Now: create, rename, re-parent, delete, rendered as an
+**indented tree** (the parent relationship is the whole point; a flat list
+of names hides it). Depth is computed by walking parents with a cap — a
+malformed chain can't hang the render. Delete errors surface the server's
+own message: "3 members belong to it" tells the admin what to do next.
+
+## Document types (B55) — Settings → Types
+
+Rename inline, delete-if-unused. **System types get no controls at all**
+rather than buttons that answer 422 — the type list already marks them.
+
+## Notification preferences (B56) — Settings → Notifications
+
+Five family switches, email only. A Callout states up front that the
+in-app bell always shows everything and these switches govern email —
+otherwise "off" would read as "I'll never hear about this". Local draft so
+several toggles are one save. SMS/WhatsApp/push are deliberately NOT
+offered: their adapters are log-only, so a switch would be a promise the
+system can't keep.
+
+## Security policy (B57) — Settings → Security policy
+
+Admins read, owners edit (a Callout says which you are). Every control
+states its consequence rather than restating its label — "People without it
+keep access to Settings so they can enrol" is the sentence that stops an
+owner locking their team out. The allowlist hint explains the
+own-address rule before the 422 does. Sharing sub-controls disable when
+public links are off, because they'd be meaningless.
+
+## Document links (B58) — `document-links.tsx`, on the document page
+
+Sits with the document's own facts, above the process panels. Each link
+reads in the **right voice for who's looking**: "Amends X" on the
+amendment, "Amended by Y" on the contract — one row, two sentences, via
+`links.type.{type}.{direction}` keys. Target picked through a small
+non-infinite search query (`documentPickerQuery`), which reuses the
+existing endpoint and its permission rules.
+
+## i18n
+
+`departments.*`, `links.*`, `notifPrefs.*`, `secPolicy.*`,
+`common.{edit,rename,delete}`, `docTypes.{renamed,deleted}` — FR/EN.
+
+# Slice W26 — Document status control (activates B54)
+
+Status becomes a control instead of a badge nobody could move.
+
+- Edit dialog: a Select with the three values a person owns (draft /
+  active / archived) and a one-line explanation of what each MEANS —
+  "Work in progress, not treated as an official record" beats an enum.
+- When the document sits in a DERIVED state (expiring / expired /
+  renewed), the control is replaced by the state plus where to change it
+  (the deadline under Échéances). Offering a dropdown the API would 422 is
+  worse than explaining the rule.
+- `patchDocument` gained `status`, typed to the three editable values so
+  the derived ones can't be sent by accident. Status is only included in
+  the body when it actually changed.
+- i18n: `document.statusField`, `statusDerived`, `statusHint.*` FR/EN.
+
 # Slice W25 — Tenant export in settings (activates B52)
 
 Owner-only fifth tab on `/settings`: **Export des données**.

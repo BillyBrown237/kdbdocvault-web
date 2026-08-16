@@ -40,6 +40,7 @@ import type {
   AssistantQueryBody,
   AssistantUsage200,
   ListSavedSearches200,
+  Problem,
   ProblemResponse,
   RateLimitedResponse,
   RunSavedSearch200,
@@ -646,6 +647,8 @@ export const useDeleteSavedSearch = <TError = RateLimitedResponse | ProblemRespo
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **NOT YET IMPLEMENTED — answers 501.** The AI assistant is not available. Text extraction and full-text search ARE live (/search), which covers "find the document"; the assistant covers "answer from the document" and needs a provider decision.
+<!-- kdb-annotation -->
  * @summary Natural-language query — answer + matching documents + applied filters
  */
 export type assistantQueryResponse200 = {
@@ -658,15 +661,20 @@ export type assistantQueryResponse429 = {
   status: 429
 }
 
+export type assistantQueryResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type assistantQueryResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 200 | 429>
+  status: Exclude<HTTPStatusCodes, 200 | 429 | 501>
 }
     
 export type assistantQueryResponseSuccess = (assistantQueryResponse200) & {
   headers: Headers;
 };
-export type assistantQueryResponseError = (assistantQueryResponse429 | assistantQueryResponseDefault) & {
+export type assistantQueryResponseError = (assistantQueryResponse429 | assistantQueryResponse501 | assistantQueryResponseDefault) & {
   headers: Headers;
 };
 
@@ -695,7 +703,7 @@ export const assistantQuery = async (assistantQueryBody: AssistantQueryBody, opt
 
 
 
-export const getAssistantQueryMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
+export const getAssistantQueryMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assistantQuery>>, TError,{data: AssistantQueryBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof assistantQuery>>, TError,{data: AssistantQueryBody}, TContext> => {
 
@@ -722,12 +730,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type AssistantQueryMutationResult = NonNullable<Awaited<ReturnType<typeof assistantQuery>>>
     export type AssistantQueryMutationBody = AssistantQueryBody
-    export type AssistantQueryMutationError = RateLimitedResponse | ProblemResponse
+    export type AssistantQueryMutationError = RateLimitedResponse | Problem | ProblemResponse
 
     /**
  * @summary Natural-language query — answer + matching documents + applied filters
  */
-export const useAssistantQuery = <TError = RateLimitedResponse | ProblemResponse,
+export const useAssistantQuery = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assistantQuery>>, TError,{data: AssistantQueryBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof assistantQuery>>,
@@ -741,6 +749,8 @@ export const useAssistantQuery = <TError = RateLimitedResponse | ProblemResponse
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **NOT YET IMPLEMENTED — answers 501.** See POST /assistant/query.
+<!-- kdb-annotation -->
  * @summary Grounded Q&A on one document with page/paragraph citations
  */
 export type assistantAskDocumentResponse200 = {
@@ -753,15 +763,20 @@ export type assistantAskDocumentResponse429 = {
   status: 429
 }
 
+export type assistantAskDocumentResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type assistantAskDocumentResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 200 | 429>
+  status: Exclude<HTTPStatusCodes, 200 | 429 | 501>
 }
     
 export type assistantAskDocumentResponseSuccess = (assistantAskDocumentResponse200) & {
   headers: Headers;
 };
-export type assistantAskDocumentResponseError = (assistantAskDocumentResponse429 | assistantAskDocumentResponseDefault) & {
+export type assistantAskDocumentResponseError = (assistantAskDocumentResponse429 | assistantAskDocumentResponse501 | assistantAskDocumentResponseDefault) & {
   headers: Headers;
 };
 
@@ -791,7 +806,7 @@ export const assistantAskDocument = async (documentId: string,
 
 
 
-export const getAssistantAskDocumentMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
+export const getAssistantAskDocumentMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assistantAskDocument>>, TError,{documentId: string;data: AssistantAskDocumentBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof assistantAskDocument>>, TError,{documentId: string;data: AssistantAskDocumentBody}, TContext> => {
 
@@ -818,12 +833,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type AssistantAskDocumentMutationResult = NonNullable<Awaited<ReturnType<typeof assistantAskDocument>>>
     export type AssistantAskDocumentMutationBody = AssistantAskDocumentBody
-    export type AssistantAskDocumentMutationError = RateLimitedResponse | ProblemResponse
+    export type AssistantAskDocumentMutationError = RateLimitedResponse | Problem | ProblemResponse
 
     /**
  * @summary Grounded Q&A on one document with page/paragraph citations
  */
-export const useAssistantAskDocument = <TError = RateLimitedResponse | ProblemResponse,
+export const useAssistantAskDocument = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assistantAskDocument>>, TError,{documentId: string;data: AssistantAskDocumentBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof assistantAskDocument>>,
@@ -837,6 +852,8 @@ export const useAssistantAskDocument = <TError = RateLimitedResponse | ProblemRe
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **NOT YET IMPLEMENTED — answers 501.** See POST /assistant/query.
+<!-- kdb-annotation -->
  * @summary Summary + key clause extraction
  */
 export type assistantSummarizeResponse200 = {
@@ -849,15 +866,20 @@ export type assistantSummarizeResponse429 = {
   status: 429
 }
 
+export type assistantSummarizeResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type assistantSummarizeResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 200 | 429>
+  status: Exclude<HTTPStatusCodes, 200 | 429 | 501>
 }
     
 export type assistantSummarizeResponseSuccess = (assistantSummarizeResponse200) & {
   headers: Headers;
 };
-export type assistantSummarizeResponseError = (assistantSummarizeResponse429 | assistantSummarizeResponseDefault) & {
+export type assistantSummarizeResponseError = (assistantSummarizeResponse429 | assistantSummarizeResponse501 | assistantSummarizeResponseDefault) & {
   headers: Headers;
 };
 
@@ -885,7 +907,7 @@ export const assistantSummarize = async (documentId: string, options?: RequestIn
 
 
 
-export const getAssistantSummarizeMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
+export const getAssistantSummarizeMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assistantSummarize>>, TError,{documentId: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof assistantSummarize>>, TError,{documentId: string}, TContext> => {
 
@@ -912,12 +934,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type AssistantSummarizeMutationResult = NonNullable<Awaited<ReturnType<typeof assistantSummarize>>>
     
-    export type AssistantSummarizeMutationError = RateLimitedResponse | ProblemResponse
+    export type AssistantSummarizeMutationError = RateLimitedResponse | Problem | ProblemResponse
 
     /**
  * @summary Summary + key clause extraction
  */
-export const useAssistantSummarize = <TError = RateLimitedResponse | ProblemResponse,
+export const useAssistantSummarize = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assistantSummarize>>, TError,{documentId: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof assistantSummarize>>,
@@ -931,6 +953,8 @@ export const useAssistantSummarize = <TError = RateLimitedResponse | ProblemResp
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **NOT YET IMPLEMENTED — answers 501.** See POST /assistant/query. The credit ledger (ai_credit_ledger) and the plan's AI-credit limit already exist and are enforced at purchase time.
+<!-- kdb-annotation -->
  * @summary AI credit consumption for the tenant
  */
 export type assistantUsageResponse200 = {
@@ -943,15 +967,20 @@ export type assistantUsageResponse429 = {
   status: 429
 }
 
+export type assistantUsageResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type assistantUsageResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 200 | 429>
+  status: Exclude<HTTPStatusCodes, 200 | 429 | 501>
 }
     
 export type assistantUsageResponseSuccess = (assistantUsageResponse200) & {
   headers: Headers;
 };
-export type assistantUsageResponseError = (assistantUsageResponse429 | assistantUsageResponseDefault) & {
+export type assistantUsageResponseError = (assistantUsageResponse429 | assistantUsageResponse501 | assistantUsageResponseDefault) & {
   headers: Headers;
 };
 
@@ -987,7 +1016,7 @@ export const getAssistantUsageQueryKey = () => {
     }
 
     
-export const getAssistantUsageQueryOptions = <TData = Awaited<ReturnType<typeof assistantUsage>>, TError = RateLimitedResponse | ProblemResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assistantUsage>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getAssistantUsageQueryOptions = <TData = Awaited<ReturnType<typeof assistantUsage>>, TError = RateLimitedResponse | Problem | ProblemResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assistantUsage>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -1006,10 +1035,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type AssistantUsageQueryResult = NonNullable<Awaited<ReturnType<typeof assistantUsage>>>
-export type AssistantUsageQueryError = RateLimitedResponse | ProblemResponse
+export type AssistantUsageQueryError = RateLimitedResponse | Problem | ProblemResponse
 
 
-export function useAssistantUsage<TData = Awaited<ReturnType<typeof assistantUsage>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useAssistantUsage<TData = Awaited<ReturnType<typeof assistantUsage>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof assistantUsage>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof assistantUsage>>,
@@ -1019,7 +1048,7 @@ export function useAssistantUsage<TData = Awaited<ReturnType<typeof assistantUsa
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAssistantUsage<TData = Awaited<ReturnType<typeof assistantUsage>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useAssistantUsage<TData = Awaited<ReturnType<typeof assistantUsage>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assistantUsage>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof assistantUsage>>,
@@ -1029,7 +1058,7 @@ export function useAssistantUsage<TData = Awaited<ReturnType<typeof assistantUsa
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAssistantUsage<TData = Awaited<ReturnType<typeof assistantUsage>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useAssistantUsage<TData = Awaited<ReturnType<typeof assistantUsage>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assistantUsage>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -1037,7 +1066,7 @@ export function useAssistantUsage<TData = Awaited<ReturnType<typeof assistantUsa
  * @summary AI credit consumption for the tenant
  */
 
-export function useAssistantUsage<TData = Awaited<ReturnType<typeof assistantUsage>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useAssistantUsage<TData = Awaited<ReturnType<typeof assistantUsage>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assistantUsage>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {

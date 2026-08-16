@@ -21,11 +21,27 @@ info:
     and is not re-documented here.
 
 
-    Rate limiting: every authenticated response carries X-RateLimit-Limit, X-RateLimit-Remaining and X-RateLimit-Reset headers; exceeding the quota returns 429 with Retry-After. Guest/public endpoints (/shared,
-    /sign, /verify) have stricter per-IP limits with CAPTCHA escalation.'
+    Rate limiting: every authenticated response carries X-RateLimit-Limit, X-RateLimit-Remaining and X-RateLimit-Reset
+    headers; exceeding the quota returns 429 with Retry-After. Guest/public endpoints (/shared, /sign,
+    /verify) have stricter per-IP limits with CAPTCHA escalation.'
   contact:
     name: KDB Vault Engineering
     email: api@kdbvault.com
+  x-kdb-convention-notes:
+  - key: sort-and-fields
+    text: '`sort=` and `fields=` (sparse fieldsets) are documented as global conventions but are implemented
+      NOWHERE. Lists have fixed, sensible ordering (recency, or name where that reads better). Post-pilot.'
+  - key: job-pattern
+    text: The "unified 202-job pattern" is real, but there is no generic GET /jobs/{id}. Each async surface
+      owns its own status endpoint — imports at GET /imports/{id}, every export kind (audit export, evidence
+      bundle, tenant export) at GET /audit/exports/{jobId}. The 202 response body always carries the polling
+      URL, so a client that follows the Location/`job_id` it is GIVEN never needs to know this.
+  - key: captcha
+    text: Rate-limit headers and 429 + Retry-After are live on every limited response. CAPTCHA escalation
+      on public endpoints is NOT implemented; public surfaces rely on strict per-IP limits alone.
+  - key: idempotency
+    text: 'Idempotency-Key is accepted on non-GET requests but is not yet a replay cache: it is recorded,
+      not enforced. Clients must still treat retries as potentially duplicating. Post-pilot.'
 servers:
 - url: https://api.kdbvault.com/v1
   description: Production
@@ -184,8 +200,9 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
-      description: 'Returns AuthTokens directly when MFA is not enabled. When MFA is enabled, returns an MfaChallenge instead — no tokens are issued until the challenge is completed. Discriminate on the
-        presence of mfa_required: true.'
+      description: 'Returns AuthTokens directly when MFA is not enabled. When MFA is enabled, returns
+        an MfaChallenge instead — no tokens are issued until the challenge is completed. Discriminate
+        on the presence of mfa_required: true.'
   /auth/mfa/challenge:
     post:
       tags:
@@ -222,8 +239,9 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
-      description: Exchange a challenge_token from /auth/login plus exactly one factor (totp_code, sms_code, or webauthn_assertion) for tokens. The challenge is single-use, expires after 5 minutes, and
-        is invalidated after 5 failed attempts — the client must then log in again.
+      description: Exchange a challenge_token from /auth/login plus exactly one factor (totp_code, sms_code,
+        or webauthn_assertion) for tokens. The challenge is single-use, expires after 5 minutes, and is
+        invalidated after 5 failed attempts — the client must then log in again.
   /auth/refresh:
     post:
       tags:
@@ -490,6 +508,18 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: &id001
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      x-kdb-status: deferred
+      x-kdb-note: Passkeys are not available. Use password + authenticator app (TOTP).
+      description: '**NOT YET IMPLEMENTED — answers 501.** Passkeys are not available. Use password +
+        authenticator app (TOTP).
+
+        <!-- kdb-annotation -->'
   /auth/sso/{provider}/start:
     get:
       tags:
@@ -510,6 +540,15 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: Enterprise SSO (SAML/OIDC) is not available. Sign in with email + password.
+      description: '**NOT YET IMPLEMENTED — answers 501.** Enterprise SSO (SAML/OIDC) is not available.
+        Sign in with email + password.
+
+        <!-- kdb-annotation -->'
   /auth/sso/{provider}/callback:
     post:
       tags:
@@ -534,6 +573,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: Enterprise SSO (SAML/OIDC) is not available.
+      description: '**NOT YET IMPLEMENTED — answers 501.** Enterprise SSO (SAML/OIDC) is not available.
+
+        <!-- kdb-annotation -->'
   /me:
     get:
       tags:
@@ -616,6 +663,13 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+      x-kdb-status: changed
+      x-kdb-note: PATCH is correct and accepted (B49). PUT is also accepted during the transition, because
+        the hand-written SPA client shipped against it.
+      description: '**DIFFERS FROM THIS DESCRIPTION.** PATCH is correct and accepted (B49). PUT is also
+        accepted during the transition, because the hand-written SPA client shipped against it.
+
+        <!-- kdb-annotation -->'
   /me/notification-preferences:
     get:
       tags:
@@ -655,6 +709,17 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+      x-kdb-status: changed
+      x-kdb-note: Preferences are per FAMILY (deadlines, approvals, signatures, documents, billing), not
+        per raw event type, and cover external channels only — the in-app bell is the record of what happened
+        and cannot be switched off. Only `email` delivers today; sms, whatsapp and push are accepted but
+        their adapters are log-only.
+      description: '**DIFFERS FROM THIS DESCRIPTION.** Preferences are per FAMILY (deadlines, approvals,
+        signatures, documents, billing), not per raw event type, and cover external channels only — the
+        in-app bell is the record of what happened and cannot be switched off. Only `email` delivers today;
+        sms, whatsapp and push are accepted but their adapters are log-only.
+
+        <!-- kdb-annotation -->'
   /me/emergency-contacts:
     get:
       tags:
@@ -677,6 +742,16 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: Emergency access is a Personal-plan feature; the pilot targets businesses. Schema exists
+        (emergency_contacts, V001); no surface yet.
+      description: '**NOT YET IMPLEMENTED — answers 501.** Emergency access is a Personal-plan feature;
+        the pilot targets businesses. Schema exists (emergency_contacts, V001); no surface yet.
+
+        <!-- kdb-annotation -->'
     post:
       tags:
       - Profile
@@ -724,6 +799,16 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: Emergency access is a Personal-plan feature; the pilot targets businesses. Schema exists
+        (emergency_contacts, V001); no surface yet.
+      description: '**NOT YET IMPLEMENTED — answers 501.** Emergency access is a Personal-plan feature;
+        the pilot targets businesses. Schema exists (emergency_contacts, V001); no surface yet.
+
+        <!-- kdb-annotation -->'
   /me/emergency-contacts/{contactId}:
     delete:
       tags:
@@ -744,6 +829,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: See GET /me/emergency-contacts.
+      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /me/emergency-contacts.
+
+        <!-- kdb-annotation -->'
   /emergency-access/{grantToken}/request:
     post:
       tags:
@@ -764,6 +857,17 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: Deferred with the rest of emergency access. When built it joins the public-surface contract
+        (capability token, SECURITY DEFINER peephole, strict per-IP limit) like /shared, /sign and /verify.
+      description: '**NOT YET IMPLEMENTED — answers 501.** Deferred with the rest of emergency access.
+        When built it joins the public-surface contract (capability token, SECURITY DEFINER peephole,
+        strict per-IP limit) like /shared, /sign and /verify.
+
+        <!-- kdb-annotation -->'
   /tenants:
     post:
       tags:
@@ -1283,6 +1387,17 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: Custom roles are not editable. The pilot runs on the four seeded system roles (Owner
+        / Admin / Member / Viewer), which ARE enforced end to end (B47). GET /roles works.
+      description: '**NOT YET IMPLEMENTED — answers 501.** Custom roles are not editable. The pilot runs
+        on the four seeded system roles (Owner / Admin / Member / Viewer), which ARE enforced end to end
+        (B47). GET /roles works.
+
+        <!-- kdb-annotation -->'
   /roles/{roleId}:
     parameters:
     - name: roleId
@@ -1307,6 +1422,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: See POST /roles.
+      description: '**NOT YET IMPLEMENTED — answers 501.** See POST /roles.
+
+        <!-- kdb-annotation -->'
     patch:
       tags:
       - Tenants
@@ -1336,6 +1459,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: See POST /roles.
+      description: '**NOT YET IMPLEMENTED — answers 501.** See POST /roles.
+
+        <!-- kdb-annotation -->'
     delete:
       tags:
       - Tenants
@@ -1348,6 +1479,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: See POST /roles.
+      description: '**NOT YET IMPLEMENTED — answers 501.** See POST /roles.
+
+        <!-- kdb-annotation -->'
   /permissions/catalog:
     get:
       tags:
@@ -1375,6 +1514,15 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: Meaningless until custom roles exist; lands with them.
+      description: '**NOT YET IMPLEMENTED — answers 501.** Meaningless until custom roles exist; lands
+        with them.
+
+        <!-- kdb-annotation -->'
   /folders:
     get:
       tags:
@@ -1835,6 +1983,15 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+      x-kdb-status: changed
+      x-kdb-note: Implements `folder_id`, `q` and cursor pagination only. The richer filters (type_id,
+        tag, status, owner_id, expiring_before) live on GET /search, which is the faceted surface — list
+        is for browsing, search is for filtering.
+      description: '**DIFFERS FROM THIS DESCRIPTION.** Implements `folder_id`, `q` and cursor pagination
+        only. The richer filters (type_id, tag, status, owner_id, expiring_before) live on GET /search,
+        which is the faceted surface — list is for browsing, search is for filtering.
+
+        <!-- kdb-annotation -->'
     post:
       tags:
       - Documents
@@ -1873,6 +2030,16 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+      x-kdb-status: not-planned
+      x-kdb-note: 'Direct multipart upload for small files was never built and should be struck: every
+        upload takes the presigned path (POST /documents/uploads → PUT to storage → POST .../complete),
+        including small ones. One ingest path means one place to size-limit, virus-scan and audit.'
+      description: '**NOT IMPLEMENTED AS SPECIFIED.** Direct multipart upload for small files was never
+        built and should be struck: every upload takes the presigned path (POST /documents/uploads → PUT
+        to storage → POST .../complete), including small ones. One ingest path means one place to size-limit,
+        virus-scan and audit.
+
+        <!-- kdb-annotation -->'
   /documents/bulk:
     post:
       tags:
@@ -1925,6 +2092,16 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: Batch operations are not available. Per-document move / copy / tag / trash all work;
+        act per document.
+      description: '**NOT YET IMPLEMENTED — answers 501.** Batch operations are not available. Per-document
+        move / copy / tag / trash all work; act per document.
+
+        <!-- kdb-annotation -->'
   /documents/{documentId}:
     parameters:
     - $ref: '#/components/parameters/documentId'
@@ -1983,6 +2160,17 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+      x-kdb-status: stronger
+      x-kdb-note: 'If-Match is REQUIRED, not optional: a missing precondition answers 428 and a stale
+        one 409. Also accepts `status` for the editorial values (draft / active / archived); the expiry-driven
+        values (expiring / expired / renewed) are derived from lifecycle rules by a worker and are rejected
+        with 422 if sent.'
+      description: '**STRONGER THAN DESCRIBED.** If-Match is REQUIRED, not optional: a missing precondition
+        answers 428 and a stale one 409. Also accepts `status` for the editorial values (draft / active
+        / archived); the expiry-driven values (expiring / expired / renewed) are derived from lifecycle
+        rules by a worker and are rejected with 422 if sent.
+
+        <!-- kdb-annotation -->'
     delete:
       tags:
       - Documents
@@ -2019,6 +2207,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+      x-kdb-status: stronger
+      x-kdb-note: Answers 423 FILE_QUARANTINED when the version failed a malware scan. The same guard
+        covers version downloads, share links, data rooms and the watermark pipeline.
+      description: '**STRONGER THAN DESCRIBED.** Answers 423 FILE_QUARANTINED when the version failed
+        a malware scan. The same guard covers version downloads, share links, data rooms and the watermark
+        pipeline.
+
+        <!-- kdb-annotation -->'
   /documents/{documentId}/preview:
     get:
       tags:
@@ -2048,6 +2244,17 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+      x-kdb-status: changed
+      x-kdb-note: No paged-image renderer. Preview is served as an inline-disposition download of the
+        file itself, which means a previewer receives a URL capable of downloading — the spec's "preview
+        without download rights" nuance is NOT held. Use a data room with watermarking when that distinction
+        matters.
+      description: '**DIFFERS FROM THIS DESCRIPTION.** No paged-image renderer. Preview is served as an
+        inline-disposition download of the file itself, which means a previewer receives a URL capable
+        of downloading — the spec''s "preview without download rights" nuance is NOT held. Use a data
+        room with watermarking when that distinction matters.
+
+        <!-- kdb-annotation -->'
   /documents/{documentId}/move:
     post:
       tags:
@@ -2827,6 +3034,15 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: Document generation from templates is not available. Upload the finished file instead.
+      description: '**NOT YET IMPLEMENTED — answers 501.** Document generation from templates is not available.
+        Upload the finished file instead.
+
+        <!-- kdb-annotation -->'
     post:
       tags:
       - Documents
@@ -2866,6 +3082,15 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: Document generation from templates is not available. Upload the finished file instead.
+      description: '**NOT YET IMPLEMENTED — answers 501.** Document generation from templates is not available.
+        Upload the finished file instead.
+
+        <!-- kdb-annotation -->'
   /templates/{templateId}:
     parameters:
     - name: templateId
@@ -2890,6 +3115,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: See GET /templates.
+      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /templates.
+
+        <!-- kdb-annotation -->'
     patch:
       tags:
       - Documents
@@ -2922,6 +3155,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: See GET /templates.
+      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /templates.
+
+        <!-- kdb-annotation -->'
     delete:
       tags:
       - Documents
@@ -2934,6 +3175,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: See GET /templates.
+      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /templates.
+
+        <!-- kdb-annotation -->'
   /templates/{templateId}/preview:
     get:
       tags:
@@ -2959,6 +3208,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: See GET /templates.
+      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /templates.
+
+        <!-- kdb-annotation -->'
   /templates/{templateId}/generate:
     post:
       tags:
@@ -3000,6 +3257,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: See GET /templates.
+      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /templates.
+
+        <!-- kdb-annotation -->'
   /search:
     get:
       tags:
@@ -3175,6 +3440,18 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: The AI assistant is not available. Text extraction and full-text search ARE live (/search),
+        which covers "find the document"; the assistant covers "answer from the document" and needs a
+        provider decision.
+      description: '**NOT YET IMPLEMENTED — answers 501.** The AI assistant is not available. Text extraction
+        and full-text search ARE live (/search), which covers "find the document"; the assistant covers
+        "answer from the document" and needs a provider decision.
+
+        <!-- kdb-annotation -->'
   /assistant/documents/{documentId}/ask:
     post:
       tags:
@@ -3205,6 +3482,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: See POST /assistant/query.
+      description: '**NOT YET IMPLEMENTED — answers 501.** See POST /assistant/query.
+
+        <!-- kdb-annotation -->'
   /assistant/documents/{documentId}/summarize:
     post:
       tags:
@@ -3224,6 +3509,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: See POST /assistant/query.
+      description: '**NOT YET IMPLEMENTED — answers 501.** See POST /assistant/query.
+
+        <!-- kdb-annotation -->'
   /assistant/usage:
     get:
       tags:
@@ -3248,6 +3541,17 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: See POST /assistant/query. The credit ledger (ai_credit_ledger) and the plan's AI-credit
+        limit already exist and are enforced at purchase time.
+      description: '**NOT YET IMPLEMENTED — answers 501.** See POST /assistant/query. The credit ledger
+        (ai_credit_ledger) and the plan''s AI-credit limit already exist and are enforced at purchase
+        time.
+
+        <!-- kdb-annotation -->'
   /lifecycle/expiring:
     get:
       tags:
@@ -3695,6 +3999,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+      x-kdb-status: stronger
+      x-kdb-note: Completing a recurring obligation now SPAWNS the next instance from its recurrence rule
+        (B49) — the field's presence had implied this behaviour before it existed.
+      description: '**STRONGER THAN DESCRIBED.** Completing a recurring obligation now SPAWNS the next
+        instance from its recurrence rule (B49) — the field''s presence had implied this behaviour before
+        it existed.
+
+        <!-- kdb-annotation -->'
   /retention-policies:
     get:
       tags:
@@ -3717,6 +4029,18 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: Schedule-driven retention is not available. Per-document lifecycle rules (/documents/{id}/lifecycle-rules)
+        cover the pilot's needs; the compliance report's "retention coverage" therefore counts LIFECYCLE
+        RULE coverage, not policy coverage.
+      description: '**NOT YET IMPLEMENTED — answers 501.** Schedule-driven retention is not available.
+        Per-document lifecycle rules (/documents/{id}/lifecycle-rules) cover the pilot''s needs; the compliance
+        report''s "retention coverage" therefore counts LIFECYCLE RULE coverage, not policy coverage.
+
+        <!-- kdb-annotation -->'
     post:
       tags:
       - Lifecycle
@@ -3762,6 +4086,18 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: Schedule-driven retention is not available. Per-document lifecycle rules (/documents/{id}/lifecycle-rules)
+        cover the pilot's needs; the compliance report's "retention coverage" therefore counts LIFECYCLE
+        RULE coverage, not policy coverage.
+      description: '**NOT YET IMPLEMENTED — answers 501.** Schedule-driven retention is not available.
+        Per-document lifecycle rules (/documents/{id}/lifecycle-rules) cover the pilot''s needs; the compliance
+        report''s "retention coverage" therefore counts LIFECYCLE RULE coverage, not policy coverage.
+
+        <!-- kdb-annotation -->'
   /retention-policies/{policyId}:
     parameters:
     - name: policyId
@@ -3797,6 +4133,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: See GET /retention-policies.
+      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /retention-policies.
+
+        <!-- kdb-annotation -->'
     delete:
       tags:
       - Lifecycle
@@ -3809,6 +4153,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: See GET /retention-policies.
+      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /retention-policies.
+
+        <!-- kdb-annotation -->'
   /legal-holds:
     get:
       tags:
@@ -3922,8 +4274,15 @@ paths:
       - Lifecycle
       operationId: initiateLegalHoldRelease
       summary: Initiate release — dual control, step 1 of 2
-      description: Creates a pending release request. The hold stays fully active until a DIFFERENT admin with the legal_holds:release permission approves via /release/approve. The initiator cannot approve
-        their own request (enforced server-side, 409 LEGAL_HOLD_SELF_APPROVAL). Requests expire after 72 hours. Both steps are audited.
+      description: '**STRONGER THAN DESCRIBED.** Dual approval is enforced: the requester cannot countersign
+        their own release (LEGAL_HOLD_SELF_APPROVAL).
+
+        <!-- kdb-annotation -->
+
+        Creates a pending release request. The hold stays fully active until a DIFFERENT admin with the
+        legal_holds:release permission approves via /release/approve. The initiator cannot approve their
+        own request (enforced server-side, 409 LEGAL_HOLD_SELF_APPROVAL). Requests expire after 72 hours.
+        Both steps are audited.'
       parameters:
       - name: holdId
         in: path
@@ -3953,6 +4312,8 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+      x-kdb-status: stronger
+      x-kdb-note: 'Dual approval is enforced: the requester cannot countersign their own release (LEGAL_HOLD_SELF_APPROVAL).'
   /workflow-templates:
     get:
       tags:
@@ -4521,6 +4882,16 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: Document comment threads are not available. The approval flow's per-step comment covers
+        the workflow conversation.
+      description: '**NOT YET IMPLEMENTED — answers 501.** Document comment threads are not available.
+        The approval flow''s per-step comment covers the workflow conversation.
+
+        <!-- kdb-annotation -->'
     post:
       tags:
       - Workflows
@@ -4551,6 +4922,16 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: Document comment threads are not available. The approval flow's per-step comment covers
+        the workflow conversation.
+      description: '**NOT YET IMPLEMENTED — answers 501.** Document comment threads are not available.
+        The approval flow''s per-step comment covers the workflow conversation.
+
+        <!-- kdb-annotation -->'
   /comments/{commentId}:
     parameters:
     - name: commentId
@@ -4586,6 +4967,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: See GET /documents/{documentId}/comments.
+      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /documents/{documentId}/comments.
+
+        <!-- kdb-annotation -->'
     delete:
       tags:
       - Workflows
@@ -4598,6 +4987,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: See GET /documents/{documentId}/comments.
+      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /documents/{documentId}/comments.
+
+        <!-- kdb-annotation -->'
   /documents/{documentId}/envelopes:
     post:
       tags:
@@ -4640,6 +5037,15 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+      x-kdb-status: changed
+      x-kdb-note: '`verify_method: sms_otp` is REJECTED with 422 until an SMS provider is integrated —
+        accepting it would create an envelope whose signer can never receive a code. Use `email_otp` or
+        `none`.'
+      description: '**DIFFERS FROM THIS DESCRIPTION.** `verify_method: sms_otp` is REJECTED with 422 until
+        an SMS provider is integrated — accepting it would create an envelope whose signer can never receive
+        a code. Use `email_otp` or `none`.
+
+        <!-- kdb-annotation -->'
   /envelopes:
     get:
       tags:
@@ -5094,6 +5500,15 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+      x-kdb-status: stronger
+      x-kdb-note: 'Subject to the tenant security policy (GET /tenant/security-policy): public links may
+        be disabled entirely (403), a password may be mandatory (422), and a maximum lifetime may be enforced
+        (422).'
+      description: '**STRONGER THAN DESCRIBED.** Subject to the tenant security policy (GET /tenant/security-policy):
+        public links may be disabled entirely (403), a password may be mandatory (422), and a maximum
+        lifetime may be enforced (422).
+
+        <!-- kdb-annotation -->'
   /share-links:
     get:
       tags:
@@ -5947,6 +6362,17 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: Push registration is meaningless until a push target exists — the PWA has no web-push
+        and there is no native app. Notifications deliver in-app and by email.
+      description: '**NOT YET IMPLEMENTED — answers 501.** Push registration is meaningless until a push
+        target exists — the PWA has no web-push and there is no native app. Notifications deliver in-app
+        and by email.
+
+        <!-- kdb-annotation -->'
   /devices/{deviceId}:
     delete:
       tags:
@@ -5967,6 +6393,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: See POST /devices.
+      description: '**NOT YET IMPLEMENTED — answers 501.** See POST /devices.
+
+        <!-- kdb-annotation -->'
   /reports/overview:
     get:
       tags:
@@ -6221,6 +6655,16 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: Machine API keys are not available. All access is user-scoped JWT. The grace-window
+        rotation design survives to implementation.
+      description: '**NOT YET IMPLEMENTED — answers 501.** Machine API keys are not available. All access
+        is user-scoped JWT. The grace-window rotation design survives to implementation.
+
+        <!-- kdb-annotation -->'
     post:
       tags:
       - Admin
@@ -6261,6 +6705,16 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: Machine API keys are not available. All access is user-scoped JWT. The grace-window
+        rotation design survives to implementation.
+      description: '**NOT YET IMPLEMENTED — answers 501.** Machine API keys are not available. All access
+        is user-scoped JWT. The grace-window rotation design survives to implementation.
+
+        <!-- kdb-annotation -->'
   /api-keys/{keyId}:
     delete:
       tags:
@@ -6281,6 +6735,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: See GET /api-keys.
+      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /api-keys.
+
+        <!-- kdb-annotation -->'
   /api-keys/{keyId}/rotate:
     post:
       tags:
@@ -6319,6 +6781,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: See GET /api-keys.
+      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /api-keys.
+
+        <!-- kdb-annotation -->'
   /webhooks:
     get:
       tags:
@@ -6341,6 +6811,17 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: Outbound webhooks are not available. Domain events ARE recorded (outbox_messages) so
+        nothing is lost in the meantime — subscriptions created later can be replayed from the event log.
+      description: '**NOT YET IMPLEMENTED — answers 501.** Outbound webhooks are not available. Domain
+        events ARE recorded (outbox_messages) so nothing is lost in the meantime — subscriptions created
+        later can be replayed from the event log.
+
+        <!-- kdb-annotation -->'
     post:
       tags:
       - Admin
@@ -6378,6 +6859,17 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: Outbound webhooks are not available. Domain events ARE recorded (outbox_messages) so
+        nothing is lost in the meantime — subscriptions created later can be replayed from the event log.
+      description: '**NOT YET IMPLEMENTED — answers 501.** Outbound webhooks are not available. Domain
+        events ARE recorded (outbox_messages) so nothing is lost in the meantime — subscriptions created
+        later can be replayed from the event log.
+
+        <!-- kdb-annotation -->'
   /webhooks/{webhookId}:
     parameters:
     - name: webhookId
@@ -6418,6 +6910,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: See GET /webhooks.
+      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /webhooks.
+
+        <!-- kdb-annotation -->'
     delete:
       tags:
       - Admin
@@ -6430,6 +6930,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: See GET /webhooks.
+      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /webhooks.
+
+        <!-- kdb-annotation -->'
   /webhooks/{webhookId}/deliveries:
     get:
       tags:
@@ -6463,6 +6971,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: See GET /webhooks.
+      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /webhooks.
+
+        <!-- kdb-annotation -->'
   /webhooks/{webhookId}/deliveries/{deliveryId}/retry:
     post:
       tags:
@@ -6489,6 +7005,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: See GET /webhooks.
+      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /webhooks.
+
+        <!-- kdb-annotation -->'
   /webhooks/events/{eventId}/replay:
     post:
       tags:
@@ -6509,6 +7033,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: See GET /webhooks.
+      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /webhooks.
+
+        <!-- kdb-annotation -->'
   /webhooks/{webhookId}/replay:
     post:
       tags:
@@ -6553,6 +7085,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: See GET /webhooks.
+      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /webhooks.
+
+        <!-- kdb-annotation -->'
   /tenant/security-policy:
     get:
       tags:
@@ -6592,6 +7132,15 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+      x-kdb-status: stronger
+      x-kdb-note: Owner-only (GET is admin+). Refuses an ip_allowlist that excludes the caller's own current
+        address, so the setting cannot lock its author out. MFA and allowlist rules exempt /auth and /me,
+        so a user newly caught by a policy can still enrol.
+      description: '**STRONGER THAN DESCRIBED.** Owner-only (GET is admin+). Refuses an ip_allowlist that
+        excludes the caller''s own current address, so the setting cannot lock its author out. MFA and
+        allowlist rules exempt /auth and /me, so a user newly caught by a policy can still enrol.
+
+        <!-- kdb-annotation -->'
   /tenant/sso:
     get:
       tags:
@@ -6610,6 +7159,15 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: SSO configuration lands with SSO itself (Enterprise tier).
+      description: '**NOT YET IMPLEMENTED — answers 501.** SSO configuration lands with SSO itself (Enterprise
+        tier).
+
+        <!-- kdb-annotation -->'
     put:
       tags:
       - Admin
@@ -6634,6 +7192,15 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '501':
+          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
+          content: *id001
+      x-kdb-status: deferred
+      x-kdb-note: SSO configuration lands with SSO itself (Enterprise tier).
+      description: '**NOT YET IMPLEMENTED — answers 501.** SSO configuration lands with SSO itself (Enterprise
+        tier).
+
+        <!-- kdb-annotation -->'
   /tenant/export:
     post:
       tags:
@@ -6651,6 +7218,17 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+      x-kdb-status: stronger
+      x-kdb-note: 'Returns the EXISTING job if one is already queued or running for the tenant, rather
+        than stacking multi-gigabyte builds. Archive contents: files/ (current versions, original bytes,
+        folder tree preserved), metadata.csv, audit.jsonl (full hash chain), evidence/ and manifest.json
+        — all readable without KDB DocVault software.'
+      description: '**STRONGER THAN DESCRIBED.** Returns the EXISTING job if one is already queued or
+        running for the tenant, rather than stacking multi-gigabyte builds. Archive contents: files/ (current
+        versions, original bytes, folder tree preserved), metadata.csv, audit.jsonl (full hash chain),
+        evidence/ and manifest.json — all readable without KDB DocVault software.
+
+        <!-- kdb-annotation -->'
   /jobs/{jobId}:
     get:
       tags:
@@ -6675,6 +7253,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+      x-kdb-status: not-planned
+      x-kdb-note: 'There is no generic job endpoint. Poll the URL the 202 response gave you: GET /imports/{importId}
+        for imports, GET /audit/exports/{jobId} for every export kind.'
+      description: '**NOT IMPLEMENTED AS SPECIFIED.** There is no generic job endpoint. Poll the URL the
+        202 response gave you: GET /imports/{importId} for imports, GET /audit/exports/{jobId} for every
+        export kind.
+
+        <!-- kdb-annotation -->'
   /import-connections:
     get:
       tags:
@@ -7181,13 +7767,22 @@ paths:
                     type: object
                     additionalProperties:
                       type: string
+      x-kdb-status: not-planned
+      x-kdb-note: Tiered health detail was not built. Use GET /live (process up) and GET /ready (dependencies
+        checked — database and object store), which are also the container probes.
+      description: '**NOT IMPLEMENTED AS SPECIFIED.** Tiered health detail was not built. Use GET /live
+        (process up) and GET /ready (dependencies checked — database and object store), which are also
+        the container probes.
+
+        <!-- kdb-annotation -->'
   /legal-holds/{holdId}/release/approve:
     post:
       tags:
       - Lifecycle
       operationId: approveLegalHoldRelease
       summary: Approve pending release — step 2, different admin required
-      description: 409 if the approver is the initiator or no pending request exists. On success the hold is released and retention schedules resume for all held documents.
+      description: 409 if the approver is the initiator or no pending request exists. On success the hold
+        is released and retention schedules resume for all held documents.
       parameters:
       - name: holdId
         in: path
@@ -7589,7 +8184,8 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: User access token or tenant-scoped API key. Tenant id comes from the token, never from parameters.
+      description: User access token or tenant-scoped API key. Tenant id comes from the token, never from
+        parameters.
   parameters:
     cursor:
       name: cursor
@@ -7763,7 +8359,8 @@ components:
         error: null
     AuthTokens:
       type: object
-      description: Issued access token. The rotating refresh token is delivered as an httpOnly Secure cookie (web) or in secure storage exchange (mobile), never in this body.
+      description: Issued access token. The rotating refresh token is delivered as an httpOnly Secure
+        cookie (web) or in secure storage exchange (mobile), never in this body.
       required:
       - access_token
       - expires_in
@@ -9782,7 +10379,8 @@ components:
         issued_at: '2026-07-13T10:30:00Z'
     MfaChallenge:
       type: object
-      description: Returned by /auth/login when the account has MFA enabled. Exchange the challenge_token plus exactly one factor at /auth/mfa/challenge.
+      description: Returned by /auth/login when the account has MFA enabled. Exchange the challenge_token
+        plus exactly one factor at /auth/mfa/challenge.
       required:
       - mfa_required
       - challenge_token
@@ -9816,7 +10414,8 @@ components:
         expires_in: 300
     LegalHoldReleaseRequest:
       type: object
-      description: 'Dual-control release: one admin initiates, a different admin must approve within the window.'
+      description: 'Dual-control release: one admin initiates, a different admin must approve within the
+        window.'
       properties:
         id:
           type: string

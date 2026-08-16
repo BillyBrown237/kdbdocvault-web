@@ -483,6 +483,34 @@ export interface DocumentType {
   metadata_schema: Record<string, unknown>
 }
 
+/** B58. `direction: 'outgoing'` means THIS document is the subject of the
+ * verb ("this amends that"); 'incoming' means it's the object ("amended by"). */
+export interface DocumentLink {
+  id: string
+  link_type: 'amends' | 'fulfills' | 'supports' | 'relates_to'
+  direction: 'outgoing' | 'incoming'
+  other_document: { id: string; title: string; status: string }
+  created_by: string | null
+  created_at: string
+}
+
+/** B57. Absent policy row on the server = these defaults, so this is never null. */
+export interface SecurityPolicy {
+  require_mfa: boolean
+  session_max_days: number
+  ip_allowlist: string[]
+  share_max_days: number | null
+  share_require_password: boolean
+  share_external_allowed: boolean
+}
+
+/** B56. `always_on` lists channels that cannot be switched off (in_app). */
+export interface NotificationPrefs {
+  channels: string[]
+  always_on: string[]
+  preferences: { family: string; channels: Record<string, boolean> }[]
+}
+
 // --- imports (W17) -----------------------------------------------------------
 
 export interface ImportJob {

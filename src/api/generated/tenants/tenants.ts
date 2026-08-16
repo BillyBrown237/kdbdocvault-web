@@ -52,6 +52,7 @@ import type {
   ListMembersParams,
   ListRoles200,
   Membership,
+  Problem,
   ProblemResponse,
   RateLimitedResponse,
   Role,
@@ -2001,6 +2002,8 @@ export function useListRoles<TData = Awaited<ReturnType<typeof listRoles>>, TErr
 
 
 /**
+ * **NOT YET IMPLEMENTED — answers 501.** Custom roles are not editable. The pilot runs on the four seeded system roles (Owner / Admin / Member / Viewer), which ARE enforced end to end (B47). GET /roles works.
+<!-- kdb-annotation -->
  * @summary Create custom role
  */
 export type createRoleResponse201 = {
@@ -2013,15 +2016,20 @@ export type createRoleResponse429 = {
   status: 429
 }
 
+export type createRoleResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type createRoleResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 201 | 429>
+  status: Exclude<HTTPStatusCodes, 201 | 429 | 501>
 }
     
 export type createRoleResponseSuccess = (createRoleResponse201) & {
   headers: Headers;
 };
-export type createRoleResponseError = (createRoleResponse429 | createRoleResponseDefault) & {
+export type createRoleResponseError = (createRoleResponse429 | createRoleResponse501 | createRoleResponseDefault) & {
   headers: Headers;
 };
 
@@ -2050,7 +2058,7 @@ export const createRole = async (createRoleBody: CreateRoleBody, options?: Reque
 
 
 
-export const getCreateRoleMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
+export const getCreateRoleMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRole>>, TError,{data: CreateRoleBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createRole>>, TError,{data: CreateRoleBody}, TContext> => {
 
@@ -2077,12 +2085,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateRoleMutationResult = NonNullable<Awaited<ReturnType<typeof createRole>>>
     export type CreateRoleMutationBody = CreateRoleBody
-    export type CreateRoleMutationError = RateLimitedResponse | ProblemResponse
+    export type CreateRoleMutationError = RateLimitedResponse | Problem | ProblemResponse
 
     /**
  * @summary Create custom role
  */
-export const useCreateRole = <TError = RateLimitedResponse | ProblemResponse,
+export const useCreateRole = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRole>>, TError,{data: CreateRoleBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createRole>>,
@@ -2096,6 +2104,8 @@ export const useCreateRole = <TError = RateLimitedResponse | ProblemResponse,
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **NOT YET IMPLEMENTED — answers 501.** See POST /roles.
+<!-- kdb-annotation -->
  * @summary Role detail with permission list
  */
 export type getRoleResponse200 = {
@@ -2108,15 +2118,20 @@ export type getRoleResponse429 = {
   status: 429
 }
 
+export type getRoleResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type getRoleResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 200 | 429>
+  status: Exclude<HTTPStatusCodes, 200 | 429 | 501>
 }
     
 export type getRoleResponseSuccess = (getRoleResponse200) & {
   headers: Headers;
 };
-export type getRoleResponseError = (getRoleResponse429 | getRoleResponseDefault) & {
+export type getRoleResponseError = (getRoleResponse429 | getRoleResponse501 | getRoleResponseDefault) & {
   headers: Headers;
 };
 
@@ -2152,7 +2167,7 @@ export const getGetRoleQueryKey = (roleId?: string,) => {
     }
 
     
-export const getGetRoleQueryOptions = <TData = Awaited<ReturnType<typeof getRole>>, TError = RateLimitedResponse | ProblemResponse>(roleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRole>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getGetRoleQueryOptions = <TData = Awaited<ReturnType<typeof getRole>>, TError = RateLimitedResponse | Problem | ProblemResponse>(roleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRole>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -2171,10 +2186,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetRoleQueryResult = NonNullable<Awaited<ReturnType<typeof getRole>>>
-export type GetRoleQueryError = RateLimitedResponse | ProblemResponse
+export type GetRoleQueryError = RateLimitedResponse | Problem | ProblemResponse
 
 
-export function useGetRole<TData = Awaited<ReturnType<typeof getRole>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useGetRole<TData = Awaited<ReturnType<typeof getRole>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
  roleId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRole>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getRole>>,
@@ -2184,7 +2199,7 @@ export function useGetRole<TData = Awaited<ReturnType<typeof getRole>>, TError =
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetRole<TData = Awaited<ReturnType<typeof getRole>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useGetRole<TData = Awaited<ReturnType<typeof getRole>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
  roleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRole>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getRole>>,
@@ -2194,7 +2209,7 @@ export function useGetRole<TData = Awaited<ReturnType<typeof getRole>>, TError =
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetRole<TData = Awaited<ReturnType<typeof getRole>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useGetRole<TData = Awaited<ReturnType<typeof getRole>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
  roleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRole>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -2202,7 +2217,7 @@ export function useGetRole<TData = Awaited<ReturnType<typeof getRole>>, TError =
  * @summary Role detail with permission list
  */
 
-export function useGetRole<TData = Awaited<ReturnType<typeof getRole>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useGetRole<TData = Awaited<ReturnType<typeof getRole>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
  roleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRole>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -2219,6 +2234,8 @@ export function useGetRole<TData = Awaited<ReturnType<typeof getRole>>, TError =
 
 
 /**
+ * **NOT YET IMPLEMENTED — answers 501.** See POST /roles.
+<!-- kdb-annotation -->
  * @summary Edit role (system roles immutable)
  */
 export type updateRoleResponse200 = {
@@ -2231,15 +2248,20 @@ export type updateRoleResponse429 = {
   status: 429
 }
 
+export type updateRoleResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type updateRoleResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 200 | 429>
+  status: Exclude<HTTPStatusCodes, 200 | 429 | 501>
 }
     
 export type updateRoleResponseSuccess = (updateRoleResponse200) & {
   headers: Headers;
 };
-export type updateRoleResponseError = (updateRoleResponse429 | updateRoleResponseDefault) & {
+export type updateRoleResponseError = (updateRoleResponse429 | updateRoleResponse501 | updateRoleResponseDefault) & {
   headers: Headers;
 };
 
@@ -2269,7 +2291,7 @@ export const updateRole = async (roleId: string,
 
 
 
-export const getUpdateRoleMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
+export const getUpdateRoleMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRole>>, TError,{roleId: string;data: UpdateRoleBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateRole>>, TError,{roleId: string;data: UpdateRoleBody}, TContext> => {
 
@@ -2296,12 +2318,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type UpdateRoleMutationResult = NonNullable<Awaited<ReturnType<typeof updateRole>>>
     export type UpdateRoleMutationBody = UpdateRoleBody
-    export type UpdateRoleMutationError = RateLimitedResponse | ProblemResponse
+    export type UpdateRoleMutationError = RateLimitedResponse | Problem | ProblemResponse
 
     /**
  * @summary Edit role (system roles immutable)
  */
-export const useUpdateRole = <TError = RateLimitedResponse | ProblemResponse,
+export const useUpdateRole = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRole>>, TError,{roleId: string;data: UpdateRoleBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateRole>>,
@@ -2315,6 +2337,8 @@ export const useUpdateRole = <TError = RateLimitedResponse | ProblemResponse,
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **NOT YET IMPLEMENTED — answers 501.** See POST /roles.
+<!-- kdb-annotation -->
  * @summary Delete role (not assignable while in use)
  */
 export type deleteRoleResponse204 = {
@@ -2327,15 +2351,20 @@ export type deleteRoleResponse429 = {
   status: 429
 }
 
+export type deleteRoleResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type deleteRoleResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 204 | 429>
+  status: Exclude<HTTPStatusCodes, 204 | 429 | 501>
 }
     
 export type deleteRoleResponseSuccess = (deleteRoleResponse204) & {
   headers: Headers;
 };
-export type deleteRoleResponseError = (deleteRoleResponse429 | deleteRoleResponseDefault) & {
+export type deleteRoleResponseError = (deleteRoleResponse429 | deleteRoleResponse501 | deleteRoleResponseDefault) & {
   headers: Headers;
 };
 
@@ -2363,7 +2392,7 @@ export const deleteRole = async (roleId: string, options?: RequestInit): Promise
 
 
 
-export const getDeleteRoleMutationOptions = <TError = RateLimitedResponse | ProblemResponse,
+export const getDeleteRoleMutationOptions = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRole>>, TError,{roleId: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteRole>>, TError,{roleId: string}, TContext> => {
 
@@ -2390,12 +2419,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeleteRoleMutationResult = NonNullable<Awaited<ReturnType<typeof deleteRole>>>
     
-    export type DeleteRoleMutationError = RateLimitedResponse | ProblemResponse
+    export type DeleteRoleMutationError = RateLimitedResponse | Problem | ProblemResponse
 
     /**
  * @summary Delete role (not assignable while in use)
  */
-export const useDeleteRole = <TError = RateLimitedResponse | ProblemResponse,
+export const useDeleteRole = <TError = RateLimitedResponse | Problem | ProblemResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRole>>, TError,{roleId: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteRole>>,
@@ -2409,6 +2438,8 @@ export const useDeleteRole = <TError = RateLimitedResponse | ProblemResponse,
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * **NOT YET IMPLEMENTED — answers 501.** Meaningless until custom roles exist; lands with them.
+<!-- kdb-annotation -->
  * @summary All assignable permission keys with descriptions
  */
 export type getPermissionsCatalogResponse200 = {
@@ -2421,15 +2452,20 @@ export type getPermissionsCatalogResponse429 = {
   status: 429
 }
 
+export type getPermissionsCatalogResponse501 = {
+  data: Problem
+  status: 501
+}
+
 export type getPermissionsCatalogResponseDefault = {
   data: ProblemResponse
-  status: Exclude<HTTPStatusCodes, 200 | 429>
+  status: Exclude<HTTPStatusCodes, 200 | 429 | 501>
 }
     
 export type getPermissionsCatalogResponseSuccess = (getPermissionsCatalogResponse200) & {
   headers: Headers;
 };
-export type getPermissionsCatalogResponseError = (getPermissionsCatalogResponse429 | getPermissionsCatalogResponseDefault) & {
+export type getPermissionsCatalogResponseError = (getPermissionsCatalogResponse429 | getPermissionsCatalogResponse501 | getPermissionsCatalogResponseDefault) & {
   headers: Headers;
 };
 
@@ -2465,7 +2501,7 @@ export const getGetPermissionsCatalogQueryKey = () => {
     }
 
     
-export const getGetPermissionsCatalogQueryOptions = <TData = Awaited<ReturnType<typeof getPermissionsCatalog>>, TError = RateLimitedResponse | ProblemResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPermissionsCatalog>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getGetPermissionsCatalogQueryOptions = <TData = Awaited<ReturnType<typeof getPermissionsCatalog>>, TError = RateLimitedResponse | Problem | ProblemResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPermissionsCatalog>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -2484,10 +2520,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetPermissionsCatalogQueryResult = NonNullable<Awaited<ReturnType<typeof getPermissionsCatalog>>>
-export type GetPermissionsCatalogQueryError = RateLimitedResponse | ProblemResponse
+export type GetPermissionsCatalogQueryError = RateLimitedResponse | Problem | ProblemResponse
 
 
-export function useGetPermissionsCatalog<TData = Awaited<ReturnType<typeof getPermissionsCatalog>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useGetPermissionsCatalog<TData = Awaited<ReturnType<typeof getPermissionsCatalog>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPermissionsCatalog>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getPermissionsCatalog>>,
@@ -2497,7 +2533,7 @@ export function useGetPermissionsCatalog<TData = Awaited<ReturnType<typeof getPe
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetPermissionsCatalog<TData = Awaited<ReturnType<typeof getPermissionsCatalog>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useGetPermissionsCatalog<TData = Awaited<ReturnType<typeof getPermissionsCatalog>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPermissionsCatalog>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getPermissionsCatalog>>,
@@ -2507,7 +2543,7 @@ export function useGetPermissionsCatalog<TData = Awaited<ReturnType<typeof getPe
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetPermissionsCatalog<TData = Awaited<ReturnType<typeof getPermissionsCatalog>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useGetPermissionsCatalog<TData = Awaited<ReturnType<typeof getPermissionsCatalog>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPermissionsCatalog>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -2515,7 +2551,7 @@ export function useGetPermissionsCatalog<TData = Awaited<ReturnType<typeof getPe
  * @summary All assignable permission keys with descriptions
  */
 
-export function useGetPermissionsCatalog<TData = Awaited<ReturnType<typeof getPermissionsCatalog>>, TError = RateLimitedResponse | ProblemResponse>(
+export function useGetPermissionsCatalog<TData = Awaited<ReturnType<typeof getPermissionsCatalog>>, TError = RateLimitedResponse | Problem | ProblemResponse>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPermissionsCatalog>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
