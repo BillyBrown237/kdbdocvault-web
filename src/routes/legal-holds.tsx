@@ -71,12 +71,20 @@ function LegalHoldsPage() {
     onError: (e) => fail(e, t),
   })
 
+  // The release reason is REQUIRED by the API (it is recorded on the request
+  // and in the audit trail), so the dialog collects it before we call —
+  // sending nothing produced a server error rather than a prompt.
+  const [releaseFor, setReleaseFor] = useState<string | null>(null)
+  const [reason, setReason] = useState('')
+
   const release = useMutation({
-    mutationFn: (holdId: string) => releaseLegalHold(holdId),
+    mutationFn: (holdId: string) => releaseLegalHold(holdId, reason.trim()),
     onSuccess: async (r) => {
       toast.success(
         r.status === 'released' ? t('holds.released') : t('holds.releasePending'),
       )
+      setReleaseFor(null)
+      setReason('')
       await queryClient.invalidateQueries({ queryKey: ['legal-holds'] })
     },
     onError: (e) => fail(e, t),
@@ -113,7 +121,10 @@ function LegalHoldsPage() {
                     meId={me.data?.id}
                     locale={i18n.language}
                     releasing={release.isPending}
-                    onRelease={() => release.mutate(h.id)}
+                    onRelease={() => {
+                      setReason('')
+                      setReleaseFor(h.id)
+                    }}
                   />
                 </div>
               ))}
@@ -154,6 +165,48 @@ function LegalHoldsPage() {
             </Button>
             <Button disabled={create.isPending || !name.trim()} onClick={() => create.mutate()}>
               {create.isPending ? t('app.loading') : t('common.create')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Release reason. Separate dialog rather than an inline field: this is
+          the step that ends a legal obligation, and it should feel like a
+          decision, not a button. */}
+      <Dialog open={releaseFor !== null} onOpenChange={(o) => !o && setReleaseFor(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {list.find((h) => h.id === releaseFor)?.status === 'pending_release'
+                ? t('holds.approveRelease')
+                : t('holds.requestRelease')}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">{t('holds.reasonExplainer')}</p>
+            <div className="space-y-1.5">
+              <Label htmlFor="release-reason">{t('holds.reason')}</Label>
+              <Textarea
+                id="release-reason"
+                rows={4}
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder={t('holds.reasonPlaceholder')}
+              />
+              <p className="text-xs text-muted-foreground">
+                {t('holds.reasonMin', { count: Math.max(0, 10 - reason.trim().length) })}
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReleaseFor(null)}>
+              {t('common.cancel')}
+            </Button>
+            <Button
+              disabled={release.isPending || reason.trim().length < 10}
+              onClick={() => releaseFor && release.mutate(releaseFor)}
+            >
+              {release.isPending ? t('app.loading') : t('holds.confirmRelease')}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import { SecretReveal } from '@/components/ui/secret-reveal'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { Switch } from '@/components/ui/switch'
 import { toast } from '@/components/ui/sonner'
@@ -181,6 +182,30 @@ export function WebhooksCard() {
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">{t('integrations.secretHint')}</p>
+              {/* This value is as unrecoverable as the API key: we store it
+                  encrypted and never return it, so the receiving side must
+                  keep its own copy. Same treatment, same download options. */}
+              {secret.length >= 16 && (
+                <SecretReveal
+                  value={secret}
+                  envKey="KDB_WEBHOOK_SECRET"
+                  filenameBase="kdbvault-webhook-secret"
+                  title={t('integrations.hookSecretFileTitle')}
+                  usage={
+                    signature
+                      ? t('integrations.signatureHint', {
+                          header: signature.header,
+                          algorithm: signature.algorithm,
+                        })
+                      : undefined
+                  }
+                  meta={url.trim() ? { [t('integrations.url')]: url.trim() } : undefined}
+                  // Verification is the half integrators get wrong: signing
+                  // the body alone, or comparing with == and leaking timing.
+                  // Show the code rather than describing it in prose.
+                  example={verifySnippet(secret)}
+                />
+              )}
             </div>
 
             <div className="space-y-2">
@@ -351,4 +376,32 @@ function DeliveryLog({ webhookId }: { webhookId: string }) {
  * same meanings (queued/running/done/failed) with the right tones. */
 function mapStatus(s: string): string {
   return s === 'delivered' ? 'done' : s === 'failed' ? 'failed' : 'queued'
+}
+
+/**
+ * Node verification, the way it should be written: signed over
+ * `timestamp.body`, compared in constant time, and with the timestamp checked
+ * so a captured payload can't be replayed forever. Every one of those three is
+ * a mistake real integrations ship.
+ */
+function verifySnippet(secret: string): string {
+  return [
+    "const crypto = require('crypto')",
+    '',
+    '// req.body must be the RAW bytes, not a parsed object.',
+    `const secret = '${secret}'`,
+    "const ts = req.headers['x-kdb-timestamp']",
+    "const sig = req.headers['x-kdb-signature']",
+    '',
+    'if (Math.abs(Date.now() / 1000 - Number(ts)) > 300) return res.sendStatus(408)',
+    '',
+    "const expected = crypto.createHmac('sha256', secret)",
+    '  .update(`${ts}.${req.body}`)',
+    "  .digest('hex')",
+    '',
+    'if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected)))',
+    '  return res.sendStatus(401)',
+    '',
+    'res.sendStatus(200) // acknowledge fast; process afterwards',
+  ].join('\n')
 }

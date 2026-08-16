@@ -163,6 +163,18 @@ export class UploadTask {
    * worker reads the upload row directly.
    */
   async runAsArchive(onProgress?: (fraction: number) => void): Promise<string> {
+    return this.reserveOnly(onProgress)
+  }
+
+  /**
+   * The general form of the above: get the bytes into storage and hand back
+   * the reservation for someone else to spend.
+   *
+   * Two consumers now — ZIP imports and document templates (W30). Both need
+   * the file stored but must NOT call `/complete`, which would mint a document
+   * out of the archive or the template itself.
+   */
+  async reserveOnly(onProgress?: (fraction: number) => void): Promise<string> {
     await this.reserveAndPut(onProgress)
     return this.uploadId!
   }

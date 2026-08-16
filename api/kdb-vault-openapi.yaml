@@ -3034,15 +3034,7 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
-        '501':
-          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
-          content: *id001
-      description: '**NOT YET IMPLEMENTED — answers 501.** Document generation from templates is not available.
-        Upload the finished file instead.
-
-        <!-- kdb-annotation -->'
-      x-kdb-status: deferred
-      x-kdb-note: Document generation from templates is not available. Upload the finished file instead.
+      description: ''
     post:
       tags:
       - Documents
@@ -3082,15 +3074,20 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
-        '501':
-          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
-          content: *id001
-      description: '**NOT YET IMPLEMENTED — answers 501.** Document generation from templates is not available.
-        Upload the finished file instead.
+      description: '**STRONGER THAN DESCRIBED.** The uploaded file must be a Word .docx; blanks are marked
+        {{double_braces}}. Substitution is per-paragraph, which is what makes it work on real documents
+        — Word splits a placeholder across XML runs, so a naive replace finds nothing. Headers and footers
+        are merged too. Authoring is admin+ (a template is inherited by every future contract); generating
+        is member+. The response reports declared-but-absent fields and undeclared placeholders as WARNINGS
+        rather than rejecting.
 
         <!-- kdb-annotation -->'
-      x-kdb-status: deferred
-      x-kdb-note: Document generation from templates is not available. Upload the finished file instead.
+      x-kdb-status: stronger
+      x-kdb-note: The uploaded file must be a Word .docx; blanks are marked {{double_braces}}. Substitution
+        is per-paragraph, which is what makes it work on real documents — Word splits a placeholder across
+        XML runs, so a naive replace finds nothing. Headers and footers are merged too. Authoring is admin+
+        (a template is inherited by every future contract); generating is member+. The response reports
+        declared-but-absent fields and undeclared placeholders as WARNINGS rather than rejecting.
   /templates/{templateId}:
     parameters:
     - name: templateId
@@ -3115,14 +3112,7 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
-        '501':
-          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
-          content: *id001
-      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /templates.
-
-        <!-- kdb-annotation -->'
-      x-kdb-status: deferred
-      x-kdb-note: See GET /templates.
+      description: ''
     patch:
       tags:
       - Documents
@@ -3155,14 +3145,15 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
-        '501':
-          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
-          content: *id001
-      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /templates.
+      description: '**STRONGER THAN DESCRIBED.** Editing bumps `version`. Documents already generated
+        keep the version they came from (`documents.template_version`), so "which contracts used the old
+        wording?" survives the template moving on.
 
         <!-- kdb-annotation -->'
-      x-kdb-status: deferred
-      x-kdb-note: See GET /templates.
+      x-kdb-status: stronger
+      x-kdb-note: Editing bumps `version`. Documents already generated keep the version they came from
+        (`documents.template_version`), so "which contracts used the old wording?" survives the template
+        moving on.
     delete:
       tags:
       - Documents
@@ -3175,14 +3166,13 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
-        '501':
-          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
-          content: *id001
-      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /templates.
+      description: '**DIFFERS FROM THIS DESCRIPTION.** Retires (`active = false`) rather than deleting:
+        generated documents reference the template, and a hard delete would lie about provenance.
 
         <!-- kdb-annotation -->'
-      x-kdb-status: deferred
-      x-kdb-note: See GET /templates.
+      x-kdb-status: changed
+      x-kdb-note: 'Retires (`active = false`) rather than deleting: generated documents reference the
+        template, and a hard delete would lie about provenance.'
   /templates/{templateId}/preview:
     get:
       tags:
@@ -3208,14 +3198,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
-        '501':
-          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
-          content: *id001
-      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /templates.
+      description: '**STRONGER THAN DESCRIBED.** Streams the template merged with typed SAMPLE values,
+        so an author can see the shape of the output without inventing data or creating a document they
+        then delete.
 
         <!-- kdb-annotation -->'
-      x-kdb-status: deferred
-      x-kdb-note: See GET /templates.
+      x-kdb-status: stronger
+      x-kdb-note: Streams the template merged with typed SAMPLE values, so an author can see the shape
+        of the output without inventing data or creating a document they then delete.
   /templates/{templateId}/generate:
     post:
       tags:
@@ -3257,14 +3247,19 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
-        '501':
-          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
-          content: *id001
-      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /templates.
+      description: '**STRONGER THAN DESCRIBED.** Produces a .docx in the vault as an ordinary document
+        — merge values stored as its metadata, `template_id`/`template_version` recorded, and a `document.created`
+        outbox event emitted (so webhooks fire). Required fields are reported ALL AT ONCE. The response
+        carries `can_send_for_signature` — currently false with reason SIGNATURE_REQUIRES_PDF, because
+        sealing and watermarking are PDF-only and output matches the template''s format.
 
         <!-- kdb-annotation -->'
-      x-kdb-status: deferred
-      x-kdb-note: See GET /templates.
+      x-kdb-status: stronger
+      x-kdb-note: Produces a .docx in the vault as an ordinary document — merge values stored as its metadata,
+        `template_id`/`template_version` recorded, and a `document.created` outbox event emitted (so webhooks
+        fire). Required fields are reported ALL AT ONCE. The response carries `can_send_for_signature`
+        — currently false with reason SIGNATURE_REQUIRES_PDF, because sealing and watermarking are PDF-only
+        and output matches the template's format.
   /search:
     get:
       tags:

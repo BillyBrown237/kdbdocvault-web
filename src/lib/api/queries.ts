@@ -20,6 +20,10 @@ import type {
   ApiKeyList,
   AuditAnchor,
   CreatedApiKey,
+  GeneratedDocument,
+  Template,
+  TemplateDetail,
+  TemplateField,
   Webhook,
   WebhookDelivery,
   WebhookList,
@@ -812,6 +816,67 @@ export function updateDepartment(
 
 export function deleteDepartment(departmentId: string): Promise<void> {
   return apiFetch<void>(`/departments/${departmentId}`, { method: 'DELETE' })
+}
+
+// --- templates (W30 / B61) ----------------------------------------------------
+
+export const templatesQuery = queryOptions({
+  queryKey: ['templates'],
+  queryFn: () => apiFetch<Page<Template>>('/templates'),
+})
+
+export function templateQuery(templateId: string) {
+  return queryOptions({
+    queryKey: ['templates', templateId],
+    queryFn: () => apiFetch<TemplateDetail>(`/templates/${templateId}`),
+  })
+}
+
+/** The blanks a just-uploaded file contains, in reading order. */
+export function inspectTemplateUpload(uploadId: string): Promise<{ placeholders: string[] }> {
+  return apiFetch<{ placeholders: string[] }>('/templates/inspect', {
+    method: 'POST',
+    body: JSON.stringify({ upload_id: uploadId }),
+  })
+}
+
+export function createTemplate(input: {
+  name: string
+  upload_id: string
+  doc_type_id?: string | null
+  fields: TemplateField[]
+}): Promise<TemplateDetail> {
+  return apiFetch<TemplateDetail>('/templates', { method: 'POST', body: JSON.stringify(input) })
+}
+
+export function updateTemplate(
+  templateId: string,
+  input: { name?: string; upload_id?: string; fields?: TemplateField[] },
+): Promise<TemplateDetail> {
+  return apiFetch<TemplateDetail>(`/templates/${templateId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
+}
+
+/** Retires rather than deletes — generated documents point back at it. */
+export function retireTemplate(templateId: string): Promise<void> {
+  return apiFetch<void>(`/templates/${templateId}`, { method: 'DELETE' })
+}
+
+export function generateFromTemplate(
+  templateId: string,
+  input: { folder_id?: string | null; title?: string; values: Record<string, string> },
+): Promise<GeneratedDocument> {
+  return apiFetch<GeneratedDocument>(`/templates/${templateId}/generate`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+/** Streams a .docx merged with sample values. */
+export function previewTemplate(templateId: string): Promise<Blob> {
+  return apiFetch<Blob>(`/templates/${templateId}/preview`)
 }
 
 // --- integrations: API keys (W28 / B59, admin+) -------------------------------

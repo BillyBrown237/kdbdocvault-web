@@ -27,6 +27,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TeamRouteImport } from './routes/team'
+import { Route as TemplatesRouteImport } from './routes/templates'
 import { Route as TrashRouteImport } from './routes/trash'
 import { Route as DocumentsDocumentIdRouteImport } from './routes/documents.$documentId'
 import { Route as RoomTokenRouteImport } from './routes/room.$token'
@@ -129,6 +130,11 @@ const TeamRoute = TeamRouteImport.update({
   path: '/team',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TemplatesRoute = TemplatesRouteImport.update({
+  id: '/templates',
+  path: '/templates',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TrashRoute = TrashRouteImport.update({
   id: '/trash',
   path: '/trash',
@@ -204,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/team': typeof TeamRoute
+  '/templates': typeof TemplatesRoute
   '/trash': typeof TrashRoute
   '/documents/$documentId': typeof DocumentsDocumentIdRoute
   '/room/$token': typeof RoomTokenRoute
@@ -235,6 +242,7 @@ export interface FileRoutesByTo {
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/team': typeof TeamRoute
+  '/templates': typeof TemplatesRoute
   '/trash': typeof TrashRoute
   '/documents/$documentId': typeof DocumentsDocumentIdRoute
   '/room/$token': typeof RoomTokenRoute
@@ -267,6 +275,7 @@ export interface FileRoutesById {
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/team': typeof TeamRoute
+  '/templates': typeof TemplatesRoute
   '/trash': typeof TrashRoute
   '/documents/$documentId': typeof DocumentsDocumentIdRoute
   '/room/$token': typeof RoomTokenRoute
@@ -300,6 +309,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/team'
+    | '/templates'
     | '/trash'
     | '/documents/$documentId'
     | '/room/$token'
@@ -331,6 +341,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/team'
+    | '/templates'
     | '/trash'
     | '/documents/$documentId'
     | '/room/$token'
@@ -362,6 +373,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/team'
+    | '/templates'
     | '/trash'
     | '/documents/$documentId'
     | '/room/$token'
@@ -394,6 +406,7 @@ export interface RootRouteChildren {
   SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
   TeamRoute: typeof TeamRoute
+  TemplatesRoute: typeof TemplatesRoute
   TrashRoute: typeof TrashRoute
   DocumentsDocumentIdRoute: typeof DocumentsDocumentIdRoute
   RoomTokenRoute: typeof RoomTokenRoute
@@ -535,6 +548,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/templates': {
+      id: '/templates'
+      path: '/templates'
+      fullPath: '/templates'
+      preLoaderRoute: typeof TemplatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/trash': {
       id: '/trash'
       path: '/trash'
@@ -634,6 +654,7 @@ const rootRouteChildren: RootRouteChildren = {
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
   TeamRoute: TeamRoute,
+  TemplatesRoute: TemplatesRoute,
   TrashRoute: TrashRoute,
   DocumentsDocumentIdRoute: DocumentsDocumentIdRoute,
   RoomTokenRoute: RoomTokenRoute,

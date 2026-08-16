@@ -8,6 +8,7 @@ import { Download, Monitor, ShieldCheck } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
 import { NotificationPreferencesCard } from '@/components/settings/notification-preferences'
 import { SecurityPolicyCard } from '@/components/settings/security-policy'
+import { SecretReveal } from '@/components/ui/secret-reveal'
 import { ApiProblem, NetworkError } from '@/lib/api/http'
 import {
   changePassword,
@@ -249,12 +250,19 @@ function TotpCard() {
   const queryClient = useQueryClient()
   const me = useQuery(meQuery)
   const [qr, setQr] = useState<string | null>(null)
+  // W29: the seed itself, pulled out of the otpauth URI. Authenticator apps
+  // accept a typed key when a camera isn't available — and setting up 2FA on
+  // the same device you're reading this on is the common case, not the edge.
+  const [secretKey, setSecretKey] = useState<string | null>(null)
   const [code, setCode] = useState('')
   const [disablePw, setDisablePw] = useState('')
 
   const begin = useMutation({
     mutationFn: totpSetup,
-    onSuccess: async (r) => setQr(await QRCode.toDataURL(r.otpauth_uri)),
+    onSuccess: async (r) => {
+      setQr(await QRCode.toDataURL(r.otpauth_uri))
+      setSecretKey(new URL(r.otpauth_uri).searchParams.get('secret'))
+    },
     onError: (e) => fail(e, t),
   })
   const confirm = useMutation({
@@ -262,6 +270,7 @@ function TotpCard() {
     onSuccess: async () => {
       toast.success(t('settings.totpEnabled'))
       setQr(null)
+      setSecretKey(null)
       setCode('')
       await queryClient.invalidateQueries({ queryKey: ['me'] })
     },
@@ -314,6 +323,23 @@ function TotpCard() {
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">{t('settings.scanQr')}</p>
             <img src={qr} alt="TOTP QR" className="h-44 w-44 rounded-md border" />
+            {/* W29: a QR code is useless to someone setting up on the SAME
+                device, or using a manager that takes a typed seed. The secret
+                is masked by default — this one is worth shoulder-surfing. */}
+            {secretKey && (
+              <div className="space-y-1.5">
+                <Label className="text-xs">{t('settings.manualKey')}</Label>
+                <SecretReveal
+                  value={secretKey}
+                  masked
+                  envKey="KDB_TOTP_SECRET"
+                  filenameBase="kdbvault-authenticator"
+                  title={t('settings.totpFileTitle')}
+                  usage={t('settings.totpFileUsage')}
+                  meta={{ [t('auth.login.identifier')]: me.data?.email ?? '' }}
+                />
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label>{t('settings.currentCode')}</Label>
               <Input inputMode="numeric" value={code} onChange={(e) => setCode(e.target.value)} />

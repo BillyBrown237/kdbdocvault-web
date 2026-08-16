@@ -6,6 +6,7 @@ import { Check, Copy, Mail, UserPlus, Users } from 'lucide-react'
 
 import { AppShell } from '@/components/app-shell'
 import { DepartmentsCard } from '@/components/settings/departments'
+import { SecretReveal } from '@/components/ui/secret-reveal'
 import { ApiProblem, NetworkError } from '@/lib/api/http'
 import {
   createInvitation,
@@ -311,23 +312,16 @@ function InvitationsTab() {
             </div>
 
             {inviteUrl && (
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 rounded-md border border-emerald-300 bg-emerald-50 p-2">
-                  <code className="min-w-0 flex-1 truncate text-xs">{inviteUrl}</code>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-7 shrink-0 bg-white"
-                    onClick={() => {
-                      void navigator.clipboard.writeText(inviteUrl)
-                      setCopied(true)
-                    }}
-                  >
-                    {copied ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
-                    {copied ? t('share.copied') : t('share.copy')}
-                  </Button>
-                </div>
+              <div className="space-y-2 rounded-md border border-emerald-300 bg-emerald-50 p-3">
+                {/* An invitation link grants membership to whoever opens it —
+                    a capability like any other, shown once. */}
+                <SecretReveal
+                  value={inviteUrl}
+                  filenameBase="kdbvault-invitation"
+                  title={t('team.inviteFileTitle')}
+                  usage={t('team.inviteFileUsage')}
+                  meta={{ [t('auth.login.identifier')]: email }}
+                />
                 <p className="text-xs text-muted-foreground">{t('team.inviteUrlNote')}</p>
               </div>
             )}

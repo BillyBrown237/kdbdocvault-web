@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Check, Copy, Link2 } from 'lucide-react'
+import { Link2 } from 'lucide-react'
 
 import { ApiProblem, NetworkError } from '@/lib/api/http'
 import { createShareLink, revokeShareLink, shareLinksQuery } from '@/lib/api/queries'
@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { SecretReveal } from '@/components/ui/secret-reveal'
 import { Separator } from '@/components/ui/separator'
 import { toast } from '@/components/ui/sonner'
 
@@ -30,7 +31,6 @@ export function SharePanel({ documentId }: { documentId: string }) {
   const [password, setPassword] = useState('')
   const [expiresAt, setExpiresAt] = useState('')
   const [createdUrl, setCreatedUrl] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
 
   const create = useMutation({
     mutationFn: () =>
@@ -41,7 +41,6 @@ export function SharePanel({ documentId }: { documentId: string }) {
       }),
     onSuccess: async (link) => {
       setCreatedUrl(link.url ?? null)
-      setCopied(false)
       setPassword('')
       setExpiresAt('')
       await queryClient.invalidateQueries({ queryKey: ['share-links', documentId] })
@@ -57,13 +56,6 @@ export function SharePanel({ documentId }: { documentId: string }) {
     mutationFn: revokeShareLink,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['share-links', documentId] }),
   })
-
-  async function copyUrl() {
-    if (!createdUrl) return
-    await navigator.clipboard.writeText(createdUrl)
-    setCopied(true)
-    toast.success(t('share.copied'))
-  }
 
   const activeLinks = links.data?.data.filter((l) => !l.revoked_at) ?? []
 
@@ -114,14 +106,20 @@ export function SharePanel({ documentId }: { documentId: string }) {
         </form>
 
         {createdUrl && (
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 rounded-md border border-emerald-300 bg-emerald-50 p-2">
-              <code className="min-w-0 flex-1 truncate text-xs">{createdUrl}</code>
-              <Button variant="outline" size="sm" className="h-7 shrink-0 bg-white" onClick={() => void copyUrl()}>
-                {copied ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
-                {copied ? t('share.copied') : t('share.copy')}
-              </Button>
-            </div>
+          <div className="space-y-2 rounded-md border border-emerald-300 bg-emerald-50 p-3">
+            {/* A share URL is a capability: whoever holds it holds the access.
+                Same one-time treatment as an API key, download included —
+                the person creating it is rarely the person who needs it. */}
+            <SecretReveal
+              value={createdUrl}
+              filenameBase="kdbvault-share-link"
+              title={t('share.fileTitle')}
+              usage={t('share.fileUsage')}
+              meta={{
+                [t('share.permission')]: t(`share.${permission}`),
+                ...(expiresAt ? { [t('share.expires')]: expiresAt } : {}),
+              }}
+            />
             <p className="text-xs text-muted-foreground">{t('share.oneTime')}</p>
           </div>
         )}

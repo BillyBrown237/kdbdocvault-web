@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Check, Copy, KeyRound, RefreshCw } from 'lucide-react'
+import { KeyRound, RefreshCw } from 'lucide-react'
 
 import {
   apiKeysQuery,
@@ -9,7 +9,7 @@ import {
   revokeApiKey,
   rotateApiKey,
 } from '@/lib/api/queries'
-import { ApiProblem, NetworkError } from '@/lib/api/http'
+import { API_ORIGIN, ApiProblem, NetworkError } from '@/lib/api/http'
 import type { CreatedApiKey } from '@/lib/api/types'
 import { formatDate } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
@@ -25,8 +25,38 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { SecretReveal } from '@/components/ui/secret-reveal'
 import { Separator } from '@/components/ui/separator'
 import { toast } from '@/components/ui/sonner'
+
+/** Filesystem-safe stem for the downloaded file, from the key's own name. */
+function slug(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'key'
+}
+
+/**
+ * A copy-paste-able first request.
+ *
+ * The endpoint is chosen from the key's OWN scopes: handing someone a
+ * `/documents` example for an audit-only key would answer 403 and teach them
+ * their key is broken when it isn't. Falls back to the current origin when
+ * VITE_API_URL is unset (the dev proxy case), so the command still runs.
+ */
+function curlExample(secret: string, scopes: string[]): string {
+  const base = (API_ORIGIN || window.location.origin) + '/v1'
+  const path = scopes.some((s) => s.startsWith('documents:'))
+    ? '/documents?limit=5'
+    : scopes.includes('search:read')
+      ? '/search?q=test'
+      : scopes.includes('reports:read')
+        ? '/reports/overview'
+        : scopes.includes('audit:read')
+          ? '/audit/events?limit=5'
+          : scopes.includes('signatures:read')
+            ? '/envelopes'
+            : '/imports'
+  return `curl -H "Authorization: ApiKey ${secret}" \\\n  ${base}${path}`
+}
 
 /**
  * W28 (B59) — machine API keys.
@@ -45,7 +75,6 @@ export function ApiKeysCard() {
   const [name, setName] = useState('')
   const [scopes, setScopes] = useState<string[]>([])
   const [revealed, setRevealed] = useState<CreatedApiKey | null>(null)
-  const [copied, setCopied] = useState(false)
 
   const fail = (err: unknown) => {
     if (err instanceof NetworkError) toast.error(t('errors.network'))
@@ -88,13 +117,6 @@ export function ApiKeysCard() {
   const rows = keys.data?.data ?? []
   const live = rows.filter((k) => !k.revoked_at)
   const revoked = rows.filter((k) => k.revoked_at)
-
-  async function copySecret() {
-    if (!revealed) return
-    await navigator.clipboard.writeText(revealed.secret)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
 
   return (
     <Card>
@@ -241,15 +263,24 @@ export function ApiKeysCard() {
               <DialogTitle>{t('integrations.secretTitle')}</DialogTitle>
             </DialogHeader>
             <Callout variant="warning">{t('integrations.secretOnce')}</Callout>
-            <div className="flex items-center gap-2">
-              <code className="min-w-0 flex-1 truncate rounded-md border bg-muted px-3 py-2 font-mono text-xs">
-                {revealed?.secret}
-              </code>
-              <Button size="sm" variant="outline" onClick={copySecret}>
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">{t('integrations.secretUsage')}</p>
+            {revealed && (
+              <SecretReveal
+                value={revealed.secret}
+                envKey="KDB_API_KEY"
+                filenameBase={`kdbvault-api-key-${slug(revealed.key.name)}`}
+                title={t('integrations.secretFileTitle', { name: revealed.key.name })}
+                usage={t('integrations.secretUsage')}
+                meta={{
+                  [t('integrations.keyName')]: revealed.key.name,
+                  [t('integrations.scopes')]: revealed.key.scopes.join(' '),
+                }}
+                // A real command, with the real host and the real value: the
+                // shape of the header is guessable, that it WORKS is not.
+                // Uses a route the key's own scopes can actually reach, so
+                // pasting it doesn't produce a confusing 403.
+                example={curlExample(revealed.secret, revealed.key.scopes)}
+              />
+            )}
             <DialogFooter>
               <Button onClick={() => setRevealed(null)}>{t('integrations.secretSaved')}</Button>
             </DialogFooter>

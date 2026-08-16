@@ -11,6 +11,7 @@ import {
   Gavel,
   Download,
   FileArchive,
+  FileText,
   FolderClosed,
   Home,
   LogOut,
@@ -53,10 +54,13 @@ const NAV_SECONDARY = [
   { to: '/rooms', key: 'nav.rooms', icon: DoorOpen },
   { to: '/imports', key: 'nav.imports', icon: FileArchive },
   { to: '/reports', key: 'nav.reports', icon: BarChart3 },
+  { to: '/templates', key: 'nav.templates', icon: FileText },
   { to: '/integrations', key: 'nav.integrations', icon: Plug },
 ] as const
 
-/** Admin-only entries in NAV_SECONDARY (W20/B47 gating). */
+/** Admin-only entries in NAV_SECONDARY (W20/B47 gating). Templates is NOT
+ * here: anyone may generate from one — only authoring is admin, and that's
+ * gated inside the page. */
 const ADMIN_ONLY = new Set(['/imports', '/reports', '/integrations'])
 
 export function AppShell({ children }: { children: React.ReactNode }) {

@@ -1,3 +1,152 @@
+# Slice W30.1 — The template editor fills itself in
+
+Reported from use: adding many blanks meant scrolling back to a button at
+the top. Fixed — and the underlying problem was that the form asked for
+information the document already contained.
+
+## The blanks now detect themselves
+
+Choosing a file uploads it immediately and asks the new `POST
+/templates/inspect` what placeholders it holds. Every one becomes a row,
+in READING ORDER (body, then headers and footers), with label and type
+guessed from the key. The author corrects rather than transcribes.
+
+Guessing is RULES, not a model: `start_date` is a date because it ends in
+`_date`. Deterministic, instant, free, and wrong only in ways that are
+visible and one click from fixed. (French and English stems both — `montant`
+and `amount`, `echeance` and `deadline`.) The label is just the key made
+readable; a human still writes the real question.
+
+Re-choosing a file never clobbers work: existing rows are kept, only
+genuinely new placeholders are appended.
+
+## The button moved
+
+"Add a blank" now sits AFTER the list — where you are when you finish
+filling one in — full width, and scrolls the new row into view. Adding
+something you can't see is indistinguishable from nothing happening.
+
+## Also
+
+- "No blanks found" states what to do about it rather than just reporting.
+- Save is disabled while the upload is in flight; the file is stored on
+  selection now, so saving is only the declaration.
+- The template name defaults to the file name, tidied.
+
+# Slice W30 — Templates UI (activates B61)
+
+New route `/templates`, in the main nav rather than the admin section:
+anyone may generate from a template, only admins author one. A template is
+inherited by every future contract, so editing one edits the future — a
+different privilege from filling in a form.
+
+## Authoring
+
+Upload + field builder in one dialog. The .docx goes through the ordinary
+presigned path via a new `reserveOnly()` on `UploadTask` — reserve and PUT,
+never `/complete`, which would mint a document out of the template file
+itself. (`runAsArchive` now delegates to it; ZIP imports and templates want
+the same thing, and the old name only described one of them.)
+
+Each declared field shows the exact `{{placeholder}}` to paste into the
+document, so the key and the braces can't drift apart. After saving, the
+server's warnings are shown in place — declared blanks that appear nowhere,
+and blanks in the file nobody described.
+
+## Generating
+
+The form is built from the template's own declarations: a `date` field gets
+a date picker, a `choice` field gets its options. That's the whole point of
+typing them — nobody should be typing a date into a free-text box hoping
+the format matches. On success it navigates straight to the new document,
+because having it was the point.
+
+## i18n bug worth recording
+
+The help text needed to SHOW `{{employee_name}}` as an example — but
+i18next interpolates `{{…}}`, so a literal one in a translation renders as
+nothing. The example is passed as an interpolation VALUE instead. Anything
+teaching double-brace syntax through i18next hits this.
+
+# Fix W29.1 — A secret you can't use isn't much of a secret
+
+Reported from use: the key modal never said the value goes in the
+`Authorization` header.
+
+**The regression:** `SecretReveal` accepted a `usage` prop and wrote it into
+the downloaded files ONLY — it was never rendered on screen. The modal it
+replaced had that line. So the common path (copy to clipboard, close the
+dialog) told the user nothing about how to send the value.
+
+`usage` now renders under the secret, and the API key text says the whole
+truth rather than just the header shape: there is no login step and no token
+exchange, that one header IS the authentication.
+
+## Beyond the fix: a first request that runs
+
+Knowing the header shape and knowing it WORKS are different things, so both
+integration secrets now show a copyable snippet, on screen and appended to
+both downloads:
+
+- **API key** — a real `curl` with the real host and the real value. The
+  endpoint is picked from the key's OWN scopes, because handing someone a
+  `/documents` example for an audit-only key would answer 403 and teach them
+  their key is broken when it isn't. Falls back to the page origin when
+  `VITE_API_URL` is unset, so it still runs behind the dev proxy.
+- **Webhook secret** — Node verification code, written the way it should be:
+  HMAC over `timestamp.body` (not the body alone), `timingSafeEqual` (not
+  `==`), and a timestamp window so a captured payload can't be replayed
+  forever. All three are mistakes real integrations ship; showing the code
+  prevents them better than prose describing it.
+
+# Slice W29 — One treatment for every secret
+
+Five places in the app hand out a value that exists exactly once. Each had
+grown its own copy button, its own warning, and its own idea of how much to
+explain. Now they share `ui/secret-reveal.tsx`.
+
+## Why download, not just copy
+
+"Copy to clipboard" quietly assumes the person is sitting at the machine
+that needs the value. They usually aren't — the API key goes to a server,
+the share link goes to a colleague, the authenticator seed goes to a
+phone. So every secret can now be downloaded in two shapes:
+
+- **`.env`** — ready to drop beside an application. Commented, dated, with
+  the variable name the integration expects (`KDB_API_KEY`,
+  `KDB_WEBHOOK_SECRET`, `KDB_TOTP_SECRET`) and a "keep this out of version
+  control" line.
+- **`.txt`** — for a password manager or a handover note: what it is, what
+  it's for, when it was issued, how to use it, and the warning that whoever
+  holds it has the access.
+
+Filenames carry a timestamp, and the API key's carries its own name — a
+downloads folder with three `secret.txt` files helps nobody.
+
+## Applied to
+
+| Where | Secret | Notes |
+|---|---|---|
+| Integrations → keys | API key | `.env` + `.txt`, scopes recorded in both |
+| Integrations → webhooks | signing secret | Appears as soon as it's valid; we store it encrypted and never return it, so the receiving side needs its own copy |
+| Document → share | share URL | A capability: whoever holds it holds the access |
+| Team → invite | invitation URL | Grants membership to whoever opens it |
+| Settings → 2FA | authenticator seed | **New** — previously QR-only |
+
+## The 2FA one was a real gap
+
+Setup offered a QR code and nothing else. That fails for anyone enrolling
+on the same device they're reading on, or using a manager that takes a
+typed seed. The key is now shown (masked by default — this is the one worth
+shoulder-surfing, so it's behind a reveal toggle) and downloadable.
+
+## Details worth keeping
+
+- Clipboard writes can fail without https or a user gesture. Rather than
+  looking broken, a failed copy un-masks the value so it can be read.
+- The object URL is revoked on a timer, not immediately: Safari cancels
+  the download if you free it too soon.
+
 # Slice W28 — Integrations page (activates B59/B60)
 
 New admin route `/integrations`, one page for both halves: keys and

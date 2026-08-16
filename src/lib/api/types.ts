@@ -494,6 +494,46 @@ export interface DocumentLink {
   created_at: string
 }
 
+// --- templates (W30 / B61) ----------------------------------------------------
+
+export interface TemplateField {
+  key: string
+  label: string
+  type: 'text' | 'date' | 'number' | 'choice'
+  required: boolean
+  choices?: string[] | null
+}
+
+export interface Template {
+  id: string
+  name: string
+  doc_type_id: string | null
+  version: number
+  active: boolean
+  created_at: string
+  fields: TemplateField[]
+}
+
+/** Authoring mistakes, reported rather than blocking: a declared field that
+ * appears nowhere in the file, or a placeholder nobody declared. */
+export interface TemplateWarnings {
+  declared_but_missing: string[]
+  in_file_but_undeclared: string[]
+}
+
+export interface TemplateDetail {
+  template: Template
+  warnings: TemplateWarnings
+}
+
+export interface GeneratedDocument {
+  document_id: string
+  version_id: string
+  title: string
+  can_send_for_signature: boolean
+  signature_blocked_reason: string | null
+}
+
 // --- integrations (W28 / B59-B60) --------------------------------------------
 
 export interface ApiKey {
