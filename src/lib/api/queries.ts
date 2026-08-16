@@ -19,7 +19,13 @@ import type {
   AclEntryInput,
   ApiKeyList,
   AuditAnchor,
+  Comment,
   CreatedApiKey,
+  CreatedEmergencyContact,
+  Device,
+  DeviceList,
+  EmergencyContact,
+  RetentionPolicy,
   GeneratedDocument,
   Template,
   TemplateDetail,
@@ -818,11 +824,116 @@ export function deleteDepartment(departmentId: string): Promise<void> {
   return apiFetch<void>(`/departments/${departmentId}`, { method: 'DELETE' })
 }
 
+// --- comments (W31 / B63) -----------------------------------------------------
+
+export function commentsQuery(documentId: string) {
+  return queryOptions({
+    queryKey: ['comments', documentId],
+    queryFn: () => apiFetch<Page<Comment>>(`/documents/${documentId}/comments`),
+  })
+}
+
+export function createComment(
+  documentId: string,
+  input: { body: string; parent_id?: string | null },
+): Promise<Comment> {
+  return apiFetch<Comment>(`/documents/${documentId}/comments`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export function editComment(commentId: string, body: string): Promise<Comment> {
+  return apiFetch<Comment>(`/comments/${commentId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ body }),
+  })
+}
+
+export function deleteComment(commentId: string): Promise<void> {
+  return apiFetch<void>(`/comments/${commentId}`, { method: 'DELETE' })
+}
+
+// --- retention policies (W31 / B62, admin+) -----------------------------------
+
+export const retentionPoliciesQuery = queryOptions({
+  queryKey: ['retention-policies'],
+  queryFn: () =>
+    apiFetch<{ data: RetentionPolicy[]; triggers: string[]; actions: string[] }>(
+      '/retention-policies',
+    ),
+})
+
+export function createRetentionPolicy(input: {
+  doc_type_id: string
+  trigger_event: string
+  retain_years: number
+  end_action: string
+}): Promise<RetentionPolicy> {
+  return apiFetch<RetentionPolicy>('/retention-policies', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export function updateRetentionPolicy(
+  policyId: string,
+  input: { retain_years?: number; end_action?: string },
+): Promise<RetentionPolicy> {
+  return apiFetch<RetentionPolicy>(`/retention-policies/${policyId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
+}
+
+export function deleteRetentionPolicy(policyId: string): Promise<void> {
+  return apiFetch<void>(`/retention-policies/${policyId}`, { method: 'DELETE' })
+}
+
+// --- devices + emergency access (W31 / B64-B65) -------------------------------
+
+export const devicesQuery = queryOptions({
+  queryKey: ['devices'],
+  queryFn: () => apiFetch<DeviceList>('/devices'),
+})
+
+export function registerDevice(input: { platform: string; token: string }): Promise<Device> {
+  return apiFetch<Device>('/devices', { method: 'POST', body: JSON.stringify(input) })
+}
+
+export function unregisterDevice(deviceId: string): Promise<void> {
+  return apiFetch<void>(`/devices/${deviceId}`, { method: 'DELETE' })
+}
+
+export const emergencyContactsQuery = queryOptions({
+  queryKey: ['emergency-contacts'],
+  queryFn: () => apiFetch<Page<EmergencyContact>>('/me/emergency-contacts'),
+})
+
+export function createEmergencyContact(input: {
+  name: string
+  email: string
+  phone?: string
+  scope?: string
+  veto_window_hours?: number
+}): Promise<CreatedEmergencyContact> {
+  return apiFetch<CreatedEmergencyContact>('/me/emergency-contacts', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export function deleteEmergencyContact(contactId: string): Promise<void> {
+  return apiFetch<void>(`/me/emergency-contacts/${contactId}`, { method: 'DELETE' })
+}
+
 // --- templates (W30 / B61) ----------------------------------------------------
 
 export const templatesQuery = queryOptions({
   queryKey: ['templates'],
-  queryFn: () => apiFetch<Page<Template>>('/templates'),
+  // `formats` reflects the DEPLOYMENT (is a converter configured?), not any
+  // one template — so PDF is offered or not before a form is filled in.
+  queryFn: () => apiFetch<Page<Template> & { formats: string[] }>('/templates'),
 })
 
 export function templateQuery(templateId: string) {
@@ -866,7 +977,12 @@ export function retireTemplate(templateId: string): Promise<void> {
 
 export function generateFromTemplate(
   templateId: string,
-  input: { folder_id?: string | null; title?: string; values: Record<string, string> },
+  input: {
+    folder_id?: string | null
+    title?: string
+    values: Record<string, string>
+    format?: 'docx' | 'pdf'
+  },
 ): Promise<GeneratedDocument> {
   return apiFetch<GeneratedDocument>(`/templates/${templateId}/generate`, {
     method: 'POST',

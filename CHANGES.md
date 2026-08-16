@@ -1,3 +1,38 @@
+# Slice W31 — Screens for B62–B65
+
+## Comments (document page)
+
+Flat array from the API, nested here, one level deep. Deleted comments are
+tombstones that stay in place — replies under a vanished comment stop making
+sense, and a thread with holes reads as a cover-up. The edit button only
+appears inside the 15-minute window rather than waiting to fail with a 409.
+
+## Retention rules (Settings → Security policy)
+
+Each policy renders as the SENTENCE it is — "Contracts: 10 years after the
+expiry date, then ask an administrator to decide" — not a row of enum
+values. A retention schedule gets read to auditors and lawyers; `expiry / 10
+/ review` makes them decode it.
+
+Choosing "move to the bin" shows a warning before saving, because that's the
+one option where nobody is asked at the time. The legal-hold exemption is
+stated on the form, since it's the first question a compliance officer asks.
+
+## Devices + emergency access (Settings → Sessions)
+
+Grouped with sessions deliberately: all three answer "what can reach my
+account, and how do I stop it?"
+
+Devices repeats the server's own `delivery.enabled = false` rather than
+showing a list that silently receives nothing.
+
+Emergency access leads with the **veto**, not the nomination — the fear the
+feature creates is "someone could take my documents", and the answer is "you
+get told, and you can refuse". A pending request renders as a warning callout
+with the refuse button in it. The grant token uses `SecretReveal` with
+download, because unlike every other secret in the app this one must reach a
+person who cannot reach *you* — a safe, a notary, family.
+
 # Slice W30.1 — The template editor fills itself in
 
 Reported from use: adding many blanks meant scrolling back to a button at

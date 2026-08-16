@@ -494,6 +494,72 @@ export interface DocumentLink {
   created_at: string
 }
 
+// --- B62–B65 (W31) ------------------------------------------------------------
+
+export interface RetentionPolicy {
+  id: string
+  doc_type_id: string
+  doc_type_name: string
+  trigger_event: 'creation' | 'expiry'
+  retain_years: number
+  end_action: 'archive' | 'destroy' | 'review'
+  created_at: string
+}
+
+/** Flat with `parent_id` — one level of threading, nested by the client. */
+export interface Comment {
+  id: string
+  parent_id: string | null
+  author_id: string
+  author_name: string
+  body: string
+  edited: boolean
+  /** Tombstone: body is blank but the row stays so replies keep their anchor. */
+  deleted: boolean
+  created_at: string
+}
+
+export interface Device {
+  id: string
+  platform: 'web' | 'ios' | 'android'
+  token_preview: string
+  created_at: string
+}
+
+export interface DeviceList {
+  data: Device[]
+  platforms: string[]
+  delivery: {
+    enabled: boolean
+    web_enabled: boolean
+    mobile_enabled: boolean
+    /** Public by definition — the browser needs it to subscribe. Served
+     * rather than bundled so rotating doesn't need a frontend release. */
+    vapid_public_key: string | null
+    reason: string | null
+    detail: string
+  }
+}
+
+export interface EmergencyContact {
+  id: string
+  name: string
+  email: string
+  phone: string | null
+  scope: 'all' | 'selected_folders'
+  folder_ids: string[]
+  veto_window_hours: number
+  status: 'active' | 'access_requested' | 'access_granted'
+  access_requested_at: string | null
+  created_at: string
+}
+
+export interface CreatedEmergencyContact {
+  contact: EmergencyContact
+  grant_token: string
+  grant_token_notice: string
+}
+
 // --- templates (W30 / B61) ----------------------------------------------------
 
 export interface TemplateField {

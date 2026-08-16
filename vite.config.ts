@@ -38,6 +38,10 @@ const config = defineConfig({
         // IndexedDB persistence handles offline data, not the service worker.
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/v1\//, /^\/pub\//],
+        // W32: push + notificationclick handlers. Imported rather than
+        // hand-writing the whole worker (injectManifest), which would mean
+        // maintaining the precache manifest by hand for twenty lines of push.
+        importScripts: ['/push-sw.js'],
       },
     }),
   ],

@@ -742,16 +742,7 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
-        '501':
-          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
-          content: *id001
-      description: '**NOT YET IMPLEMENTED — answers 501.** Emergency access is a Personal-plan feature;
-        the pilot targets businesses. Schema exists (emergency_contacts, V001); no surface yet.
-
-        <!-- kdb-annotation -->'
-      x-kdb-status: deferred
-      x-kdb-note: Emergency access is a Personal-plan feature; the pilot targets businesses. Schema exists
-        (emergency_contacts, V001); no surface yet.
+      description: ''
     post:
       tags:
       - Profile
@@ -799,16 +790,15 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
-        '501':
-          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
-          content: *id001
-      description: '**NOT YET IMPLEMENTED — answers 501.** Emergency access is a Personal-plan feature;
-        the pilot targets businesses. Schema exists (emergency_contacts, V001); no surface yet.
+      description: '**STRONGER THAN DESCRIBED.** Returns the grant token ONCE, here, and never again.
+        `veto_window_hours` must be 24–720: the window is what protects the owner from a request they
+        did not expect, so it cannot be shorter than a day. Scope is `all` or `selected_folders`.
 
         <!-- kdb-annotation -->'
-      x-kdb-status: deferred
-      x-kdb-note: Emergency access is a Personal-plan feature; the pilot targets businesses. Schema exists
-        (emergency_contacts, V001); no surface yet.
+      x-kdb-status: stronger
+      x-kdb-note: 'Returns the grant token ONCE, here, and never again. `veto_window_hours` must be 24–720:
+        the window is what protects the owner from a request they did not expect, so it cannot be shorter
+        than a day. Scope is `all` or `selected_folders`.'
   /me/emergency-contacts/{contactId}:
     delete:
       tags:
@@ -829,14 +819,13 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
-        '501':
-          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
-          content: *id001
-      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /me/emergency-contacts.
+      description: '**STRONGER THAN DESCRIBED.** Removing the contact IS THE VETO — it destroys the grant
+        token, so a pending request dies with it. A veto has to be one obvious action taken under stress.
 
         <!-- kdb-annotation -->'
-      x-kdb-status: deferred
-      x-kdb-note: See GET /me/emergency-contacts.
+      x-kdb-status: stronger
+      x-kdb-note: Removing the contact IS THE VETO — it destroys the grant token, so a pending request
+        dies with it. A veto has to be one obvious action taken under stress.
   /emergency-access/{grantToken}/request:
     post:
       tags:
@@ -857,17 +846,25 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
-        '501':
-          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
-          content: *id001
-      description: '**NOT YET IMPLEMENTED — answers 501.** Deferred with the rest of emergency access.
-        When built it joins the public-surface contract (capability token, SECURITY DEFINER peephole,
-        strict per-IP limit) like /shared, /sign and /verify.
+      description: '**DIFFERS FROM THIS DESCRIPTION.** Starts the veto window and notifies the owner immediately;
+        access is granted only after the window elapses in silence (hourly worker sweep). Idempotent —
+        presenting the token again during an open window returns the same answer rather than restarting
+        the clock. Unknown and already-used tokens answer an identical 404 so probing cannot distinguish
+        a real token. On grant (B66) a DATA ROOM is provisioned from the contact''s scope and a personal
+        magic link is emailed to them — that link is the access path. Documents under an active legal
+        hold are excluded: a hold outranks an automatic disclosure. A scope matching no documents creates
+        no room, because an empty shelf is worse than a refusal.
 
         <!-- kdb-annotation -->'
-      x-kdb-status: deferred
-      x-kdb-note: Deferred with the rest of emergency access. When built it joins the public-surface contract
-        (capability token, SECURITY DEFINER peephole, strict per-IP limit) like /shared, /sign and /verify.
+      x-kdb-status: changed
+      x-kdb-note: 'Starts the veto window and notifies the owner immediately; access is granted only after
+        the window elapses in silence (hourly worker sweep). Idempotent — presenting the token again during
+        an open window returns the same answer rather than restarting the clock. Unknown and already-used
+        tokens answer an identical 404 so probing cannot distinguish a real token. On grant (B66) a DATA
+        ROOM is provisioned from the contact''s scope and a personal magic link is emailed to them — that
+        link is the access path. Documents under an active legal hold are excluded: a hold outranks an
+        automatic disclosure. A scope matching no documents creates no room, because an empty shelf is
+        worse than a refusal.'
   /tenants:
     post:
       tags:
@@ -3034,7 +3031,16 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
-      description: ''
+      description: '**STRONGER THAN DESCRIBED.** Also returns `formats` — `["docx","pdf"]` when a document
+        converter is configured, `["docx"]` otherwise. Whether PDF can be produced is a property of the
+        deployment, so a client learns it once instead of discovering it from a 409 after filling in a
+        form.
+
+        <!-- kdb-annotation -->'
+      x-kdb-status: stronger
+      x-kdb-note: Also returns `formats` — `["docx","pdf"]` when a document converter is configured, `["docx"]`
+        otherwise. Whether PDF can be produced is a property of the deployment, so a client learns it
+        once instead of discovering it from a 409 after filling in a form.
     post:
       tags:
       - Documents
@@ -3249,17 +3255,23 @@ paths:
           $ref: '#/components/responses/RateLimited'
       description: '**STRONGER THAN DESCRIBED.** Produces a .docx in the vault as an ordinary document
         — merge values stored as its metadata, `template_id`/`template_version` recorded, and a `document.created`
-        outbox event emitted (so webhooks fire). Required fields are reported ALL AT ONCE. The response
-        carries `can_send_for_signature` — currently false with reason SIGNATURE_REQUIRES_PDF, because
-        sealing and watermarking are PDF-only and output matches the template''s format.
+        outbox event emitted (so webhooks fire). Required fields are reported ALL AT ONCE. `format` accepts
+        `docx` or `pdf` (B68): PDF is a CONVERSION of the merged .docx via the Gotenberg sidecar, never
+        a second render path, so the bytes people sign are the bytes the template produced — rendered
+        PDF/A-2b. Requesting `pdf` without a configured converter is a 409, not a silent .docx. `can_send_for_signature`
+        is true for PDF output; for .docx it stays false with SIGNATURE_REQUIRES_PDF (or SIGNATURE_REQUIRES_PDF_NO_CONVERTER
+        when the deployment cannot produce one), because sealing and watermarking are PDF-only.
 
         <!-- kdb-annotation -->'
       x-kdb-status: stronger
-      x-kdb-note: Produces a .docx in the vault as an ordinary document — merge values stored as its metadata,
-        `template_id`/`template_version` recorded, and a `document.created` outbox event emitted (so webhooks
-        fire). Required fields are reported ALL AT ONCE. The response carries `can_send_for_signature`
-        — currently false with reason SIGNATURE_REQUIRES_PDF, because sealing and watermarking are PDF-only
-        and output matches the template's format.
+      x-kdb-note: 'Produces a .docx in the vault as an ordinary document — merge values stored as its
+        metadata, `template_id`/`template_version` recorded, and a `document.created` outbox event emitted
+        (so webhooks fire). Required fields are reported ALL AT ONCE. `format` accepts `docx` or `pdf`
+        (B68): PDF is a CONVERSION of the merged .docx via the Gotenberg sidecar, never a second render
+        path, so the bytes people sign are the bytes the template produced — rendered PDF/A-2b. Requesting
+        `pdf` without a configured converter is a 409, not a silent .docx. `can_send_for_signature` is
+        true for PDF output; for .docx it stays false with SIGNATURE_REQUIRES_PDF (or SIGNATURE_REQUIRES_PDF_NO_CONVERTER
+        when the deployment cannot produce one), because sealing and watermarking are PDF-only.'
   /search:
     get:
       tags:
@@ -4024,18 +4036,7 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
-        '501':
-          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
-          content: *id001
-      description: '**NOT YET IMPLEMENTED — answers 501.** Schedule-driven retention is not available.
-        Per-document lifecycle rules (/documents/{id}/lifecycle-rules) cover the pilot''s needs; the compliance
-        report''s "retention coverage" therefore counts LIFECYCLE RULE coverage, not policy coverage.
-
-        <!-- kdb-annotation -->'
-      x-kdb-status: deferred
-      x-kdb-note: Schedule-driven retention is not available. Per-document lifecycle rules (/documents/{id}/lifecycle-rules)
-        cover the pilot's needs; the compliance report's "retention coverage" therefore counts LIFECYCLE
-        RULE coverage, not policy coverage.
+      description: ''
     post:
       tags:
       - Lifecycle
@@ -4081,18 +4082,20 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
-        '501':
-          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
-          content: *id001
-      description: '**NOT YET IMPLEMENTED — answers 501.** Schedule-driven retention is not available.
-        Per-document lifecycle rules (/documents/{id}/lifecycle-rules) cover the pilot''s needs; the compliance
-        report''s "retention coverage" therefore counts LIFECYCLE RULE coverage, not policy coverage.
+      description: '**DIFFERS FROM THIS DESCRIPTION.** `trigger_event` accepts `creation` and `expiry`
+        only. `termination` is REJECTED with 422: nothing in the platform records when a contract was
+        terminated, so a policy keyed to it would silently never fire — a compliance feature reporting
+        coverage it does not provide is worse than an absent one. A daily worker applies policies; `destroy`
+        moves documents to the trash (30-day window) rather than obliterating them, and documents under
+        an active legal hold are excluded entirely.
 
         <!-- kdb-annotation -->'
-      x-kdb-status: deferred
-      x-kdb-note: Schedule-driven retention is not available. Per-document lifecycle rules (/documents/{id}/lifecycle-rules)
-        cover the pilot's needs; the compliance report's "retention coverage" therefore counts LIFECYCLE
-        RULE coverage, not policy coverage.
+      x-kdb-status: changed
+      x-kdb-note: '`trigger_event` accepts `creation` and `expiry` only. `termination` is REJECTED with
+        422: nothing in the platform records when a contract was terminated, so a policy keyed to it would
+        silently never fire — a compliance feature reporting coverage it does not provide is worse than
+        an absent one. A daily worker applies policies; `destroy` moves documents to the trash (30-day
+        window) rather than obliterating them, and documents under an active legal hold are excluded entirely.'
   /retention-policies/{policyId}:
     parameters:
     - name: policyId
@@ -4128,14 +4131,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
-        '501':
-          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
-          content: *id001
-      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /retention-policies.
+      description: '**DIFFERS FROM THIS DESCRIPTION.** Only `retain_years` and `end_action` are editable.
+        The document type and trigger are the policy''s identity (its unique key) — changing what it applies
+        to is a different policy.
 
         <!-- kdb-annotation -->'
-      x-kdb-status: deferred
-      x-kdb-note: See GET /retention-policies.
+      x-kdb-status: changed
+      x-kdb-note: Only `retain_years` and `end_action` are editable. The document type and trigger are
+        the policy's identity (its unique key) — changing what it applies to is a different policy.
     delete:
       tags:
       - Lifecycle
@@ -4148,14 +4151,7 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
-        '501':
-          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
-          content: *id001
-      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /retention-policies.
-
-        <!-- kdb-annotation -->'
-      x-kdb-status: deferred
-      x-kdb-note: See GET /retention-policies.
+      description: ''
   /legal-holds:
     get:
       tags:
@@ -4877,16 +4873,15 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
-        '501':
-          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
-          content: *id001
-      description: '**NOT YET IMPLEMENTED — answers 501.** Document comment threads are not available.
-        The approval flow''s per-step comment covers the workflow conversation.
+      description: '**DIFFERS FROM THIS DESCRIPTION.** Returns a FLAT array with `parent_id` — the client
+        nests it. Deleted comments are included with an empty body and `deleted: true`: a thread with
+        holes reads as a cover-up, and replies under a vanished comment stop making sense.
 
         <!-- kdb-annotation -->'
-      x-kdb-status: deferred
-      x-kdb-note: Document comment threads are not available. The approval flow's per-step comment covers
-        the workflow conversation.
+      x-kdb-status: changed
+      x-kdb-note: 'Returns a FLAT array with `parent_id` — the client nests it. Deleted comments are included
+        with an empty body and `deleted: true`: a thread with holes reads as a cover-up, and replies under
+        a vanished comment stop making sense.'
     post:
       tags:
       - Workflows
@@ -4917,16 +4912,15 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
-        '501':
-          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
-          content: *id001
-      description: '**NOT YET IMPLEMENTED — answers 501.** Document comment threads are not available.
-        The approval flow''s per-step comment covers the workflow conversation.
+      description: '**DIFFERS FROM THIS DESCRIPTION.** Threading is ONE level deep: a reply to a reply
+        flattens onto the same thread. @mentions are matched against active members of the tenant by name
+        or email local-part and raise a `comment.mentioned` notification (mutable through /me/notification-preferences).
 
         <!-- kdb-annotation -->'
-      x-kdb-status: deferred
-      x-kdb-note: Document comment threads are not available. The approval flow's per-step comment covers
-        the workflow conversation.
+      x-kdb-status: changed
+      x-kdb-note: 'Threading is ONE level deep: a reply to a reply flattens onto the same thread. @mentions
+        are matched against active members of the tenant by name or email local-part and raise a `comment.mentioned`
+        notification (mutable through /me/notification-preferences).'
   /comments/{commentId}:
     parameters:
     - name: commentId
@@ -4962,14 +4956,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
-        '501':
-          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
-          content: *id001
-      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /documents/{documentId}/comments.
+      description: '**DIFFERS FROM THIS DESCRIPTION.** Editable by the author within 15 minutes; afterwards
+        409. A comment someone has already replied to cannot be quietly rewritten — the thread should
+        read as it happened.
 
         <!-- kdb-annotation -->'
-      x-kdb-status: deferred
-      x-kdb-note: See GET /documents/{documentId}/comments.
+      x-kdb-status: changed
+      x-kdb-note: Editable by the author within 15 minutes; afterwards 409. A comment someone has already
+        replied to cannot be quietly rewritten — the thread should read as it happened.
     delete:
       tags:
       - Workflows
@@ -4982,14 +4976,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
-        '501':
-          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
-          content: *id001
-      description: '**NOT YET IMPLEMENTED — answers 501.** See GET /documents/{documentId}/comments.
+      description: '**STRONGER THAN DESCRIBED.** Soft delete (the row stays so replies keep their anchor).
+        Authors delete their own; Owners and Admins delete any — a comment nobody can remove is how a
+        document page becomes unusable.
 
         <!-- kdb-annotation -->'
-      x-kdb-status: deferred
-      x-kdb-note: See GET /documents/{documentId}/comments.
+      x-kdb-status: stronger
+      x-kdb-note: Soft delete (the row stays so replies keep their anchor). Authors delete their own;
+        Owners and Admins delete any — a comment nobody can remove is how a document page becomes unusable.
   /documents/{documentId}/envelopes:
     post:
       tags:
@@ -6357,17 +6351,21 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
-        '501':
-          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
-          content: *id001
-      description: '**NOT YET IMPLEMENTED — answers 501.** Push registration is meaningless until a push
-        target exists — the PWA has no web-push and there is no native app. Notifications deliver in-app
-        and by email.
+      description: '**DIFFERS FROM THIS DESCRIPTION.** Registration works and is idempotent on (user,
+        token) — browsers and OSes re-issue the same token on every launch. `platform` accepts `web` (added
+        in V026; the PWA is the client that exists) as well as ios and android. For `web` the token is
+        the whole PushSubscription JSON — endpoint, p256dh and auth are three values, not one. WEB PUSH
+        SENDS (B67) when `Push:Vapid:*` is configured; mobile does not yet. `GET /devices` reports `web_enabled`,
+        `mobile_enabled` and the VAPID public key the browser needs to subscribe.
 
         <!-- kdb-annotation -->'
-      x-kdb-status: deferred
-      x-kdb-note: Push registration is meaningless until a push target exists — the PWA has no web-push
-        and there is no native app. Notifications deliver in-app and by email.
+      x-kdb-status: changed
+      x-kdb-note: Registration works and is idempotent on (user, token) — browsers and OSes re-issue the
+        same token on every launch. `platform` accepts `web` (added in V026; the PWA is the client that
+        exists) as well as ios and android. For `web` the token is the whole PushSubscription JSON — endpoint,
+        p256dh and auth are three values, not one. WEB PUSH SENDS (B67) when `Push:Vapid:*` is configured;
+        mobile does not yet. `GET /devices` reports `web_enabled`, `mobile_enabled` and the VAPID public
+        key the browser needs to subscribe.
   /devices/{deviceId}:
     delete:
       tags:
@@ -6388,14 +6386,14 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
-        '501':
-          description: Not implemented yet (problem+json with code NOT_IMPLEMENTED).
-          content: *id001
-      description: '**NOT YET IMPLEMENTED — answers 501.** See POST /devices.
+      description: '**STRONGER THAN DESCRIBED.** Scoped to the caller''s own devices, and a hard delete
+        — a revoked push token has no evidentiary value and keeping it would force the sender to track
+        dead tokens.
 
         <!-- kdb-annotation -->'
-      x-kdb-status: deferred
-      x-kdb-note: See POST /devices.
+      x-kdb-status: stronger
+      x-kdb-note: Scoped to the caller's own devices, and a hard delete — a revoked push token has no
+        evidentiary value and keeping it would force the sender to track dead tokens.
   /reports/overview:
     get:
       tags:
@@ -6524,6 +6522,15 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/RateLimited'
+      description: '**STRONGER THAN DESCRIBED.** Now reports `retention_policies` and `covered_by_retention`.
+        Before B62, "retention coverage" in this report counted LIFECYCLE RULES, which are per-document
+        reminders — a different thing from a disposal schedule covering a whole document type.
+
+        <!-- kdb-annotation -->'
+      x-kdb-status: stronger
+      x-kdb-note: Now reports `retention_policies` and `covered_by_retention`. Before B62, "retention
+        coverage" in this report counted LIFECYCLE RULES, which are per-document reminders — a different
+        thing from a disposal schedule covering a whole document type.
   /reports/workflow-performance:
     get:
       tags:

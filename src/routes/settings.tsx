@@ -7,6 +7,8 @@ import { Download, Monitor, ShieldCheck } from 'lucide-react'
 
 import { AppShell } from '@/components/app-shell'
 import { NotificationPreferencesCard } from '@/components/settings/notification-preferences'
+import { DevicesCard, EmergencyContactsCard } from '@/components/settings/emergency-devices'
+import { RetentionPoliciesCard } from '@/components/settings/retention-policies'
 import { SecurityPolicyCard } from '@/components/settings/security-policy'
 import { SecretReveal } from '@/components/ui/secret-reveal'
 import { ApiProblem, NetworkError } from '@/lib/api/http'
@@ -81,6 +83,10 @@ function SettingsPage() {
         </TabsContent>
         <TabsContent value="sessions">
           <SessionsCard />
+          {/* Devices and emergency contacts belong with sessions: all three
+              answer "what can reach my account, and how do I stop it?" */}
+          <DevicesCard />
+          <EmergencyContactsCard />
         </TabsContent>
         <TabsContent value="types">
           <DocumentTypesCard />
@@ -91,6 +97,9 @@ function SettingsPage() {
         {isAdmin && (
           <TabsContent value="policy">
             <SecurityPolicyCard canEdit={isOwner} />
+            {/* Retention is a security-and-compliance decision made once for
+                the whole organisation — same audience, same page. */}
+            <RetentionPoliciesCard canEdit={isAdmin} />
           </TabsContent>
         )}
         {isOwner && (

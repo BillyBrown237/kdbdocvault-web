@@ -32,10 +32,13 @@ const NO_FOLDER = '__none__'
  */
 export function GenerateDialog({
   template,
+  formats,
   open,
   onOpenChange,
 }: {
   template: Template
+  /** From the list response — ['docx'] when no converter is deployed. */
+  formats: string[]
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
@@ -47,6 +50,11 @@ export function GenerateDialog({
   const [values, setValues] = useState<Record<string, string>>({})
   const [title, setTitle] = useState('')
   const [folder, setFolder] = useState<string>(NO_FOLDER)
+  // Default to PDF when it's available: most generated documents are finals
+  // to send, and PDF is the one that can be signed. Word stays one click away
+  // for the drafts people still edit.
+  const canPdf = formats.includes('pdf')
+  const [format, setFormat] = useState<'docx' | 'pdf'>(canPdf ? 'pdf' : 'docx')
 
   const generate = useMutation({
     mutationFn: () =>
@@ -54,6 +62,7 @@ export function GenerateDialog({
         folder_id: folder === NO_FOLDER ? null : folder,
         title: title.trim() || undefined,
         values,
+        format,
       }),
     onSuccess: async (g) => {
       toast.success(t('templates.generated'))
@@ -130,6 +139,24 @@ export function GenerateDialog({
             />
             <p className="text-xs text-muted-foreground">{t('templates.docTitleHint')}</p>
           </div>
+
+          {canPdf && (
+            <div className="space-y-1.5">
+              <Label>{t('templates.format')}</Label>
+              <Select value={format} onValueChange={(v) => setFormat(v as 'docx' | 'pdf')}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pdf">{t('templates.formatPdf')}</SelectItem>
+                  <SelectItem value="docx">{t('templates.formatDocx')}</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {format === 'pdf' ? t('templates.formatPdfHint') : t('templates.formatDocxHint')}
+              </p>
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <Label>{t('templates.folder')}</Label>

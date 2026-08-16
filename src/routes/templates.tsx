@@ -164,6 +164,7 @@ function TemplatesPage() {
       {generating && (
         <GenerateDialog
           template={generating}
+          formats={templates.data?.formats ?? ['docx']}
           open={generating !== null}
           onOpenChange={(o) => !o && setGenerating(null)}
         />

@@ -7,6 +7,7 @@ import { ChevronLeft, Download, Pin, Star } from 'lucide-react'
 import { AclPanel } from '@/components/acl-panel'
 import { AppShell } from '@/components/app-shell'
 import { DocumentActions } from '@/components/document-actions'
+import { CommentsPanel } from '@/components/comments-panel'
 import { DocumentLinks } from '@/components/document-links'
 import { DocumentTrailPanel } from '@/components/document-trail-panel'
 import { ExtractionPanel } from '@/components/extraction-panel'
@@ -157,6 +158,10 @@ function DocumentDetail() {
               above the process panels — "what is this connected to" is a
               question about the document, not about a workflow. */}
           <DocumentLinks documentId={d.id} />
+          {/* W31 (B63): the conversation sits with the document's own facts,
+              not among the process panels — it's about the document, not a
+              workflow step. */}
+          <CommentsPanel documentId={d.id} />
           <LifecyclePanel documentId={d.id} />
           <WorkflowPanel documentId={d.id} />
           <AclPanel documentId={d.id} />
