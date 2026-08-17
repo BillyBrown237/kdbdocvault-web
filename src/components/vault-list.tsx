@@ -25,7 +25,7 @@ export function FolderRow({ folder }: { folder: Folder }) {
 }
 
 export function DocumentRow({ document }: { document: Document }) {
-  const { t, i18n } = useTranslation()
+  const { i18n } = useTranslation()
   const version = document.current_version
 
   return (

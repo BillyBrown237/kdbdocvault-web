@@ -28,7 +28,7 @@ import {
   type SignerInput,
 } from '@/lib/api/queries'
 import { formatDate } from '@/lib/format'
-import type { Envelope, Signer, SignerStatus } from '@/lib/api/types'
+import type { Envelope, Signer } from '@/lib/api/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/ui/status-badge'

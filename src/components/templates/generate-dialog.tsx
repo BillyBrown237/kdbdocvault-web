@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -45,7 +45,9 @@ export function GenerateDialog({
   const { t } = useTranslation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const folders = useQuery(rootFoldersQuery)
+  // rootFoldersQuery is infiniteQueryOptions — useQuery would accept it at
+  // runtime and return the wrong shape. The render already reads `.pages`.
+  const folders = useInfiniteQuery(rootFoldersQuery)
 
   const [values, setValues] = useState<Record<string, string>>({})
   const [title, setTitle] = useState('')

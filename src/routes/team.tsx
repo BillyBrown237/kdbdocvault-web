@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Check, Copy, Mail, UserPlus, Users } from 'lucide-react'
+import { Mail, UserPlus, Users } from 'lucide-react'
 
 import { AppShell } from '@/components/app-shell'
 import { DepartmentsCard } from '@/components/settings/departments'
@@ -235,7 +235,6 @@ function InvitationsTab() {
   const [email, setEmail] = useState('')
   const [roleId, setRoleId] = useState<string>('')
   const [inviteUrl, setInviteUrl] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     if (!roleId && roles.data?.data.length) {
@@ -248,7 +247,6 @@ function InvitationsTab() {
     mutationFn: () => createInvitation({ email: email.trim(), role_id: roleId }),
     onSuccess: async (r) => {
       setInviteUrl(r.invite_url)
-      setCopied(false)
       setEmail('')
       await queryClient.invalidateQueries({ queryKey: ['invitations'] })
     },
