@@ -1,11 +1,27 @@
 # Deploying the web app
 
-Push to `main` → GitHub Actions typechecks, builds, and publishes the static
-files to the VPS. Roughly 90 seconds.
+Push to `develop` → GitHub Actions typechecks, builds, and publishes the
+static files to the VPS. Roughly 90 seconds.
 
 This pipeline is **independent of the backend's**. The two share a server, not
 a release cycle: a CSS fix doesn't rebuild .NET images, and a database
 migration doesn't wait on `npm ci`.
+
+## Branches
+
+| Branch | Deploys to | Status |
+|---|---|---|
+| `develop` | the dev environment | active |
+| `main` | production | **no workflow yet** |
+
+While the product is pre-pilot, `develop` is the only branch that ships.
+`main` is left without a workflow on purpose: a branch that cannot deploy
+cannot deploy by accident, and adding production later is a new file rather
+than an edit to a pipeline you depend on.
+
+When you're ready, copy this file to `deploy-prod.yml`, trigger it on `main`,
+point it at the production web root, and use a `production` environment with
+a required reviewer so a merge can't ship unattended.
 
 ## Who owns what on the server
 

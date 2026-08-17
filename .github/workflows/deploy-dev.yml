@@ -1,6 +1,12 @@
 # =============================================================================
 # FRONTEND deployment: the SPA and the front office.
-# Triggered by every push to `main` in THIS repository.
+# Triggered by every push to `develop` in THIS repository.
+#
+# BRANCH STRATEGY while the product is pre-pilot: `develop` is the only branch
+# that deploys, and it deploys to the dev environment. `main` is reserved for
+# production and has no workflow yet — deliberately. An unused `main` cannot
+# accidentally ship, and adding the production pipeline later is a new file,
+# not an edit to a working one.
 #
 # Independent of the backend pipeline (Kdbdocvault) on purpose. A CSS fix
 # should not rebuild .NET images, and a database migration should not wait on
@@ -19,7 +25,7 @@ name: Deploy web to dev
 
 on:
   push:
-    branches: [main]
+    branches: [develop]
     paths-ignore:
       # Docs-only commits shouldn't spend three minutes rebuilding a bundle
       # that comes out byte-identical.
