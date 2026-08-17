@@ -13,14 +13,27 @@
 # `npm ci`. The two share a server, not a release cycle.
 #
 # Division of territory on the VPS:
-#   this pipeline  → /var/www/kdbvault-dev/{web,site}   (static files)
-#   backend        → ~/kdbvault-dev                     (compose, containers)
-#   neither        → /etc/nginx                         (set up once, by hand)
+#   this pipeline  → /var/www/kdbvault-dev/{releases,current}  (static files)
+#   backend        → ~/kdbvault-dev                         (compose, containers)
+#   neither        → /etc/nginx                             (set up once, by hand)
+#
+# Nginx should serve the SPA from:
+#
+#   /var/www/kdbvault-dev/current/web
+#
+# and the front office/site from:
+#
+#   /var/www/kdbvault-dev/current/site
+#
+# Releases are immutable directories. `current` is a symlink to the active
+# release, so publishing a new build is a single symlink replacement rather
+# than a delete/copy sequence that can expose a partially deployed tree.
 #
 # Because the API is proxied same-origin by nginx (/v1 and /pub on the app
 # host), the SPA has no API URL to configure and no CORS to negotiate — which
 # is also why these two pipelines need no knowledge of each other.
 # =============================================================================
+
 name: Deploy web to dev
 
 on:
@@ -31,6 +44,7 @@ on:
       # that comes out byte-identical.
       - "**.md"
       - "docs/**"
+
   workflow_dispatch:
 
 concurrency:
@@ -38,8 +52,12 @@ concurrency:
   cancel-in-progress: true # unlike the backend: a superseded static build is safe to drop
 
 jobs:
+  # ===========================================================================
+  # BUILD
+  # ===========================================================================
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -67,8 +85,16 @@ jobs:
 
       - name: Bundle
         run: |
+          set -euo pipefail
+
+          test -d dist
+          test -d site
+
           tar -czf web-bundle.tar.gz -C dist .
           tar -czf site-bundle.tar.gz -C site .
+
+          test -s web-bundle.tar.gz
+          test -s site-bundle.tar.gz
 
       - uses: actions/upload-artifact@v4
         with:
@@ -78,15 +104,22 @@ jobs:
             site-bundle.tar.gz
           retention-days: 7
 
+  # ===========================================================================
+  # DEPLOY
+  # ===========================================================================
   deploy:
     needs: [build]
     runs-on: ubuntu-latest
     environment: dev
+
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: web-bundles
 
+      # -----------------------------------------------------------------------
+      # Upload bundles to VPS
+      # -----------------------------------------------------------------------
       - name: Copy to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -97,6 +130,9 @@ jobs:
           source: "web-bundle.tar.gz,site-bundle.tar.gz"
           target: /tmp
 
+      # -----------------------------------------------------------------------
+      # Publish release
+      # -----------------------------------------------------------------------
       - name: Publish
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -106,52 +142,348 @@ jobs:
           port: ${{ secrets.VPS_PORT || 22 }}
           script: |
             set -euo pipefail
-            WEB_ROOT=${WEB_ROOT:-/var/www/kdbvault-dev}
+
+            WEB_ROOT="/var/www/kdbvault-dev"
+            RELEASE_ID="${GITHUB_SHA:-$(date +%Y%m%d%H%M%S)}"
+            RELEASES_DIR="$WEB_ROOT/releases"
+            RELEASE_DIR="$RELEASES_DIR/$RELEASE_ID"
 
             if [ ! -d "$WEB_ROOT" ]; then
-              echo "FATAL: $WEB_ROOT does not exist. See the backend repo's deploy/README.md." >&2
+              echo "FATAL: $WEB_ROOT does not exist."
+              echo "See the backend repo's deploy/README.md."
               exit 1
             fi
 
-            # Extract to a staging directory, then swap by rename. A `rm -rf`
-            # followed by a slow extract would serve 404s — or worse, a half
-            # build with a new index.html pointing at assets not yet written.
-            # mv within the same filesystem is atomic enough that no request
-            # ever sees a mixed tree.
-            rm -rf "$WEB_ROOT/.stage-web" "$WEB_ROOT/.stage-site"
-            mkdir -p "$WEB_ROOT/.stage-web" "$WEB_ROOT/.stage-site"
-            tar -xzf /tmp/web-bundle.tar.gz -C "$WEB_ROOT/.stage-web"
-            tar -xzf /tmp/site-bundle.tar.gz -C "$WEB_ROOT/.stage-site"
+            if [ ! -d "$RELEASES_DIR" ]; then
+              echo "Creating releases directory: $RELEASES_DIR"
+              mkdir -p "$RELEASES_DIR"
+            fi
 
-            rm -rf "$WEB_ROOT/web.prev" "$WEB_ROOT/site.prev"
-            [ -d "$WEB_ROOT/web" ]  && mv "$WEB_ROOT/web"  "$WEB_ROOT/web.prev"  || true
-            [ -d "$WEB_ROOT/site" ] && mv "$WEB_ROOT/site" "$WEB_ROOT/site.prev" || true
-            mv "$WEB_ROOT/.stage-web"  "$WEB_ROOT/web"
-            mv "$WEB_ROOT/.stage-site" "$WEB_ROOT/site"
+            # Verify that the uploaded artifacts actually exist and are
+            # non-empty before touching the active deployment.
+            if [ ! -s /tmp/web-bundle.tar.gz ]; then
+              echo "FATAL: /tmp/web-bundle.tar.gz is missing or empty."
+              exit 1
+            fi
 
-            # Keep ONE previous build: rolling back a static site is a rename,
-            # and that is worth more than the disk it costs.
-            rm -f /tmp/web-bundle.tar.gz /tmp/site-bundle.tar.gz
+            if [ ! -s /tmp/site-bundle.tar.gz ]; then
+              echo "FATAL: /tmp/site-bundle.tar.gz is missing or empty."
+              exit 1
+            fi
+
+            # Never reuse an existing release directory. This makes every
+            # deployment immutable and prevents stale files from surviving
+            # between builds.
+            if [ -e "$RELEASE_DIR" ]; then
+              echo "FATAL: release already exists: $RELEASE_DIR"
+              exit 1
+            fi
+
+            mkdir -p "$RELEASE_DIR/web"
+            mkdir -p "$RELEASE_DIR/site"
+
+            # Extract both bundles into the same release directory.
+            # Nothing is visible to nginx yet.
+            tar -xzf /tmp/web-bundle.tar.gz -C "$RELEASE_DIR/web"
+            tar -xzf /tmp/site-bundle.tar.gz -C "$RELEASE_DIR/site"
+
+            # Basic sanity checks before publishing.
+            if [ ! -f "$RELEASE_DIR/web/index.html" ]; then
+              echo "FATAL: web release has no index.html."
+              rm -rf "$RELEASE_DIR"
+              exit 1
+            fi
+
+            if [ ! -f "$RELEASE_DIR/site/index.html" ]; then
+              echo "FATAL: site release has no index.html."
+              rm -rf "$RELEASE_DIR"
+              exit 1
+            fi
+
+            # Capture the currently active release before switching.
+            PREVIOUS_RELEASE=""
+
+            if [ -L "$WEB_ROOT/current" ]; then
+              PREVIOUS_RELEASE="$(readlink "$WEB_ROOT/current")"
+              echo "Previous release: $PREVIOUS_RELEASE"
+            elif [ -e "$WEB_ROOT/current" ]; then
+              echo "FATAL: $WEB_ROOT/current exists but is not a symlink."
+              rm -rf "$RELEASE_DIR"
+              exit 1
+            else
+              echo "No previous release — this is the first deployment."
+            fi
+
+            # Publish by replacing the symlink.
+            #
+            # The release itself is already complete. Nginx continues serving
+            # the previous release until this point.
+            #
+            # `ln -sfn` changes the symlink rather than copying files into the
+            # live directory, so nginx never observes a half-extracted build.
+            ln -sfn "$RELEASE_DIR" "$WEB_ROOT/current"
+
+            # Verify that the symlink points to the release we just published.
+            CURRENT_TARGET="$(readlink "$WEB_ROOT/current")"
+
+            if [ "$CURRENT_TARGET" != "$RELEASE_DIR" ]; then
+              echo "FATAL: current symlink does not point to the new release."
+              echo "Expected: $RELEASE_DIR"
+              echo "Actual:   $CURRENT_TARGET"
+              exit 1
+            fi
+
+            # Remove uploaded artifacts after successful publication.
+            rm -f /tmp/web-bundle.tar.gz
+            rm -f /tmp/site-bundle.tar.gz
 
             echo "--- published ---"
-            ls -la "$WEB_ROOT/web" | head -5
+            echo "release: $RELEASE_ID"
+            echo "current: $(readlink "$WEB_ROOT/current")"
+            echo
+            echo "--- web ---"
+            ls -la "$WEB_ROOT/current/web" | head -5
+            echo
+            echo "--- site ---"
+            ls -la "$WEB_ROOT/current/site" | head -5
 
+            # Keep the current release plus the previous release.
+            #
+            # The current release is identified by the current symlink.
+            # The immediately previous release is kept as rollback material.
+            #
+            # Older releases are safe to delete.
+            CURRENT_RELEASE="$(readlink -f "$WEB_ROOT/current")"
+
+            find "$RELEASES_DIR" \
+              -mindepth 1 \
+              -maxdepth 1 \
+              -type d \
+              -printf '%T@ %p\n' \
+              | sort -nr \
+              | tail -n +3 \
+              | cut -d' ' -f2- \
+              | while IFS= read -r OLD_RELEASE; do
+                  if [ -n "$OLD_RELEASE" ] && [ "$OLD_RELEASE" != "$CURRENT_RELEASE" ]; then
+                    echo "Removing old release: $OLD_RELEASE"
+                    rm -rf "$OLD_RELEASE"
+                  fi
+                done
+
+  # ===========================================================================
+  # SMOKE TEST
+  # ===========================================================================
+  smoke-test:
+    needs: [deploy]
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
       - name: Smoke test
-        # Fetches index.html and asserts the built asset it references is
-        # actually reachable — a green deploy that serves a broken bundle is
-        # the failure this catches.
+        env:
+          APP_HOST: ${{ vars.APP_HOST }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_PORT: ${{ secrets.VPS_PORT || 22 }}
         run: |
-          APP="https://${{ secrets.APP_HOST }}"
+          set -euo pipefail
+
+          if [ -z "${APP_HOST:-}" ]; then
+            echo "::warning::vars.APP_HOST is not set — skipping the smoke test."
+            echo "Add it under Settings → Secrets and variables → Actions → Variables."
+            exit 0
+          fi
+
+          APP="https://${APP_HOST}"
+
+          echo "checking ${APP}"
+
+          # -------------------------------------------------------------------
+          # Diagnostics
+          # -------------------------------------------------------------------
+          diagnose() {
+            echo "--- diagnosis ---" >&2
+
+            if ! getent hosts "$APP_HOST" > /dev/null 2>&1; then
+              echo "DNS: ${APP_HOST} does not resolve. Add the A record." >&2
+              return
+            fi
+
+            echo "DNS: resolves to $(getent hosts "$APP_HOST" | awk '{print $1}' | head -1)" >&2
+
+            CODE=$(curl -s -o /dev/null -w '%{http_code}' \
+              --max-time 10 \
+              "https://${APP_HOST}/" \
+              2>/dev/null || echo "000")
+
+            case "$CODE" in
+              000)
+                echo "HTTPS: no response. Either nginx isn't running, ports 80/443 are" >&2
+                echo "       closed, or certbot hasn't issued a certificate yet." >&2
+                echo "       Try: curl -I http://${APP_HOST}/" >&2
+                ;;
+
+              403)
+                echo "HTTP 403: nginx can't read the frontend release." >&2
+                echo "          Check permissions on ${APP_HOST}'s web root." >&2
+                ;;
+
+              404)
+                echo "HTTP 404: nginx is up but the web root is empty or points elsewhere." >&2
+                echo "          Expected: /var/www/kdbvault-dev/current/web" >&2
+                ;;
+
+              502|503)
+                echo "HTTP ${CODE}: nginx is proxying somewhere that isn't answering." >&2
+                echo "          Check: sudo nginx -t; docker compose ps" >&2
+                ;;
+
+              *)
+                echo "HTTP ${CODE} — unexpected." >&2
+                echo "Check: sudo nginx -t; ls -la /var/www/kdbvault-dev/current/web" >&2
+                ;;
+            esac
+          }
+
+          # -------------------------------------------------------------------
+          # Test index.html and one generated JavaScript asset.
+          #
+          # A deployment can technically succeed while serving an index.html
+          # that references assets which don't exist. This catches that class
+          # of failure.
+          # -------------------------------------------------------------------
           for i in $(seq 1 10); do
-            HTML=$(curl -sf "$APP/" || true)
+            HTML=$(curl -fsS --max-time 10 "$APP/" || true)
+
             if [ -n "$HTML" ]; then
-              ASSET=$(printf '%s' "$HTML" | grep -o '/assets/[^"]*\.js' | head -1)
-              if [ -n "$ASSET" ] && curl -sfI "$APP$ASSET" > /dev/null; then
-                echo "index.html and $ASSET both served"
+
+              ASSET=$(
+                printf '%s' "$HTML" \
+                  | grep -oE '/assets/[^"]+\.js' \
+                  | head -1 \
+                  || true
+              )
+
+              if [ -z "$ASSET" ]; then
+                echo "index.html was served but references no /assets/*.js." >&2
+                echo "The published build looks wrong, not the infrastructure." >&2
+                diagnose
+                exit 1
+              fi
+
+              # Use GET rather than HEAD. This verifies the same kind of request
+              # the browser will actually make for the JavaScript bundle.
+              if curl -fsS --max-time 10 "$APP$ASSET" -o /dev/null; then
+                echo "OK — index.html and $ASSET both served"
                 exit 0
               fi
+
+              echo "index.html served but $ASSET is missing." >&2
+              echo "The deployment may be incomplete or nginx may point to the wrong root." >&2
+              diagnose
+              exit 1
             fi
+
+            if [ "$i" -eq 1 ]; then
+              echo "no response yet, retrying..."
+            else
+              echo "attempt ${i}/10 failed, retrying..."
+            fi
+
             sleep 5
           done
-          echo "the app did not serve a usable build" >&2
+
+          diagnose
           exit 1
+
+  # ===========================================================================
+  # ROLLBACK
+  #
+  # If the smoke test fails, restore the release that was active before this
+  # deployment. This is intentionally a separate job so that the deployment
+  # failure remains visible in GitHub Actions while the VPS is automatically
+  # returned to the last known-good release.
+  # ===========================================================================
+  rollback:
+    needs: [smoke-test]
+    if: ${{ always() && needs.smoke-test.result == 'failure' }}
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - name: Roll back frontend
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script: |
+            set -euo pipefail
+
+            WEB_ROOT="/var/www/kdbvault-dev"
+            RELEASES_DIR="$WEB_ROOT/releases"
+            CURRENT_LINK="$WEB_ROOT/current"
+
+            if [ ! -L "$CURRENT_LINK" ]; then
+              echo "FATAL: $CURRENT_LINK is not a symlink."
+              echo "Cannot safely determine the active release."
+              exit 1
+            fi
+
+            CURRENT_RELEASE="$(readlink -f "$CURRENT_LINK")"
+
+            echo "Current release: $CURRENT_RELEASE"
+
+            # Find the most recent release other than the currently active one.
+            PREVIOUS_RELEASE=$(
+              find "$RELEASES_DIR" \
+                -mindepth 1 \
+                -maxdepth 1 \
+                -type d \
+                -printf '%T@ %p\n' \
+                | sort -nr \
+                | cut -d' ' -f2- \
+                | while IFS= read -r RELEASE; do
+                    if [ "$RELEASE" != "$CURRENT_RELEASE" ]; then
+                      echo "$RELEASE"
+                      break
+                    fi
+                  done
+            )
+
+            if [ -z "$PREVIOUS_RELEASE" ]; then
+              echo "No previous release exists."
+              echo "This appears to be the first deployment."
+              echo "Nothing to roll back to."
+              exit 1
+            fi
+
+            if [ ! -d "$PREVIOUS_RELEASE/web" ]; then
+              echo "FATAL: previous release is missing its web directory:"
+              echo "       $PREVIOUS_RELEASE/web"
+              exit 1
+            fi
+
+            if [ ! -f "$PREVIOUS_RELEASE/web/index.html" ]; then
+              echo "FATAL: previous release has no index.html."
+              exit 1
+            fi
+
+            echo "Rolling back to:"
+            echo "$PREVIOUS_RELEASE"
+
+            ln -sfn "$PREVIOUS_RELEASE" "$CURRENT_LINK"
+
+            VERIFY_TARGET="$(readlink -f "$CURRENT_LINK")"
+
+            if [ "$VERIFY_TARGET" != "$PREVIOUS_RELEASE" ]; then
+              echo "FATAL: rollback verification failed."
+              echo "Expected: $PREVIOUS_RELEASE"
+              echo "Actual:   $VERIFY_TARGET"
+              exit 1
+            fi
+
+            echo "--- rollback complete ---"
+            echo "current: $VERIFY_TARGET"

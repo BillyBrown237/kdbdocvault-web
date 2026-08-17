@@ -45,7 +45,17 @@ Settings → Secrets and variables → Actions.
 | `VPS_USER` | SSH user owning `/var/www/kdbvault-dev` |
 | `VPS_SSH_KEY` | private key, full PEM including BEGIN/END lines |
 | `VPS_PORT` | only if SSH isn't on 22 |
-| `APP_HOST` | `kdb.dekoubrown.dev` — used by the smoke test |
+
+And one repository **variable** (the tab beside Secrets):
+
+| Variable | Value |
+|---|---|
+| `APP_HOST` | `kdb.dekoubrown.dev` |
+
+A hostname in public DNS is not a secret, and storing it as one is actively
+harmful: GitHub masks secret values in logs, so the smoke test's diagnostics
+would all read `https://***`. Variables aren't masked. If it's unset the
+smoke test warns and passes rather than failing on a missing setting.
 
 The same deploy key as the backend repo is fine — it's the same user doing the
 same kind of work. Generate it once on the VPS:
