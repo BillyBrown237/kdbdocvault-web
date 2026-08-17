@@ -1,0 +1,151 @@
+# =============================================================================
+# FRONTEND deployment: the SPA and the front office.
+# Triggered by every push to `main` in THIS repository.
+#
+# Independent of the backend pipeline (Kdbdocvault) on purpose. A CSS fix
+# should not rebuild .NET images, and a database migration should not wait on
+# `npm ci`. The two share a server, not a release cycle.
+#
+# Division of territory on the VPS:
+#   this pipeline  → /var/www/kdbvault-dev/{web,site}   (static files)
+#   backend        → ~/kdbvault-dev                     (compose, containers)
+#   neither        → /etc/nginx                         (set up once, by hand)
+#
+# Because the API is proxied same-origin by nginx (/v1 and /pub on the app
+# host), the SPA has no API URL to configure and no CORS to negotiate — which
+# is also why these two pipelines need no knowledge of each other.
+# =============================================================================
+name: Deploy web to dev
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      # Docs-only commits shouldn't spend three minutes rebuilding a bundle
+      # that comes out byte-identical.
+      - "**.md"
+      - "docs/**"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-web-dev
+  cancel-in-progress: true # unlike the backend: a superseded static build is safe to drop
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Fail here rather than shipping a bundle that compiles but is wrong.
+      # `tsc --noEmit` catches what Vite's esbuild transform does not: esbuild
+      # strips types without checking them.
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        env:
+          # Empty on purpose: nginx serves the SPA and proxies /v1 + /pub from
+          # the same origin, so an absolute URL would only invite CORS.
+          VITE_API_URL: ""
+        run: |
+          npm run generate-routes
+          npm run build
+
+      - name: Bundle
+        run: |
+          tar -czf web-bundle.tar.gz -C dist .
+          tar -czf site-bundle.tar.gz -C site .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-bundles
+          path: |
+            web-bundle.tar.gz
+            site-bundle.tar.gz
+          retention-days: 7
+
+  deploy:
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-bundles
+
+      - name: Copy to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          source: "web-bundle.tar.gz,site-bundle.tar.gz"
+          target: /tmp
+
+      - name: Publish
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script: |
+            set -euo pipefail
+            WEB_ROOT=${WEB_ROOT:-/var/www/kdbvault-dev}
+
+            if [ ! -d "$WEB_ROOT" ]; then
+              echo "FATAL: $WEB_ROOT does not exist. See the backend repo's deploy/README.md." >&2
+              exit 1
+            fi
+
+            # Extract to a staging directory, then swap by rename. A `rm -rf`
+            # followed by a slow extract would serve 404s — or worse, a half
+            # build with a new index.html pointing at assets not yet written.
+            # mv within the same filesystem is atomic enough that no request
+            # ever sees a mixed tree.
+            rm -rf "$WEB_ROOT/.stage-web" "$WEB_ROOT/.stage-site"
+            mkdir -p "$WEB_ROOT/.stage-web" "$WEB_ROOT/.stage-site"
+            tar -xzf /tmp/web-bundle.tar.gz -C "$WEB_ROOT/.stage-web"
+            tar -xzf /tmp/site-bundle.tar.gz -C "$WEB_ROOT/.stage-site"
+
+            rm -rf "$WEB_ROOT/web.prev" "$WEB_ROOT/site.prev"
+            [ -d "$WEB_ROOT/web" ]  && mv "$WEB_ROOT/web"  "$WEB_ROOT/web.prev"  || true
+            [ -d "$WEB_ROOT/site" ] && mv "$WEB_ROOT/site" "$WEB_ROOT/site.prev" || true
+            mv "$WEB_ROOT/.stage-web"  "$WEB_ROOT/web"
+            mv "$WEB_ROOT/.stage-site" "$WEB_ROOT/site"
+
+            # Keep ONE previous build: rolling back a static site is a rename,
+            # and that is worth more than the disk it costs.
+            rm -f /tmp/web-bundle.tar.gz /tmp/site-bundle.tar.gz
+
+            echo "--- published ---"
+            ls -la "$WEB_ROOT/web" | head -5
+
+      - name: Smoke test
+        # Fetches index.html and asserts the built asset it references is
+        # actually reachable — a green deploy that serves a broken bundle is
+        # the failure this catches.
+        run: |
+          APP="https://${{ secrets.APP_HOST }}"
+          for i in $(seq 1 10); do
+            HTML=$(curl -sf "$APP/" || true)
+            if [ -n "$HTML" ]; then
+              ASSET=$(printf '%s' "$HTML" | grep -o '/assets/[^"]*\.js' | head -1)
+              if [ -n "$ASSET" ] && curl -sfI "$APP$ASSET" > /dev/null; then
+                echo "index.html and $ASSET both served"
+                exit 0
+              fi
+            fi
+            sleep 5
+          done
+          echo "the app did not serve a usable build" >&2
+          exit 1
