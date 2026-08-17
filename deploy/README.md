@@ -27,9 +27,16 @@ a required reviewer so a merge can't ship unattended.
 
 | Path | Owned by |
 |---|---|
-| `/var/www/kdbvault-dev/{web,site}` | **this pipeline** |
+| `/var/www/kdbvault-dev/{releases,current}` | **this pipeline** |
 | `~/kdbvault-dev` (compose, migrations, containers) | the backend pipeline |
 | `/etc/nginx` | neither — configured once by hand |
+
+nginx serves through the `current` symlink:
+
+```
+/var/www/kdbvault-dev/current/web    → the SPA        (kdb.dekoubrown.dev)
+/var/www/kdbvault-dev/current/site   → front office   (site.kdb.dekoubrown.dev)
+```
 
 nginx serves these files directly and proxies `/v1` and `/pub` to the API on
 the same origin. That's why this repo needs no API URL and no CORS: to the
@@ -74,21 +81,44 @@ fails with a clear message rather than creating it, because guessing at
 ownership and permissions for a web root is how you end up with a 403 nobody
 can explain.
 
+**The first deploy will 404 until nginx is configured**, because `current`
+doesn't exist until this pipeline first runs — and nginx's `root` points
+through it. Order doesn't matter: deploy first or configure nginx first, the
+site comes up once both are done.
+
 ## How publishing works
 
-Bundles are extracted to a staging directory, then swapped in by rename. A
-`rm -rf` followed by a slow extract would serve 404s — or worse, a half-built
-tree where a new `index.html` references assets that haven't been written yet.
+Each build extracts into a **new, immutable release directory** named after
+the commit SHA:
 
-The previous build is kept as `web.prev` / `site.prev`, so rolling back is:
-
-```bash
-cd /var/www/kdbvault-dev
-mv web web.bad && mv web.prev web
+```
+/var/www/kdbvault-dev/releases/<sha>/web
+/var/www/kdbvault-dev/releases/<sha>/site
 ```
 
-No cache to purge: `index.html` and both service workers are served
+Nothing is visible to nginx until the extract has finished and both
+`index.html` files are verified present. Only then is `current` repointed.
+Because nginx resolves the symlink per request, the switch is atomic — no
+request ever sees a half-built tree, and no nginx reload is needed.
+
+A failed extract deletes its own release directory and leaves `current`
+untouched, so a broken build cannot take the site down.
+
+### Rolling back
+
+```bash
+ls -t /var/www/kdbvault-dev/releases          # newest first
+ln -sfn /var/www/kdbvault-dev/releases/<sha> /var/www/kdbvault-dev/current
+```
+
+`ln -sfn` matters: without `-n`, ln follows the existing symlink and creates
+the new link *inside* the old release directory instead of replacing it.
+
+No cache to purge — `index.html` and both service workers are served
 `no-cache`, and `/assets/*` filenames are content-hashed.
+
+**Don't enable `open_file_cache`** on these server blocks. It caches file
+descriptors across the symlink swap, so a deploy appears to do nothing.
 
 ## Things that go wrong
 

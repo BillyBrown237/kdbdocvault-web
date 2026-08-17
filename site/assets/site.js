@@ -216,7 +216,37 @@
     addEventListener("resize", paint);
   }
 
+  // ---- scroll reveal --------------------------------------------------------
+  // Sections fade up as they enter the viewport. Deliberately restrained: one
+  // short move, once per element, and never on the first screen — animating
+  // what the visitor is already looking at delays the page for no reason.
+  //
+  // Progressive by construction: the `.reveal` class is only ever added by
+  // this function, so with JS disabled every section renders as normal.
+  function reveal() {
+    if (!("IntersectionObserver" in window)) return;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    var targets = [].slice.call(document.querySelectorAll("main .s-band"));
+    // Skip the hero: it is above the fold and must be there immediately.
+    targets = targets.slice(1);
+    if (!targets.length) return;
+
+    targets.forEach(function (el) { el.classList.add("reveal"); });
+
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add("in");
+        io.unobserve(entry.target);   // once is enough; re-animating on scroll-up is nausea
+      });
+    }, { rootMargin: "0px 0px -12% 0px", threshold: 0.05 });
+
+    targets.forEach(function (el) { io.observe(el); });
+  }
+
   // ---- boot -----------------------------------------------------------------
   translate();
   paint();
+  reveal();
 })();
