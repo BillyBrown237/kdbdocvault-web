@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#070B14" />
+
+    <title>KDB Doc Vault — Your documents deserve more than a folder.</title>
+    <meta
+      name="description"
+      content="One secure place to store, organize, search, share, sign, and manage your documents — from the moment they arrive until the moment they are archived."
+    />
+
+    <!-- `type` has to match the file. It said image/svg+xml over a .ico, which
+         some browsers honour and then fail to decode. -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="/icons/favicon-32x32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="canonical" href="https://site.kdb.dekoubrown.com/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="KDB Doc Vault" />
+    <meta property="og:url" content="https://site.kdb.dekoubrown.com/" />
+    <meta property="og:title" content="KDB Doc Vault — Your documents deserve more than a folder." />
+    <meta
+      property="og:description"
+      content="Secure document management for individuals, teams, and organizations."
+    />
+    <!-- Absolute, because a share card is fetched by a crawler that has no
+         page context to resolve a relative path against. -->
+    <meta property="og:image" content="https://site.kdb.dekoubrown.com/og-image.png" />
+    <meta property="og:image:width" content="1731" />
+    <meta property="og:image:height" content="909" />
+    <meta property="og:image:alt" content="The KDB Doc Vault workspace." />
+    <meta property="og:locale" content="en" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://site.kdb.dekoubrown.com/og-image.png" />
+
+    <!-- Fonts are preconnected, not blocking: the page renders in the fallback
+         stack and swaps, so a slow font never delays first paint. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <!--
+      Structured data. Deliberately confined to things that are verifiable:
+      who publishes the site, what the site is, and what the product is.
+
+      No `aggregateRating` (there are no reviews), no `offers` (there are no
+      prices), no `numberOfEmployees`, no `foundingDate` guesses. Every one of
+      those is a rich-results upgrade and every one of them would be invented —
+      and structured data is the one place where a false claim is machine
+      readable, which is a considerably worse place to be caught in one.
+    -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://site.kdb.dekoubrown.com/#organization",
+            "name": "KDB Doc Vault",
+            "url": "https://site.kdb.dekoubrown.com/",
+            "logo": "https://site.kdb.dekoubrown.com/icons/android-chrome-512x512.png",
+            "email": "contact@kdb.dekoubrown.com",
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "Douala",
+              "addressCountry": "CM"
+            }
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://site.kdb.dekoubrown.com/#website",
+            "url": "https://site.kdb.dekoubrown.com/",
+            "name": "KDB Doc Vault",
+            "inLanguage": "en",
+            "publisher": { "@id": "https://site.kdb.dekoubrown.com/#organization" }
+          },
+          {
+            "@type": "SoftwareApplication",
+            "name": "KDB Doc Vault",
+            "applicationCategory": "BusinessApplication",
+            "applicationSubCategory": "Document management",
+            "operatingSystem": "Web",
+            "url": "https://site.kdb.dekoubrown.com/",
+            "description": "Store, organize, search, share, sign and manage documents across their whole lifecycle, with expiry reminders, controlled access and a full audit trail.",
+            "publisher": { "@id": "https://site.kdb.dekoubrown.com/#organization" }
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  One page, so one entry. In-page anchors (#pricing, #security…) are not
+  separate URLs and must not be listed: a sitemap padded with fragments of the
+  same document is a signal that the site is trying to look larger than it is.
+
+  Add a <url> here the day a real second page exists — /verify, /terms,
+  /privacy — and not before.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://site.kdb.dekoubrown.com/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>

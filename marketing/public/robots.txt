@@ -1,0 +1,9 @@
+# KDB Doc Vault — public marketing site.
+#
+# The application itself lives on a different host and is behind a login; it
+# has its own robots.txt and is not covered here.
+
+User-agent: *
+Allow: /
+
+Sitemap: https://site.kdb.dekoubrown.com/sitemap.xml

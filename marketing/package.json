@@ -1,0 +1,29 @@
+{
+  "name": "kdbvault-marketing",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "KDB Doc Vault — public marketing site. Deliberately separate from the authenticated SPA so a first-time visitor downloads a landing page, not an application.",
+  "scripts": {
+    "dev": "vite --port 3100",
+    "build": "tsc --noEmit && vite build && npm run build:ssr && node scripts/prerender.mjs",
+    "build:ssr": "vite build --ssr src/entry-server.tsx --outDir dist-ssr",
+    "preview": "vite preview --port 3100",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "lucide-react": "^1.28.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.18",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^6.0.1",
+    "tailwindcss": "^4.1.18",
+    "typescript": "^6.0.2",
+    "vite": "^8.0.0"
+  }
+}
