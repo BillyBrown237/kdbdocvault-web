@@ -115,7 +115,7 @@ export function Navbar() {
 
       <Container as="nav" className="flex h-16 items-center gap-6 lg:h-[4.5rem]">
         <a href="/" className="shrink-0 rounded-sm" aria-label={t.nav.home}>
-          <Logo />
+          <Logo decorative eager />
         </a>
 
         <ul className="mx-auto hidden items-center gap-0.5 lg:flex">

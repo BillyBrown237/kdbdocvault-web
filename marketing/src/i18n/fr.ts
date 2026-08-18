@@ -43,6 +43,7 @@ export const fr: typeof en = {
   nav: {
     skip: 'Aller au contenu',
     home: 'KDB Doc Vault — accueil',
+    brand: 'KDB Doc Vault',
     openMenu: 'Ouvrir le menu',
     closeMenu: 'Fermer le menu',
     tagline:

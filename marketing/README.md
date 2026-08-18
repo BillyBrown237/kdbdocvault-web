@@ -68,6 +68,42 @@ public/
     Home.tsx                 page d'accueil (squelette)
 ```
 
+## Les fichiers de marque
+
+```
+public/logo.png       2000×2000   master : symbole + nom, fond navy opaque
+public/app-icon.png   2000×2000   master : symbole seul, fond navy opaque
+public/og-image.png   1731×909    carte de partage
+        │
+        │  python3 scripts/brand-assets.py
+        ▼
+public/brand/logo-lockup.png   258×112   25 ko, fond transparent
+public/brand/logo-mark.png      83×112   14 ko, fond transparent
+```
+
+Les masters **ne peuvent pas** être posés tels quels dans l'interface. La barre
+de navigation est transparente au-dessus du hero : un PNG à fond opaque y
+apparaîtrait comme un rectangle sombre posé sur le halo. Le script détoure le
+fond en le remplissant **depuis les bords vers l'intérieur** — un détourage par
+couleur globale percerait aussi les zones sombres du symbole lui-même.
+
+Après remplacement d'un master : relancer le script, puis vérifier les
+constantes `width`/`height` dans `Logo.tsx`. Ce sont elles qui réservent la
+place de l'image et empêchent l'en-tête de sauter pendant le chargement.
+
+### Deux points à trancher
+
+1. **La couleur de marque ne correspond pas à celle du site.** Le logo est
+   bleu/cyan ; l'accent du site est émeraude. Les deux se voient désormais côte
+   à côte dans la barre de navigation. Soit l'accent passe au bleu de la marque
+   (une modification de `styles.css` plus toutes les valeurs `rgb()` littérales,
+   soit environ 80 occurrences), soit c'est assumé. Ce n'est pas une décision
+   technique.
+2. **`og-image.png` est en anglais uniquement.** La page française partage donc
+   une carte anglaise. Une variante `og-image-fr.png` et une clé
+   `meta.ogImage` par locale règleraient le problème — le prérendu réécrit déjà
+   toutes les autres balises `og:`.
+
 ## Bilingue — anglais et français
 
 Deux **documents prérendus distincts**, pas un sélecteur :

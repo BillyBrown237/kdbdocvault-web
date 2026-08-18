@@ -35,6 +35,7 @@ export const en = {
   nav: {
     skip: 'Skip to content',
     home: 'KDB Doc Vault — home',
+    brand: 'KDB Doc Vault',
     openMenu: 'Open menu',
     closeMenu: 'Close menu',
     tagline: 'Secure document management for individuals, teams, and organizations.',

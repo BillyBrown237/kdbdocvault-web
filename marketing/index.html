@@ -17,6 +17,9 @@
     <link rel="icon" href="/icons/favicon-32x32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
+    <!-- Above the fold in the header. Preloaded so it arrives with the CSS
+         rather than after React has mounted. -->
+    <link rel="preload" as="image" href="/brand/logo-lockup.png" />
     <link rel="canonical" href="https://site.kdb.dekoubrown.dev/" />
 
     <!--
@@ -50,6 +53,7 @@
     <meta property="og:locale" content="en" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="https://site.kdb.dekoubrown.dev/og-image.png" />
+    <meta name="twitter:image:alt" content="The KDB Doc Vault workspace." />
 
     <!-- Fonts are preconnected, not blocking: the page renders in the fallback
          stack and swaps, so a slow font never delays first paint. -->
