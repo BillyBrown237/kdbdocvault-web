@@ -37,7 +37,12 @@ export function Logo({
    * read twice.
    */
   decorative = false,
-  /** The navbar's logo is above the fold and must not be deferred. */
+  /**
+   * The navbar's logo is above the fold and must not be deferred. React 19
+   * notices the eager image and emits its own `<link rel="preload">` at the
+   * top of the render, so no hand-written preload belongs in index.html —
+   * there would simply be two for the same file.
+   */
   eager = false,
 }: {
   className?: string

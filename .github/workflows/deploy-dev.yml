@@ -121,8 +121,12 @@ jobs:
           # a page no crawler can read, and it is invisible in a screenshot.
           # One prerendered document per language. An empty root is a page no
           # crawler can read, and it is invisible in a screenshot.
+          # Test for an EMPTY root, not for a particular first child. React
+          # hoists resource hints — a `<link rel="preload">` for the eager
+          # header logo is emitted ahead of the markup — so asserting that the
+          # root opens with a <div> broke the moment the logo became an image.
           for page in index.html fr/index.html; do
-            if ! grep -q 'id="root"><div' "marketing/dist/$page"; then
+            if grep -q 'id="root"></div>' "marketing/dist/$page"; then
               echo "FATAL: marketing/dist/$page has an empty #root."
               echo "The prerender step did not run or produced nothing."
               exit 1
