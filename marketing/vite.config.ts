@@ -21,7 +21,9 @@ export default defineConfig({
     chunkSizeWarningLimit: 300,
     rolldownOptions: {
       output: {
-        advancedChunks: {
+        // Renamed from `advancedChunks` in Rolldown; the old name still works
+        // but warns on every build.
+        codeSplitting: {
           groups: [
             // React barely changes; our sections change every week. Splitting
             // them keeps the framework cached across deploys, and it keeps the

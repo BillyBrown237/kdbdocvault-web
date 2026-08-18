@@ -625,8 +625,83 @@ vie.
 Sous `prefers-reduced-motion`, `HeroVisual` saute directement à l'état final
 et le champ de recherche affiche sa requête complète.
 
+## SEO — pourquoi la page est prérendue
+
+Avant, un robot qui n'exécute pas JavaScript recevait ceci, et rien d'autre :
+
+```html
+<body><div id="root"></div></body>
+```
+
+Google finit par exécuter le JS, mais les dépanneurs de liens (LinkedIn,
+Slack, WhatsApp), Bing et à peu près tout le reste ne le font pas — et même
+pour Google, une page qui arrive déjà rendue est indexée plus vite.
+
+`npm run build` fait donc trois choses :
+
+1. `vite build` — le bundle client, comme avant ;
+2. `vite build --ssr src/entry-server.tsx` — la même application compilée pour
+   Node ;
+3. `node scripts/prerender.mjs` — rend la page et l'injecte dans
+   `dist/index.html`, puis supprime `dist-ssr/`.
+
+**Aucune dépendance ajoutée** : `react-dom/server` est livré avec React. Le
+site reste un paquet statique — nginx sert des fichiers, rien ne tourne côté
+serveur en production.
+
+`main.tsx` appelle `hydrateRoot` quand `#root` contient déjà du balisage et
+`createRoot` sinon, si bien que `npm run dev` fonctionne à l'identique.
+
+**Le script échoue bruyamment.** Un prérendu qui ne produit rien ressemble
+exactement à un prérendu réussi, et le problème ne se voit que des semaines
+plus tard, sous la forme d'une page qui n'a jamais été indexée. Chaque étape
+est donc vérifiée, et le résultat doit contenir le titre principal pour que le
+script sorte en 0. Le pipeline le revérifie deux fois : avant l'envoi, et sur
+le site en ligne.
+
+### Décalages d'hydratation
+
+Trois valeurs sont calculées à partir de la date du jour et diffèrent donc
+entre le moment du build et celui de la visite. Elles portent
+`suppressHydrationWarning` — c'est l'outil prévu pour du contenu qui doit
+volontairement différer :
+
+- `Lifecycle` — la date d'échéance de chaque ligne ;
+- `Lifecycle` — la date du rappel programmé ;
+- `panels.tsx` — le décompte « N days left » et la largeur de sa barre.
+
+Toute nouvelle valeur dérivée de `Date.now()` doit faire de même.
+
+### Ce qui est déclaré, et ce qui ne l'est pas
+
+`index.html` contient du JSON-LD : `Organization`, `WebSite`,
+`SoftwareApplication`. Volontairement rien d'autre — **pas** d'`aggregateRating`
+(aucun avis n'existe), **pas** d'`offers` (aucun prix n'est fixé), aucune date
+de fondation devinée. Les données structurées sont le seul endroit où une
+affirmation fausse est lisible par une machine, ce qui en fait un très mauvais
+endroit où se faire prendre.
+
+`public/robots.txt` et `public/sitemap.xml` ne listent qu'une URL. Les ancres
+(`#pricing`, `#security`…) ne sont pas des pages : un sitemap rempli de
+fragments du même document signale surtout un site qui essaie de paraître plus
+grand qu'il n'est.
+
 ## Déploiement
 
-Non encore branché. Le pipeline `deploy-dev.yml` du dépôt web construit
-actuellement `site/` ; il devra construire `marketing/` et publier son `dist/`
-vers `releases/<sha>/site`.
+Branché. `deploy-dev.yml` (dépôt web) construit les deux projets à chaque push
+sur `develop` :
+
+| | source | publié dans | servi sur |
+|---|---|---|---|
+| SPA | `src/` | `releases/<sha>/web` | `APP_HOST` |
+| Site public | `marketing/` | `releases/<sha>/site` | `SITE_HOST` |
+
+`marketing/package-lock.json` **doit être versionné** — `npm ci` en dépend.
+
+Une variable GitHub reste à créer pour que le test de fumée du site s'exécute :
+`SITE_HOST` = `site.kdb.dekoubrown.com`
+(Settings → Secrets and variables → Actions → Variables). Sans elle, le
+pipeline avertit et continue.
+
+L'ancien dossier `site/` n'est plus construit ni déployé ; il peut être
+supprimé du dépôt.

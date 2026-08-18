@@ -19,11 +19,15 @@
 #
 # Nginx should serve the SPA from:
 #
-#   /var/www/kdbvault-dev/current/web
+#   /var/www/kdbvault-dev/current/web      ← src/, the authenticated app
 #
-# and the front office/site from:
+# and the public marketing site from:
 #
-#   /var/www/kdbvault-dev/current/site
+#   /var/www/kdbvault-dev/current/site     ← marketing/, its own npm project
+#
+# Two npm projects, two `npm ci`, one release directory. The marketing build
+# also prerenders itself to static HTML so the page is readable without
+# JavaScript; the bundle step refuses to ship it if that did not happen.
 #
 # Releases are immutable directories. `current` is a symlink to the active
 # release, so publishing a new build is a single symlink replacement rather
@@ -65,6 +69,12 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          # Two independent npm projects in one repository. Without both
+          # lockfiles in the cache key, a change to the marketing site's
+          # dependencies would silently restore a stale cache.
+          cache-dependency-path: |
+            package-lock.json
+            marketing/package-lock.json
 
       - run: npm ci
 
@@ -83,15 +93,44 @@ jobs:
           npm run generate-routes
           npm run build
 
+      # -----------------------------------------------------------------------
+      # The public marketing site.
+      #
+      # A separate npm project with its own lockfile, on purpose: a first-time
+      # visitor reading a landing page should not download TanStack Router,
+      # React Query and pdf.js. It replaces the old hand-written `site/`.
+      #
+      # Its build also prerenders the page to static HTML — see
+      # marketing/scripts/prerender.mjs. That step fails loudly if the render
+      # comes back empty, so a silently unindexable deploy cannot get past here.
+      # -----------------------------------------------------------------------
+      - name: Build marketing site
+        working-directory: marketing
+        run: |
+          npm ci
+          npm run build
+
       - name: Bundle
         run: |
           set -euo pipefail
 
           test -d dist
-          test -d site
+          test -d marketing/dist
+
+          # The prerender must actually have happened. An empty root here is
+          # a page no crawler can read, and it is invisible in a screenshot.
+          if ! grep -q 'id="root"><div' marketing/dist/index.html; then
+            echo "FATAL: marketing/dist/index.html has an empty #root."
+            echo "The prerender step did not run or produced nothing."
+            exit 1
+          fi
+
+          for f in robots.txt sitemap.xml; do
+            test -s "marketing/dist/$f" || { echo "FATAL: marketing/dist/$f missing"; exit 1; }
+          done
 
           tar -czf web-bundle.tar.gz -C dist .
-          tar -czf site-bundle.tar.gz -C site .
+          tar -czf site-bundle.tar.gz -C marketing/dist .
 
           test -s web-bundle.tar.gz
           test -s site-bundle.tar.gz
@@ -396,6 +435,63 @@ jobs:
 
           diagnose
           exit 1
+
+      # -----------------------------------------------------------------------
+      # The marketing site, checked for the two things that can be wrong while
+      # still returning HTTP 200:
+      #
+      #   1. the page is served but empty of prerendered markup, so it is
+      #      invisible to any crawler that does not run JavaScript;
+      #   2. robots.txt or sitemap.xml did not survive the build.
+      #
+      # Both are silent failures. Neither shows up in a browser.
+      # -----------------------------------------------------------------------
+      - name: Smoke test the marketing site
+        env:
+          SITE_HOST: ${{ vars.SITE_HOST }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${SITE_HOST:-}" ]; then
+            echo "::warning::vars.SITE_HOST is not set — skipping the marketing smoke test."
+            echo "Add it under Settings → Secrets and variables → Actions → Variables."
+            echo "Expected value: site.kdb.dekoubrown.com"
+            exit 0
+          fi
+
+          SITE="https://${SITE_HOST}"
+          echo "checking ${SITE}"
+
+          HTML=""
+          for i in $(seq 1 10); do
+            HTML=$(curl -fsS --max-time 10 "$SITE/" || true)
+            [ -n "$HTML" ] && break
+            echo "attempt ${i}/10 — no response yet, retrying..."
+            sleep 5
+          done
+
+          if [ -z "$HTML" ]; then
+            echo "::error::${SITE} served nothing." >&2
+            echo "Check the nginx server block for ${SITE_HOST}; its root should be" >&2
+            echo "/var/www/kdbvault-dev/current/site" >&2
+            exit 1
+          fi
+
+          if ! printf '%s' "$HTML" | grep -q 'Your documents deserve more than a folder'; then
+            echo "::error::the page was served but contains no prerendered content." >&2
+            echo "A crawler would see an empty <div id=\"root\">." >&2
+            echo "Check the prerender step in marketing/scripts/prerender.mjs." >&2
+            exit 1
+          fi
+
+          for f in robots.txt sitemap.xml; do
+            if ! curl -fsS --max-time 10 "$SITE/$f" -o /dev/null; then
+              echo "::error::${SITE}/${f} is not being served." >&2
+              exit 1
+            fi
+          done
+
+          echo "OK — prerendered HTML, robots.txt and sitemap.xml all served"
 
   # ===========================================================================
   # ROLLBACK
