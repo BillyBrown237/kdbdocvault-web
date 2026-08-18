@@ -4,3 +4,7 @@ yarn.lock
 src/routeTree.gen.ts
 src/api/generated
 dev-dist
+
+# Separate npm project — formatted by its own tooling.
+marketing/dist
+marketing/package-lock.json

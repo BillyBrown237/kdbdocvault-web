@@ -21,6 +21,10 @@ export default [
       'src/routeTree.gen.ts',
       'src/api/generated/**',
       'dev-dist/**',
+      // A separate npm project with its own config. Linting it from here would
+      // apply this project's rules and resolver to code that isn't part of it.
+      'marketing/**',
+      'site/**',
     ],
   },
 ]

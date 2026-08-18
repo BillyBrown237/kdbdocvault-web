@@ -1,6 +1,17 @@
 {
   "include": ["**/*.ts", "**/*.tsx", "eslint.config.js", "prettier.config.js", "vite.config.js"],
-  
+
+  // `include` globs the whole repository, which now contains a second, separate
+  // npm project. `marketing/` has its own tsconfig, its own dependencies and
+  // its own `@/*` alias pointing at `marketing/src` — typechecked here instead,
+  // every one of its imports resolves against THIS project's `@/* -> ./src/*`
+  // and fails. It is not a shared library; it is a different application that
+  // happens to live in the same repository.
+  //
+  // Specifying `exclude` replaces the defaults, so `node_modules` has to be
+  // listed again explicitly.
+  "exclude": ["node_modules", "dist", "dev-dist", "marketing", "site"],
+
   "compilerOptions": {
     "target": "ES2022",
     "jsx": "react-jsx",
