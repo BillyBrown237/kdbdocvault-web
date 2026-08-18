@@ -17,6 +17,7 @@ import { Reveal } from '@/components/ui/Reveal'
 import { Section } from '@/components/ui/Section'
 import { cn } from '@/lib/cn'
 import { REGISTER_URL } from '@/lib/links'
+import { useT } from '@/i18n'
 
 /**
  * Who it is for.
@@ -55,22 +56,24 @@ const TINTS: Record<Tint, { rule: string; tile: string }> = {
 }
 
 export function Audiences() {
+  const t = useT()
+
   return (
     <Section
       id="solutions"
       tone="page"
-      eyebrow="Who it's for"
-      title="One vault, at the size you need it."
-      lead="The same documents, the same rules, the same trail — whether it holds your passport or every contract a department has signed."
+      eyebrow={t.audiences.eyebrow}
+      title={t.audiences.title}
+      lead={t.audiences.lead}
     >
       <div className="grid gap-5 lg:grid-cols-3">
         <Reveal index={0} className="h-full">
           <Card
             tint="emerald"
             icon={<UserRound size={14} aria-hidden="true" />}
-            title="Your personal vault"
-            message="Keep the documents you cannot afford to lose organized and easy to find."
-            cta="For individuals"
+            title={t.audiences.individuals.title}
+            message={t.audiences.individuals.message}
+            cta={t.audiences.individuals.cta}
           >
             <Individuals />
           </Card>
@@ -80,9 +83,9 @@ export function Audiences() {
           <Card
             tint="sky"
             icon={<Users size={14} aria-hidden="true" />}
-            title="Your team's workspace"
-            message="Give your team one place to collaborate around important documents."
-            cta="For teams"
+            title={t.audiences.teams.title}
+            message={t.audiences.teams.message}
+            cta={t.audiences.teams.cta}
           >
             <Teams />
           </Card>
@@ -92,9 +95,9 @@ export function Audiences() {
           <Card
             tint="violet"
             icon={<Building2 size={14} aria-hidden="true" />}
-            title="Document infrastructure for your organization"
-            message="Build a controlled document environment around the way your organization works."
-            cta="For organizations"
+            title={t.audiences.organizations.title}
+            message={t.audiences.organizations.message}
+            cta={t.audiences.organizations.cta}
           >
             <Organizations />
           </Card>
@@ -166,13 +169,10 @@ function Card({
 
 /** A short list of things that must not be lost. Airy, because it is short. */
 function Individuals() {
-  const items = [
-    { name: 'National ID card', meta: 'expires 2031' },
-    { name: 'Birth certificate', meta: 'no expiry' },
-    { name: 'Health insurance', meta: 'expires in 32 days', warm: true },
-    { name: 'Apartment lease', meta: 'v2 · signed' },
-    { name: 'Vehicle registration', meta: 'expires 2027' },
-  ]
+  const t = useT()
+  // The warm row is styling, not copy: the third entry — health insurance — is
+  // the one about to expire, so it carries the amber dot and amber meta.
+  const items = t.audiences.individuals.items.map((item, i) => ({ ...item, warm: i === 2 }))
   return (
     <ul className="space-y-px">
       {items.map((i) => (
@@ -202,12 +202,14 @@ function Individuals() {
 
 /** A folder with other people in it. */
 function Teams() {
+  const t = useT()
+  const rows = t.audiences.teams.rows
   return (
     <div className="space-y-2.5">
       <div className="flex items-center gap-2">
         <FolderOpen size={14} aria-hidden="true" className="shrink-0 text-[var(--color-status-sky)]" />
         <span className="min-w-0 flex-1 truncate text-ui-sm text-[var(--color-text)]">
-          Contracts / 2026
+          {t.audiences.teams.folder}
         </span>
         <span className="flex shrink-0 -space-x-1.5">
           {['MN', 'PE', 'AB'].map((a) => (
@@ -224,25 +226,23 @@ function Teams() {
         </span>
       </div>
 
+      {/* The icon belongs to the position, not to the row: first is a comment
+          thread, second an approval, third a share. Zipping them here keeps
+          `noUncheckedIndexedAccess` happy without three index assertions, and
+          a fourth row would simply fall back to the comment icon. */}
       <div className="space-y-1.5 border-t border-[var(--color-hairline)] pt-2.5">
-        <TeamRow
-          name="Kribi site — project brief"
-          chip="v3"
-          icon={<MessageSquare size={12} aria-hidden="true" />}
-          note="2 comments"
-        />
-        <TeamRow
-          name="Supplier agreement"
-          chip="v2"
-          icon={<ClipboardCheck size={12} aria-hidden="true" />}
-          note="awaiting Paul"
-        />
-        <TeamRow
-          name="Rate card — Q3"
-          chip="v1"
-          icon={<Link2 size={12} aria-hidden="true" />}
-          note="shared with Legal"
-        />
+        {rows.map((row, i) => {
+          const Icon = [MessageSquare, ClipboardCheck, Link2][i] ?? MessageSquare
+          return (
+            <TeamRow
+              key={row.name}
+              name={row.name}
+              chip={row.chip}
+              icon={<Icon size={12} aria-hidden="true" />}
+              note={row.note}
+            />
+          )
+        })}
       </div>
     </div>
   )
@@ -277,18 +277,20 @@ function TeamRow({
 
 /** Departments, and the policy applied to each. The densest of the three. */
 function Organizations() {
-  const rows = [
-    { dept: 'Finance', retention: '10 y', access: 'Editor' },
-    { dept: 'Legal', retention: '10 y', access: 'Editor' },
-    { dept: 'HR', retention: '5 y', access: 'Restricted' },
-    { dept: 'Operations', retention: '3 y', access: 'Editor' },
-  ]
+  const t = useT()
+  const rows = t.audiences.organizations.rows
   return (
     <div>
       <div className="grid grid-cols-[1fr_2.5rem_4rem] gap-y-1 text-nano">
-        <span className="text-[var(--color-text-subtle)]">Department</span>
-        <span className="text-right text-[var(--color-text-subtle)]">Keep</span>
-        <span className="text-right text-[var(--color-text-subtle)]">Access</span>
+        <span className="text-[var(--color-text-subtle)]">
+          {t.audiences.organizations.columns.department}
+        </span>
+        <span className="text-right text-[var(--color-text-subtle)]">
+          {t.audiences.organizations.columns.keep}
+        </span>
+        <span className="text-right text-[var(--color-text-subtle)]">
+          {t.audiences.organizations.columns.access}
+        </span>
 
         {/* Fragments, not wrappers: each row's three cells have to be direct
             children of the grid or they stop lining up with the header. */}
@@ -301,7 +303,7 @@ function Organizations() {
             <span
               className={cn(
                 'text-right font-mono text-micro',
-                r.access === 'Restricted'
+                r.access === t.audiences.organizations.restricted
                   ? 'text-[var(--color-status-violet)]'
                   : 'text-[var(--color-text-subtle)]',
               )}
@@ -314,10 +316,22 @@ function Organizations() {
 
       <div className="mt-2.5 flex flex-wrap gap-1.5 border-t border-[var(--color-hairline)] pt-2.5">
         {[
-          { label: 'Audit export', icon: <ScrollText size={10} aria-hidden="true" /> },
-          { label: 'Approval workflows', icon: <ClipboardCheck size={10} aria-hidden="true" /> },
-          { label: 'Compliance holds', icon: <ShieldCheck size={10} aria-hidden="true" /> },
-          { label: 'Retention clocks', icon: <Clock size={10} aria-hidden="true" /> },
+          {
+            label: t.audiences.organizations.chips[0],
+            icon: <ScrollText size={10} aria-hidden="true" />,
+          },
+          {
+            label: t.audiences.organizations.chips[1],
+            icon: <ClipboardCheck size={10} aria-hidden="true" />,
+          },
+          {
+            label: t.audiences.organizations.chips[2],
+            icon: <ShieldCheck size={10} aria-hidden="true" />,
+          },
+          {
+            label: t.audiences.organizations.chips[3],
+            icon: <Clock size={10} aria-hidden="true" />,
+          },
         ].map((c) => (
           <span
             key={c.label}

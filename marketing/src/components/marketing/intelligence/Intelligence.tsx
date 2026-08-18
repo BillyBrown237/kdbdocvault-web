@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Bell, Check, FileText, FolderInput, RotateCcw, Search, Tag } from 'lucide-react'
 import { Section } from '@/components/ui/Section'
@@ -6,12 +6,8 @@ import { cn } from '@/lib/cn'
 import { useInView } from '@/lib/useInView'
 import { useReducedMotion } from '@/lib/useReducedMotion'
 import { useTypewriter } from '@/lib/useTypewriter'
+import { useT, type Dict } from '@/i18n'
 import { PassportSheet } from './PassportSheet'
-
-const STEPS = ['Upload', 'Analyze', 'Extract', 'Organize', 'Search'] as const
-
-/** Module-level so the typewriter effect sees a stable identity. */
-const QUERY = ['documents expiring in 2029'] as const
 
 /** Milliseconds from the start of the run at which each step begins. */
 const CUES = [150, 1200, 2800, 4500, 5900, 7500]
@@ -23,12 +19,19 @@ type Field = {
   masked?: boolean
 }
 
-const FIELDS: Field[] = [
-  { label: 'Document type', value: 'Passport', confidence: 'high' },
-  { label: 'Name', value: 'John Doe', confidence: 'high' },
-  { label: 'Document number', value: 'XXXXXXXX', confidence: 'review', masked: true },
-  { label: 'Expiration', value: '12 March 2029', confidence: 'high' },
-]
+function fields(t: Dict): Field[] {
+  return [
+    { label: t.intelligence.fields.type.label, value: t.intelligence.fields.type.value, confidence: 'high' },
+    { label: t.intelligence.fields.name.label, value: t.intelligence.fields.name.value, confidence: 'high' },
+    {
+      label: t.intelligence.fields.number.label,
+      value: t.intelligence.fields.number.value,
+      confidence: 'review',
+      masked: true,
+    },
+    { label: t.intelligence.fields.expiry.label, value: t.intelligence.fields.expiry.value, confidence: 'high' },
+  ]
+}
 
 /**
  * Document intelligence.
@@ -47,17 +50,20 @@ const FIELDS: Field[] = [
  * is only visible to someone who happened to be looking.
  */
 export function Intelligence() {
+  const t = useT()
   const { ref, inView } = useInView<HTMLDivElement>()
   const reduced = useReducedMotion()
   const [run, setRun] = useState(0)
   const [step, setStep] = useState(-1)
   const [complete, setComplete] = useState(false)
 
+  const steps = t.intelligence.steps
+
   useEffect(() => {
     if (!inView) return
 
     if (reduced) {
-      setStep(STEPS.length - 1)
+      setStep(steps.length - 1)
       setComplete(true)
       return
     }
@@ -67,19 +73,24 @@ export function Intelligence() {
 
     const timers = CUES.map((at, i) =>
       window.setTimeout(() => {
-        if (i === STEPS.length) setComplete(true)
+        if (i === steps.length) setComplete(true)
         else setStep(i)
       }, at),
     )
     return () => timers.forEach(window.clearTimeout)
-  }, [inView, reduced, run])
+  }, [inView, reduced, run, steps])
 
   const reached = (i: number) => step >= i
+
+  // Memoised so the typewriter effect sees a stable identity. It compares its
+  // phrases by reference, and a fresh literal would restart the typing on
+  // every render.
+  const queryPhrases = useMemo(() => [t.intelligence.query], [t])
 
   // Gated on the step, not just on motion preference: enabled from mount, the
   // typing would finish long before the search stage appears and the field
   // would simply pop in fully written.
-  const query = useTypewriter(QUERY, {
+  const query = useTypewriter(queryPhrases, {
     enabled: !reduced && step >= 4,
     loop: false,
     typeMs: 46,
@@ -89,9 +100,9 @@ export function Intelligence() {
     <Section
       id="intelligence"
       tone="raised"
-      eyebrow="Document intelligence"
-      title="Your documents can tell you what's inside."
-      lead="KDB Doc Vault can analyze document content, extract useful information, and make documents easier to search and manage."
+      eyebrow={t.intelligence.eyebrow}
+      title={t.intelligence.title}
+      lead={t.intelligence.lead}
     >
       <div ref={ref}>
         <StepBar step={step} complete={complete} />
@@ -120,8 +131,7 @@ export function Intelligence() {
             </div>
 
             <p className="mt-4 text-center text-meta text-[var(--color-text-subtle)]">
-              Text recognition (OCR) runs on the page image, so a scan is as readable as a
-              born-digital file.
+              {t.intelligence.ocrNote}
             </p>
           </div>
 
@@ -129,16 +139,16 @@ export function Intelligence() {
           <div className="min-w-0">
             <Panel>
               <PanelHead>
-                <span>Extracted fields</span>
+                <span>{t.intelligence.extracted}</span>
                 <Appear when={reached(2)} delay={520}>
                   <span className="font-mono text-micro text-[var(--color-text-subtle)]">
-                    4 found · 1 to review
+                    {t.intelligence.found}
                   </span>
                 </Appear>
               </PanelHead>
 
               <dl className="mt-1">
-                {FIELDS.map((f, i) => (
+                {fields(t).map((f, i) => (
                   <Appear key={f.label} when={reached(2)} delay={i * 170}>
                     <div className="flex items-center gap-3 border-b border-[var(--color-hairline)] py-2.5 last:border-b-0">
                       <dt className="w-32 shrink-0 text-meta text-[var(--color-text-subtle)] sm:w-40">
@@ -155,7 +165,7 @@ export function Intelligence() {
                         </span>
                         {f.masked && (
                           <span className="shrink-0 text-nano text-[var(--color-text-subtle)]">
-                            masked
+                            {t.intelligence.masked}
                           </span>
                         )}
                         <Confidence level={f.confidence} />
@@ -170,9 +180,7 @@ export function Intelligence() {
                   claim. */}
               <Appear when={reached(2)} delay={760}>
                 <p className="mt-3 border-t border-[var(--color-hairline)] pt-3 text-ui-sm leading-relaxed text-[var(--color-text-muted)]">
-                  Extraction is a suggestion, not a verdict. Fields land as drafts, someone
-                  confirms them, and the confirmation is recorded like any other action on
-                  the document.
+                  {t.intelligence.honesty}
                 </p>
               </Appear>
             </Panel>
@@ -181,26 +189,26 @@ export function Intelligence() {
               <Appear when={reached(3)}>
                 <Panel className="h-full">
                   <PanelHead>
-                    <span>Filed automatically</span>
+                    <span>{t.intelligence.filed}</span>
                   </PanelHead>
                   <p className="mt-2 flex items-center gap-1.5 text-ui-sm text-[var(--color-text-muted)]">
                     <FolderInput size={12} aria-hidden="true" className="shrink-0 text-[var(--color-text-subtle)]" />
-                    Compliance / Identity documents
+                    {t.intelligence.folder}
                   </p>
                   <p className="mt-2 flex flex-wrap gap-1.5">
-                    {['passport', 'identity', 'expires-2029'].map((t) => (
+                    {t.intelligence.tags.map((tag) => (
                       <span
-                        key={t}
+                        key={tag}
                         className="inline-flex items-center gap-1 rounded bg-white/[0.05] px-1.5 py-0.5 font-mono text-micro text-[var(--color-text-subtle)]"
                       >
                         <Tag size={10} aria-hidden="true" />
-                        {t}
+                        {tag}
                       </span>
                     ))}
                   </p>
                   <p className="mt-2.5 flex items-center gap-1.5 border-t border-[var(--color-hairline)] pt-2.5 font-mono text-micro text-[var(--color-accent-400)]">
                     <Bell size={10} aria-hidden="true" />
-                    90 days before 12 Mar 2029 → notify owner
+                    {t.intelligence.rule}
                   </p>
                 </Panel>
               </Appear>
@@ -208,7 +216,7 @@ export function Intelligence() {
               <Appear when={reached(4)}>
                 <Panel className="h-full">
                   <PanelHead>
-                    <span>Findable afterwards</span>
+                    <span>{t.intelligence.findable}</span>
                   </PanelHead>
                   <div className="mt-2 flex items-center gap-2 rounded-lg border border-[var(--color-hairline)] bg-black/30 px-2.5 py-1.5">
                     <Search size={12} aria-hidden="true" className="shrink-0 text-[var(--color-text-subtle)]" />
@@ -227,7 +235,7 @@ export function Intelligence() {
                     </span>
                   </div>
                   <p className="mt-1 border-t border-[var(--color-hairline)] pt-2.5 text-meta leading-snug text-[var(--color-text-subtle)]">
-                    Found on a field nobody typed in — and on the words inside the page.
+                    {t.intelligence.foundNote}
                   </p>
                 </Panel>
               </Appear>
@@ -243,7 +251,7 @@ export function Intelligence() {
               className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-ui-sm text-[var(--color-text-subtle)] ring-1 ring-[var(--color-hairline)] transition-colors duration-[var(--duration-fast)] hover:bg-white/[0.04] hover:text-[var(--color-text)]"
             >
               <RotateCcw size={14} aria-hidden="true" />
-              Replay
+              {t.intelligence.replay}
             </button>
           </div>
         )}
@@ -308,6 +316,7 @@ function PanelHead({ children }: { children: ReactNode }) {
 }
 
 function Confidence({ level }: { level: 'high' | 'review' }) {
+  const t = useT()
   const review = level === 'review'
   return (
     <span
@@ -318,15 +327,18 @@ function Confidence({ level }: { level: 'high' | 'review' }) {
           : 'bg-[rgb(16_185_129/0.08)] text-[var(--color-accent-400)] ring-[rgb(16_185_129/0.20)]',
       )}
     >
-      {review ? 'needs review' : 'confident'}
+      {review ? t.intelligence.needsReview : t.intelligence.confident}
     </span>
   )
 }
 
 function StepBar({ step, complete }: { step: number; complete: boolean }) {
+  const t = useT()
+  const steps = t.intelligence.steps
+
   return (
-    <ol className="flex items-start" aria-label="How a document is processed">
-      {STEPS.map((name, i) => {
+    <ol className="flex items-start" aria-label={t.intelligence.stepsLabel}>
+      {steps.map((name, i) => {
         const done = complete || step > i
         const current = !complete && step === i
         return (
@@ -351,7 +363,7 @@ function StepBar({ step, complete }: { step: number; complete: boolean }) {
                 </span>
               </span>
 
-              {i < STEPS.length - 1 && (
+              {i < steps.length - 1 && (
                 <span
                   aria-hidden="true"
                   className={cn(
@@ -366,7 +378,7 @@ function StepBar({ step, complete }: { step: number; complete: boolean }) {
               className={cn(
                 'mt-2 w-full truncate pr-2 text-micro transition-colors duration-500 sm:text-ui-sm',
                 current || done ? 'text-[var(--color-text)]' : 'text-[var(--color-text-subtle)]',
-                i === STEPS.length - 1 && 'pr-0 text-right',
+                i === steps.length - 1 && 'pr-0 text-right',
               )}
             >
               {name}

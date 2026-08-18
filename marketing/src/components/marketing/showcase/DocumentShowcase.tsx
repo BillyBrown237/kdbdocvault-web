@@ -3,7 +3,8 @@ import type { KeyboardEvent } from 'react'
 import { Download, Ellipsis, FileText, Share2, ShieldCheck } from 'lucide-react'
 import { Section } from '@/components/ui/Section'
 import { cn } from '@/lib/cn'
-import { DOC, VERSIONS, type Version } from './document'
+import { useT, type Dict } from '@/i18n'
+import { doc, versions, type Version } from './document'
 import {
   ActivityPanel,
   OverviewPanel,
@@ -12,8 +13,23 @@ import {
   WorkflowPanel,
 } from './panels'
 
+/**
+ * These stay English in both locales: they are the state key, the `id` on each
+ * tab and the `aria-labelledby` the panel points at. The visible label comes
+ * from the dictionary, via `tabLabels`.
+ */
 const TABS = ['Overview', 'Versions', 'Activity', 'Permissions', 'Workflow'] as const
 type Tab = (typeof TABS)[number]
+
+function tabLabels(t: Dict): Record<Tab, string> {
+  return {
+    Overview: t.showcase.tabs.overview,
+    Versions: t.showcase.tabs.versions,
+    Activity: t.showcase.tabs.activity,
+    Permissions: t.showcase.tabs.permissions,
+    Workflow: t.showcase.tabs.workflow,
+  }
+}
 
 const PANEL_ID = 'doc-panel'
 
@@ -34,9 +50,11 @@ const PANEL_ID = 'doc-panel'
  * size column, the overview stacks its preview above the fields).
  */
 export function DocumentShowcase() {
+  const t = useT()
   const [tab, setTab] = useState<Tab>('Overview')
-  const [version, setVersion] = useState<Version>(VERSIONS[0] as Version)
+  const [version, setVersion] = useState<Version>(versions(t)[0] as Version)
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const labels = tabLabels(t)
 
   const onTabKeyDown = (e: KeyboardEvent) => {
     const current = TABS.indexOf(tab)
@@ -57,7 +75,7 @@ export function DocumentShowcase() {
     tabRefs.current[next]?.focus()
   }
 
-  const meta = metaFor(version)
+  const meta = metaFor(t, version)
 
   return (
     <Section
@@ -65,9 +83,9 @@ export function DocumentShowcase() {
       // `raised`, because HowItWorks above it is `seam` — see the tone note in
       // Home.tsx.
       tone="raised"
-      eyebrow="Document details"
-      title="Everything important about a document. In one place."
-      lead="A file tells you its name and its size. A document in KDB Doc Vault tells you who owns it, what it replaced, who has opened it, what it is waiting on, and what happens the day it expires."
+      eyebrow={t.showcase.eyebrow}
+      title={t.showcase.title}
+      lead={t.showcase.lead}
     >
       <div className="product-sheen overflow-hidden rounded-2xl border border-[var(--color-hairline-strong)] bg-[var(--color-surface)] shadow-frame">
         <Header version={version} />
@@ -92,7 +110,7 @@ export function DocumentShowcase() {
             <div className="relative border-b border-[var(--color-hairline)]">
               <div
                 role="tablist"
-                aria-label="Document sections"
+                aria-label={t.showcase.tablist}
                 onKeyDown={onTabKeyDown}
                 className="flex snap-x gap-1 overflow-x-auto px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               >
@@ -117,7 +135,7 @@ export function DocumentShowcase() {
                           : 'text-[var(--color-text-subtle)] hover:text-[var(--color-text-muted)]',
                       )}
                     >
-                      {name}
+                      {labels[name]}
                       <span
                         aria-hidden="true"
                         className={cn(
@@ -176,8 +194,7 @@ export function DocumentShowcase() {
                   aria-hidden="true"
                   className="mt-0.5 shrink-0 text-[var(--color-accent-400)]"
                 />
-                Encrypted at rest. Under a 10-year retention rule — deletion stays blocked
-                until it lapses.
+                {t.showcase.doc.retention}
               </p>
             </div>
           </aside>
@@ -185,24 +202,28 @@ export function DocumentShowcase() {
       </div>
 
       <p className="mt-4 text-center text-ui-sm text-[var(--color-text-subtle)]">
-        This one is live — switch the tabs, pick a version, preview an access level.
+        {t.showcase.hint}
       </p>
     </Section>
   )
 }
 
-function metaFor(version: Version) {
+function metaFor(t: Dict, version: Version) {
+  const d = doc(t)
   return [
-    { label: 'Status', value: 'Active' },
-    { label: 'Owner', value: DOC.owner },
-    { label: 'Created', value: DOC.created },
-    { label: 'Expires', value: DOC.expires },
-    { label: 'Version', value: version.label },
-    { label: 'Access', value: DOC.access },
+    { label: t.showcase.meta.status, value: t.showcase.doc.active },
+    { label: t.showcase.meta.owner, value: d.owner },
+    { label: t.showcase.meta.created, value: d.created },
+    { label: t.showcase.meta.expires, value: d.expires },
+    { label: t.showcase.meta.version, value: version.label },
+    { label: t.showcase.meta.access, value: d.access },
   ]
 }
 
 function Header({ version }: { version: Version }) {
+  const t = useT()
+  const d = doc(t)
+
   return (
     <div className="flex items-center gap-3 border-b border-[var(--color-hairline)] px-4 py-4 sm:px-5">
       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/[0.04] ring-1 ring-[var(--color-hairline)]">
@@ -212,11 +233,11 @@ function Header({ version }: { version: Version }) {
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
           <h3 className="truncate text-card font-semibold tracking-[-0.01em] text-[var(--color-text)]">
-            {DOC.name}
+            {d.name}
           </h3>
           <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[rgb(16_185_129/0.10)] px-2 py-0.5 text-micro text-[var(--color-accent-400)] ring-1 ring-[rgb(16_185_129/0.22)]">
             <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent-400)]" />
-            Active
+            {t.showcase.doc.active}
           </span>
           {/* Re-keyed so picking a version in the Versions tab visibly lands
               here — the header is how you know the switch took effect. */}
@@ -228,7 +249,7 @@ function Header({ version }: { version: Version }) {
           </span>
         </div>
         <p className="mt-0.5 truncate text-ui-sm text-[var(--color-text-subtle)]">
-          {DOC.subtitle} · {DOC.owner}
+          {d.subtitle} · {d.owner}
         </p>
       </div>
 

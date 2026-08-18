@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/cn'
+import { useT } from '@/i18n'
 
 /**
  * The example document, drawn rather than photographed.
@@ -28,17 +29,19 @@ export function PassportSheet({
   /** Whether the reading pass is running. */
   scanning: boolean
 }) {
+  const t = useT()
+
   return (
     <div className="relative mx-auto w-full max-w-[19rem]">
       <div className="relative aspect-[1.42/1] overflow-hidden rounded-lg bg-[#E9EEF5] p-3 shadow-sheet">
         <div className="flex items-start justify-between">
-          <Detected label="type" on={detected}>
+          <Detected label={t.intelligence.sheet.labels.type} on={detected}>
             <p className="text-[0.5625rem] leading-none font-semibold tracking-[0.18em]" style={{ color: INK }}>
-              PASSPORT
+              {t.intelligence.sheet.passport}
             </p>
           </Detected>
           <p className="text-[0.5rem] tracking-[0.14em]" style={{ color: LABEL }}>
-            SPECIMEN
+            {t.intelligence.sheet.specimen}
           </p>
         </div>
 
@@ -51,15 +54,15 @@ export function PassportSheet({
           />
 
           <div className="min-w-0 flex-1 space-y-1.5">
-            <Detected label="name" on={detected}>
-              <Row label="Surname / Given names" value="DOE, JOHN" />
+            <Detected label={t.intelligence.sheet.labels.name} on={detected}>
+              <Row label={t.intelligence.sheet.surname} value="DOE, JOHN" />
             </Detected>
-            <Detected label="number" on={detected}>
-              <Row label="Document no." value="XXXXXXXX" />
+            <Detected label={t.intelligence.sheet.labels.number} on={detected}>
+              <Row label={t.intelligence.sheet.documentNo} value="XXXXXXXX" />
             </Detected>
-            <Row label="Nationality" value="—" />
-            <Detected label="expiry" on={detected}>
-              <Row label="Date of expiry" value="12 MAR 2029" />
+            <Row label={t.intelligence.sheet.nationality} value="—" />
+            <Detected label={t.intelligence.sheet.labels.expiry} on={detected}>
+              <Row label={t.intelligence.sheet.expiry} value="12 MAR 2029" />
             </Detected>
           </div>
         </div>

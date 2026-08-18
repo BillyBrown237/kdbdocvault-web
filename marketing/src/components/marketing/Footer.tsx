@@ -1,6 +1,8 @@
 import { Container } from '@/components/ui/Container'
 import { CONTACT_EMAIL, LOGIN_URL } from '@/lib/links'
 import { Logo } from './Logo'
+import { LanguageSwitch } from './LanguageSwitch'
+import { useT, type Dict } from '@/i18n'
 
 const YEAR = new Date().getFullYear()
 
@@ -17,52 +19,70 @@ const YEAR = new Date().getFullYear()
  */
 type FooterLink = { label: string; href?: string }
 
-const COLUMNS: { title: string; links: FooterLink[] }[] = [
-  {
-    title: 'Product',
-    links: [
-      { label: 'Features', href: '#features' },
-      { label: 'Security', href: '#security' },
-      { label: 'Integrations', href: '#sources' },
-      { label: 'Pricing', href: '#pricing' },
-      { label: 'Roadmap' },
-    ],
-  },
-  {
-    title: 'Solutions',
-    links: [
-      { label: 'Individuals', href: '#solutions' },
-      { label: 'Teams', href: '#solutions' },
-      { label: 'Businesses', href: '#solutions' },
-      { label: 'Organizations', href: '#solutions' },
-    ],
-  },
-  {
-    title: 'Resources',
-    links: [
-      { label: 'Documentation' },
-      { label: 'Help Center' },
-      { label: 'API' },
-      { label: 'Blog' },
-    ],
-  },
-  {
-    title: 'Company',
-    links: [
-      { label: 'About' },
-      { label: 'Contact', href: `mailto:${CONTACT_EMAIL}` },
-      { label: 'Careers' },
-    ],
-  },
-  {
-    title: 'Legal',
-    links: [{ label: 'Privacy' }, { label: 'Terms' }, { label: 'Security', href: '#security' }],
-  },
-]
-
-const HAS_UNPUBLISHED = COLUMNS.some((c) => c.links.some((l) => !l.href))
+/**
+ * `id` is the stable, untranslated handle for a column. The heading text moves
+ * with the locale, but `aria-labelledby` and the React keys must not — a French
+ * page would otherwise produce different DOM ids for the same column.
+ */
+function columns(t: Dict): { id: string; title: string; links: FooterLink[] }[] {
+  return [
+    {
+      id: 'product',
+      title: t.footer.columns.product,
+      links: [
+        { label: t.footer.links.features, href: '#features' },
+        { label: t.footer.links.security, href: '#security' },
+        { label: t.footer.links.integrations, href: '#sources' },
+        { label: t.footer.links.pricing, href: '#pricing' },
+        { label: t.footer.links.roadmap },
+      ],
+    },
+    {
+      id: 'solutions',
+      title: t.footer.columns.solutions,
+      links: [
+        { label: t.footer.links.individuals, href: '#solutions' },
+        { label: t.footer.links.teams, href: '#solutions' },
+        { label: t.footer.links.businesses, href: '#solutions' },
+        { label: t.footer.links.organizations, href: '#solutions' },
+      ],
+    },
+    {
+      id: 'resources',
+      title: t.footer.columns.resources,
+      links: [
+        { label: t.footer.links.documentation },
+        { label: t.footer.links.helpCenter },
+        { label: t.footer.links.api },
+        { label: t.footer.links.blog },
+      ],
+    },
+    {
+      id: 'company',
+      title: t.footer.columns.company,
+      links: [
+        { label: t.footer.links.about },
+        { label: t.footer.links.contact, href: `mailto:${CONTACT_EMAIL}` },
+        { label: t.footer.links.careers },
+      ],
+    },
+    {
+      id: 'legal',
+      title: t.footer.columns.legal,
+      links: [
+        { label: t.footer.links.privacy },
+        { label: t.footer.links.terms },
+        { label: t.footer.links.security, href: '#security' },
+      ],
+    },
+  ]
+}
 
 export function Footer() {
+  const t = useT()
+  const cols = columns(t)
+  const hasUnpublished = cols.some((c) => c.links.some((l) => !l.href))
+
   return (
     <footer className="border-t border-[var(--color-hairline)] bg-[var(--color-ink-950)]">
       <Container className="py-14 lg:py-16">
@@ -73,24 +93,24 @@ export function Footer() {
           <div className="sm:col-span-2 md:col-span-3 lg:col-span-1">
             <Logo />
             <p className="mt-5 max-w-xs text-sm leading-relaxed text-[var(--color-text-subtle)]">
-              Secure document management for individuals, teams, and organizations.
+              {t.footer.tagline}
             </p>
             <p className="mt-4 font-mono text-xs tracking-wide text-[var(--color-text-subtle)]">
-              Douala · Yaoundé
+              {t.footer.cities}
             </p>
           </div>
 
-          {COLUMNS.map((col) => (
-            <nav key={col.title} aria-labelledby={`footer-${col.title}`}>
+          {cols.map((col) => (
+            <nav key={col.id} aria-labelledby={`footer-${col.id}`}>
               <h2
-                id={`footer-${col.title}`}
+                id={`footer-${col.id}`}
                 className="text-xs font-semibold tracking-[0.1em] text-[var(--color-text)] uppercase"
               >
                 {col.title}
               </h2>
               <ul className="mt-5 space-y-3">
                 {col.links.map((link) => (
-                  <li key={`${col.title}-${link.label}`}>
+                  <li key={`${col.id}-${link.label}`}>
                     {link.href ? (
                       <a
                         href={link.href}
@@ -110,10 +130,8 @@ export function Footer() {
           ))}
         </div>
 
-        {HAS_UNPUBLISHED && (
-          <p className="mt-12 text-xs text-[var(--color-text-subtle)]">
-            Entries shown without a link aren&rsquo;t published yet.
-          </p>
+        {hasUnpublished && (
+          <p className="mt-12 text-xs text-[var(--color-text-subtle)]">{t.footer.unpublished}</p>
         )}
 
         <div className="mt-6 h-px divider-fade" />
@@ -121,7 +139,7 @@ export function Footer() {
         <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-[var(--color-text-subtle)]">
             © {YEAR} KDB Doc Vault.{' '}
-            <span className="text-[var(--color-text-subtle)]">A KDB product.</span>
+            <span className="text-[var(--color-text-subtle)]">{t.footer.product}</span>
           </p>
 
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
@@ -129,8 +147,9 @@ export function Footer() {
               href={LOGIN_URL}
               className="rounded-sm text-xs text-[var(--color-text-subtle)] transition-colors hover:text-[var(--color-text)]"
             >
-              Sign in
+              {t.common.signIn}
             </a>
+            <LanguageSwitch />
             {/* Availability is a trust signal on a document platform: saying
                 nothing about uptime is itself a statement. */}
             <span className="inline-flex items-center gap-2 text-xs text-[var(--color-text-subtle)]">
@@ -138,7 +157,7 @@ export function Footer() {
                 aria-hidden="true"
                 className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent-500)]"
               />
-              All systems operational
+              {t.footer.operational}
             </span>
           </div>
         </div>

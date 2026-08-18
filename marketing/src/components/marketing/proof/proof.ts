@@ -14,6 +14,8 @@
  * somebody else had swapped it.
  */
 
+import type { Dict } from '@/i18n'
+
 export const PLACEHOLDER = true
 
 export type LogoSlot = {
@@ -51,6 +53,10 @@ export type Quote = {
  * The placeholder text is deliberately a brief rather than invented praise:
  * it says what belongs in each slot, so it is useful while it waits and
  * unmistakable if it ever renders in front of a visitor.
+ *
+ * Deliberately not in the dictionary. These sentences are instructions to
+ * whoever fills the slots in, not copy shown to a visitor on purpose, so
+ * translating them would only mean maintaining the same brief twice.
  */
 export const QUOTES: Quote[] = [
   {
@@ -83,4 +89,6 @@ export const QUOTES: Quote[] = [
 ]
 
 /** Shown above the logo row. Keep it modest and true. */
-export const LOGO_CAPTION = 'Used by teams at'
+export function logoCaption(t: Dict): string {
+  return t.proof.logoCaption
+}

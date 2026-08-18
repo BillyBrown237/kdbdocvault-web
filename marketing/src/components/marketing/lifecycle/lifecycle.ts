@@ -8,21 +8,25 @@
  * own arithmetic doesn't add up.
  */
 
+import type { Dict, Locale } from '@/i18n'
+
 const DAY = 86_400_000
-const FORMAT = new Intl.DateTimeFormat('en-GB', {
+const DATE_FORMAT: Intl.DateTimeFormatOptions = {
   day: '2-digit',
   month: 'short',
   year: 'numeric',
-})
-
-export function dateIn(days: number): string {
-  return FORMAT.format(new Date(Date.now() + days * DAY))
 }
 
-export function countdown(days: number): string {
-  if (days <= 0) return 'Expired'
-  if (days === 1) return 'Expires tomorrow'
-  return `Expires in ${days} days`
+export function dateIn(locale: Locale, days: number): string {
+  return new Intl.DateTimeFormat(locale === 'fr' ? 'fr-FR' : 'en-GB', DATE_FORMAT).format(
+    new Date(Date.now() + days * DAY),
+  )
+}
+
+export function countdown(t: Dict, days: number): string {
+  if (days <= 0) return t.lifecycle.expired
+  if (days === 1) return t.lifecycle.expiresTomorrow
+  return t.lifecycle.expiresIn(days)
 }
 
 /** Emerald while there is room to act, amber once there isn't. No red. */
@@ -43,40 +47,42 @@ export type Doc = {
   icon: 'passport' | 'insurance' | 'licence' | 'contract'
 }
 
-export const DOCS: Doc[] = [
-  {
-    id: 'passport',
-    name: 'Passport',
-    detail: 'Identity document',
-    owner: 'M. Ndongo',
-    days: 87,
-    icon: 'passport',
-  },
-  {
-    id: 'insurance',
-    name: 'Insurance',
-    detail: 'Vehicle fleet policy',
-    owner: 'Operations',
-    days: 32,
-    icon: 'insurance',
-  },
-  {
-    id: 'licence',
-    name: 'Business License',
-    detail: 'Trade licence — Littoral',
-    owner: 'Legal',
-    days: 7,
-    icon: 'licence',
-  },
-  {
-    id: 'contract',
-    name: 'Contract',
-    detail: 'Framework agreement — Sofrigaz SA',
-    owner: 'Finance',
-    days: 1,
-    icon: 'contract',
-  },
-]
+export function docs(t: Dict): Doc[] {
+  return [
+    {
+      id: 'passport',
+      name: t.lifecycle.docs.passport.name,
+      detail: t.lifecycle.docs.passport.detail,
+      owner: t.lifecycle.docs.passport.owner,
+      days: 87,
+      icon: 'passport',
+    },
+    {
+      id: 'insurance',
+      name: t.lifecycle.docs.insurance.name,
+      detail: t.lifecycle.docs.insurance.detail,
+      owner: t.lifecycle.docs.insurance.owner,
+      days: 32,
+      icon: 'insurance',
+    },
+    {
+      id: 'licence',
+      name: t.lifecycle.docs.licence.name,
+      detail: t.lifecycle.docs.licence.detail,
+      owner: t.lifecycle.docs.licence.owner,
+      days: 7,
+      icon: 'licence',
+    },
+    {
+      id: 'contract',
+      name: t.lifecycle.docs.contract.name,
+      detail: t.lifecycle.docs.contract.detail,
+      owner: t.lifecycle.docs.contract.owner,
+      days: 1,
+      icon: 'contract',
+    },
+  ]
+}
 
 /**
  * The axis. Five evenly spaced stops rather than a linear time scale — the
@@ -100,28 +106,9 @@ export function positionOf(days: number): number {
   return 100
 }
 
-export const LADDER = [
-  {
-    at: '90 days',
-    action: 'The owner is notified and a renewal task is opened on the document itself.',
-  },
-  {
-    at: '30 days',
-    action: 'The reminder widens to everyone who shares the folder, so it stops being one person’s memory.',
-  },
-  {
-    at: '7 days',
-    action: 'A daily reminder, and the document is flagged wherever it appears in the vault.',
-  },
-  {
-    at: '1 day',
-    action: 'Push notification to registered devices, alongside the email.',
-  },
-  {
-    at: 'Expired',
-    action: 'Access follows the policy you set, the document moves to archive, and the audit trail records all of it.',
-  },
-] as const
+export function ladder(t: Dict) {
+  return t.lifecycle.ladder
+}
 
 export type Reminder = {
   id: string
@@ -131,33 +118,35 @@ export type Reminder = {
   at: string
 }
 
-export const REMINDERS: Reminder[] = [
-  {
-    id: 'r1',
-    kind: 'push',
-    title: 'Contract expires tomorrow',
-    meta: 'Push to 3 devices · Finance',
-    at: 'just now',
-  },
-  {
-    id: 'r2',
-    kind: 'email',
-    title: 'Business License — 7 days left',
-    meta: 'Email to Legal · daily until renewed',
-    at: '2 h ago',
-  },
-  {
-    id: 'r3',
-    kind: 'task',
-    title: 'Renewal task assigned — Insurance',
-    meta: 'Aïcha Bello · due in 32 days',
-    at: 'yesterday',
-  },
-  {
-    id: 'r4',
-    kind: 'scheduled',
-    title: 'Notice scheduled — Passport',
-    meta: `30-day notice on ${dateIn(57)}`,
-    at: 'queued',
-  },
-]
+export function reminders(t: Dict, locale: Locale): Reminder[] {
+  return [
+    {
+      id: 'r1',
+      kind: 'push',
+      title: t.lifecycle.reminders.contract.title,
+      meta: t.lifecycle.reminders.contract.meta,
+      at: t.lifecycle.reminders.contract.at,
+    },
+    {
+      id: 'r2',
+      kind: 'email',
+      title: t.lifecycle.reminders.licence.title,
+      meta: t.lifecycle.reminders.licence.meta,
+      at: t.lifecycle.reminders.licence.at,
+    },
+    {
+      id: 'r3',
+      kind: 'task',
+      title: t.lifecycle.reminders.insurance.title,
+      meta: t.lifecycle.reminders.insurance.meta,
+      at: t.lifecycle.reminders.insurance.at,
+    },
+    {
+      id: 'r4',
+      kind: 'scheduled',
+      title: t.lifecycle.reminders.passport.title,
+      meta: t.lifecycle.reminders.passport.meta(dateIn(locale, 57)),
+      at: t.lifecycle.reminders.passport.at,
+    },
+  ]
+}

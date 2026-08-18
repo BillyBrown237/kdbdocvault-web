@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/ui/Reveal'
 import { Section } from '@/components/ui/Section'
 import { cn } from '@/lib/cn'
-import { ALWAYS, TIERS, type Tier } from './pricing'
+import { always, tiers, type Tier } from './pricing'
+import { useT } from '@/i18n'
 
 /**
  * Pricing, before there are prices.
@@ -23,16 +24,18 @@ import { ALWAYS, TIERS, type Tier } from './pricing'
  * choices, and there aren't enough of them yet to make it.
  */
 export function Pricing() {
+  const t = useT()
+
   return (
     <Section
       id="pricing"
       tone="raised"
-      eyebrow="Pricing"
-      title="Plans designed to grow with your document needs."
-      lead="The tiers are settled. The numbers are not — we would rather leave them blank than put up a figure we intend to change."
+      eyebrow={t.pricing.eyebrow}
+      title={t.pricing.title}
+      lead={t.pricing.lead}
     >
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-        {TIERS.map((tier, i) => (
+        {tiers(t).map((tier, i) => (
           <Reveal key={tier.id} index={i} className="h-full">
             <Card tier={tier} />
           </Reveal>
@@ -43,10 +46,10 @@ export function Pricing() {
       <div className="mt-8 rounded-2xl border border-[var(--color-hairline)] bg-[var(--color-card)]/60 p-5">
         <p className="flex items-center gap-2 text-micro tracking-[0.1em] text-[var(--color-text-subtle)] uppercase">
           <ShieldCheck size={14} aria-hidden="true" className="text-[var(--color-accent-400)]" />
-          On every plan, whatever the price turns out to be
+          {t.pricing.alwaysTitle}
         </p>
         <ul className="mt-4 grid gap-x-8 gap-y-2.5 sm:grid-cols-2 lg:grid-cols-4">
-          {ALWAYS.map((a) => (
+          {always(t).map((a) => (
             <li
               key={a}
               className="flex items-start gap-2 text-ui leading-snug text-[var(--color-text-muted)]"
@@ -66,6 +69,7 @@ export function Pricing() {
 }
 
 function Card({ tier }: { tier: Tier }) {
+  const t = useT()
   const enterprise = tier.accent === 'violet'
 
   return (
@@ -89,12 +93,12 @@ function Card({ tier }: { tier: Tier }) {
       <div className="mt-5">
         {tier.price.kind === 'soon' ? (
           <span className="inline-flex items-center rounded-lg border border-dashed border-[var(--color-hairline-strong)] px-3 py-1.5 text-ui text-[var(--color-text-subtle)]">
-            Coming soon
+            {t.common.comingSoon}
           </span>
         ) : (
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-[rgb(167_139_250/0.4)] px-3 py-1.5 text-ui text-[var(--color-status-violet)]">
             <Mail size={14} aria-hidden="true" />
-            Talk to us
+            {t.pricing.talkToUs}
           </span>
         )}
       </div>
@@ -108,8 +112,9 @@ function Card({ tier }: { tier: Tier }) {
       <div className="mt-6 border-t border-[var(--color-hairline)] pt-5">
         {tier.inherits && (
           <p className="mb-3 text-ui-sm text-[var(--color-text-subtle)]">
-            Everything in{' '}
-            <span className="text-[var(--color-text-muted)]">{tier.inherits}</span>, plus:
+            {t.pricing.everythingIn}
+            <span className="text-[var(--color-text-muted)]">{tier.inherits}</span>
+            {t.pricing.plus}
           </p>
         )}
         <ul className="space-y-2.5">

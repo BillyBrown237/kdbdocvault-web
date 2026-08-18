@@ -5,19 +5,20 @@ import { Reveal } from '@/components/ui/Reveal'
 import { cn } from '@/lib/cn'
 import { useInView } from '@/lib/useInView'
 import { useSequence } from '@/lib/useSequence'
+import { useT, type Dict } from '@/i18n'
 
-const MODEL = ['Upload', 'Understand', 'Manage', 'Automate'] as const
-
-const STEPS = [
-  { n: '01', name: 'Upload', copy: 'Bring in your document.' },
-  { n: '02', name: 'Organize', copy: 'Categorize, tag, and enrich it.' },
-  { n: '03', name: 'Manage', copy: 'Share, approve, sign, track, and collaborate.' },
-  {
-    n: '04',
-    name: 'Automate',
-    copy: 'Let reminders, workflows, and document intelligence handle repetitive work.',
-  },
-] as const
+function steps(t: Dict) {
+  return [
+    { n: '01', name: t.how.steps.upload.name, copy: t.how.steps.upload.copy },
+    { n: '02', name: t.how.steps.organize.name, copy: t.how.steps.organize.copy },
+    { n: '03', name: t.how.steps.manage.name, copy: t.how.steps.manage.copy },
+    {
+      n: '04',
+      name: t.how.steps.automate.name,
+      copy: t.how.steps.automate.copy,
+    },
+  ]
+}
 
 /**
  * How it works.
@@ -35,20 +36,22 @@ const STEPS = [
  * did not have before.
  */
 export function HowItWorks() {
+  const t = useT()
+  const model = t.how.model
   const { ref, inView } = useInView<HTMLDivElement>('0px 0px -25% 0px')
-  const reached = useSequence(inView, MODEL.length, 260, 150)
+  const reached = useSequence(inView, model.length, 260, 150)
 
   return (
     <Section
       id="how"
       tone="seam"
-      eyebrow="How it works"
-      title="From file to managed document."
-      lead="Everything else on this page happens inside these four steps."
+      eyebrow={t.how.eyebrow}
+      title={t.how.title}
+      lead={t.how.lead}
     >
       {/* The whole idea in four words, before any of the detail. */}
       <div ref={ref} className="flex flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
-        {MODEL.map((word, i) => (
+        {model.map((word, i) => (
           <span key={word} className="flex items-center gap-2 sm:gap-3">
             {i > 0 && (
               <span
@@ -74,7 +77,7 @@ export function HowItWorks() {
       </div>
 
       <ol className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {STEPS.map((step, i) => (
+        {steps(t).map((step, i) => (
           <Reveal key={step.n} index={i} className="h-full">
             <li className="flex h-full flex-col rounded-2xl border border-[var(--color-hairline)] bg-[var(--color-card)]/60 p-5">
               <p className="font-mono text-ui-sm text-[var(--color-accent-400)]">{step.n}</p>
@@ -103,6 +106,8 @@ export function HowItWorks() {
  * Each stage adds exactly one thing, and no stage explains itself.
  */
 function DocumentAt({ stage }: { stage: number }) {
+  const t = useT()
+
   return (
     <div className="rounded-xl border border-[var(--color-hairline)] bg-black/25 p-3">
       <div className="flex items-center gap-2.5">
@@ -120,13 +125,13 @@ function DocumentAt({ stage }: { stage: number }) {
       {stage >= 1 && (
         <Added>
           <span className="flex flex-wrap gap-1">
-            {['contract', '2026'].map((t) => (
+            {t.how.doc.tags.map((tag) => (
               <span
-                key={t}
+                key={tag}
                 className="inline-flex items-center gap-1 rounded bg-white/[0.05] px-1.5 py-0.5 text-nano text-[var(--color-text-subtle)]"
               >
                 <Tag size={10} aria-hidden="true" />
-                {t}
+                {tag}
               </span>
             ))}
           </span>
@@ -148,7 +153,7 @@ function DocumentAt({ stage }: { stage: number }) {
             </span>
             <span className="inline-flex items-center gap-1 text-nano text-[var(--color-accent-400)]">
               <Check size={10} aria-hidden="true" />
-              Signed
+              {t.how.doc.signed}
             </span>
           </span>
         </Added>
@@ -158,7 +163,7 @@ function DocumentAt({ stage }: { stage: number }) {
         <Added>
           <span className="inline-flex items-center gap-1.5 text-nano text-[var(--color-status-amber)]">
             <Bell size={10} aria-hidden="true" />
-            Renews in 12 months
+            {t.how.doc.renews}
           </span>
         </Added>
       )}

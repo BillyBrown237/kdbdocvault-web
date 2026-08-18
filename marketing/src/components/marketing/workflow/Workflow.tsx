@@ -17,10 +17,11 @@ import { Reveal } from '@/components/ui/Reveal'
 import { cn } from '@/lib/cn'
 import { useInView } from '@/lib/useInView'
 import { useSequence } from '@/lib/useSequence'
+import { useT, type Dict } from '@/i18n'
 import {
-  STAGES,
-  STATES,
-  STEPS,
+  stages,
+  states,
+  steps,
   type Availability,
   type Decision,
   type StateKey,
@@ -78,9 +79,14 @@ const STATE_STYLE: Record<StateKey, { chip: string; icon: ReactNode }> = {
  * one word rather than one rewrite.
  */
 export function Workflow() {
+  const t = useT()
   const { ref, inView } = useInView<HTMLDivElement>('0px 0px -18% 0px')
   // Two beats: the pending approval resolves, then the outcome lands.
   const beat = useSequence(inView, 2, 900, 1600)
+
+  const STAGES = stages(t)
+  const STATES = states(t)
+  const STEPS = steps(t)
 
   const resolved = beat >= 1
   const finished = beat >= 2
@@ -89,9 +95,9 @@ export function Workflow() {
     <Section
       id="workflow"
       tone="raised"
-      eyebrow="Workflow"
-      title="Documents can move work forward."
-      lead="Documents can participate in structured workflows instead of living separately from business processes — the approval happens on the document, not in a thread about the document."
+      eyebrow={t.workflow.eyebrow}
+      title={t.workflow.title}
+      lead={t.workflow.lead}
     >
       {/* The stages, named. */}
       <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -123,7 +129,7 @@ export function Workflow() {
         <div className="overflow-hidden rounded-2xl border border-[var(--color-hairline-strong)] bg-[var(--color-surface)] product-sheen">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-[var(--color-hairline)] px-4 py-3.5 sm:px-5">
             <h3 className="text-card font-semibold tracking-[-0.01em] text-[var(--color-text)]">
-              New supplier contract
+              {t.workflow.exampleTitle}
             </h3>
             <span className="font-mono text-meta text-[var(--color-text-subtle)]">
               WF-2026-0341 · v2
@@ -177,7 +183,7 @@ export function Workflow() {
                     finished ? 'text-[var(--color-text)]' : 'text-[var(--color-text-subtle)]',
                   )}
                 >
-                  Approved
+                  {t.workflow.approved}
                 </p>
                 <p
                   className={cn(
@@ -186,7 +192,7 @@ export function Workflow() {
                   )}
                 >
                   <span className="text-[var(--color-text-muted)]">
-                    All three approvals recorded · sent for signature to Groupe Sicam
+                    {t.workflow.approvedNote}
                   </span>
                 </p>
               </div>
@@ -195,8 +201,7 @@ export function Workflow() {
 
           <div className="border-t border-[var(--color-hairline)] px-4 py-3 sm:px-5">
             <p className="text-meta leading-relaxed text-[var(--color-text-subtle)]">
-              Each decision is recorded against <span className="text-[var(--color-text-muted)]">v2</span> —
-              approving one version never quietly approves the next one.
+              {t.workflow.versionNote}
             </p>
           </div>
         </div>
@@ -205,7 +210,7 @@ export function Workflow() {
       {/* The states, as the product labels them. */}
       <div className="mt-10">
         <h3 className="text-micro tracking-[0.1em] text-[var(--color-text-subtle)] uppercase">
-          The states a document can be in
+          {t.workflow.statesTitle}
         </h3>
         <ul className="mt-5 grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
           {STATES.map((s, i) => (
@@ -229,17 +234,20 @@ export function Workflow() {
 
 /* -------------------------------------------------------------- the step */
 
-const DECISION_PILL: Record<Decision, { key: StateKey; label: string }> = {
-  approved: { key: 'approved', label: 'Approved' },
-  returned: { key: 'rejected', label: 'Returned for changes' },
-  pending: { key: 'pending', label: 'Pending approval' },
+function decisionPill(t: Dict): Record<Decision, { key: StateKey; label: string }> {
+  return {
+    approved: { key: 'approved', label: t.workflow.states.approved.label },
+    returned: { key: 'rejected', label: t.workflow.returned },
+    pending: { key: 'pending', label: t.workflow.states.pending.label },
+  }
 }
 
 function StepRow({ step, last, resolved }: { step: Step; last: boolean; resolved: boolean }) {
+  const t = useT()
   // The last desk is the one that moves while you watch. Everything before it
   // is already history and stays put.
   const decision: Decision = last && resolved ? 'approved' : step.decision
-  const pill = DECISION_PILL[decision]
+  const pill = decisionPill(t)[decision]
   const settled = decision !== 'pending'
 
   return (
@@ -265,7 +273,7 @@ function StepRow({ step, last, resolved }: { step: Step; last: boolean; resolved
         </div>
 
         <p className="mt-1 font-mono text-micro text-[var(--color-text-subtle)]">
-          {last && resolved ? '14 Aug · 11:26' : step.at}
+          {last && resolved ? t.workflow.steps.management.resolvedAt : step.at}
         </p>
 
         <p className="mt-1.5 flex items-start gap-1.5 text-ui leading-relaxed text-[var(--color-text-muted)]">
@@ -286,8 +294,9 @@ function StepRow({ step, last, resolved }: { step: Step; last: boolean; resolved
 /* ------------------------------------------------------------------ bits */
 
 function StatePill({ state, label }: { state: StateKey; label?: string }) {
+  const t = useT()
   const style = STATE_STYLE[state]
-  const text = label ?? STATES.find((s) => s.key === state)?.label ?? state
+  const text = label ?? states(t).find((s) => s.key === state)?.label ?? state
   return (
     <span
       key={state}
@@ -308,6 +317,8 @@ function StatePill({ state, label }: { state: StateKey; label?: string }) {
  * removed the day the feature ships.
  */
 function Badge({ availability, className }: { availability: Availability; className?: string }) {
+  // Read before the early return: hooks cannot sit behind a condition.
+  const t = useT()
   if (availability === 'live') return null
   return (
     <span
@@ -316,7 +327,7 @@ function Badge({ availability, className }: { availability: Availability; classN
         className,
       )}
     >
-      Coming soon
+      {t.common.comingSoon}
     </span>
   )
 }

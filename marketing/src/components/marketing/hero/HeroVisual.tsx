@@ -16,32 +16,38 @@ import {
 import { cn } from '@/lib/cn'
 import { useReducedMotion } from '@/lib/useReducedMotion'
 import { useTypewriter } from '@/lib/useTypewriter'
+import { useT, type Dict } from '@/i18n'
 import {
-  ACTIVITY,
-  DOCS,
-  FOLDERS,
-  INCOMING_DOC,
-  LIFECYCLE,
-  SEARCH_PHRASES,
+  activity as baseActivity,
+  docs as baseDocs,
+  folders,
+  incomingDoc,
+  lifecycle,
+  searchPhrases,
+  statusLabels,
   STATUS_META,
   type Activity,
   type Doc,
 } from './workspace'
 
-const SIGNED_EVENT: Activity = {
-  id: 'a-signed',
-  who: 'Marie Ndongo',
-  action: 'signed',
-  target: 'Master services agreement',
-  at: 'now',
+function signedEvent(t: Dict): Activity {
+  return {
+    id: 'a-signed',
+    who: 'Marie Ndongo',
+    action: t.hero.events.signedDoc,
+    target: t.hero.eventTargets.msa,
+    at: t.hero.when.now,
+  }
 }
 
-const UPLOAD_EVENT: Activity = {
-  id: 'a-upload',
-  who: 'Paul Ekani',
-  action: 'uploaded',
-  target: 'Amendment no. 2',
-  at: 'now',
+function uploadEvent(t: Dict): Activity {
+  return {
+    id: 'a-upload',
+    who: 'Paul Ekani',
+    action: t.hero.events.uploaded,
+    target: t.hero.eventTargets.amendment,
+    at: t.hero.when.now,
+  }
 }
 
 /**
@@ -59,6 +65,7 @@ const UPLOAD_EVENT: Activity = {
  * gets one sentence instead of forty fragments of fake UI.
  */
 export function HeroVisual() {
+  const t = useT()
   const reduced = useReducedMotion()
 
   const [signed, setSigned] = useState(false)
@@ -84,20 +91,18 @@ export function HeroVisual() {
     return () => timers.forEach(window.clearTimeout)
   }, [reduced])
 
-  const docs: Doc[] = DOCS.map((d) => (d.id === 'msa' && signed ? { ...d, status: 'signed', updated: 'now' } : d))
+  const docs: Doc[] = baseDocs(t).map((d) =>
+    d.id === 'msa' && signed ? { ...d, status: 'signed', updated: t.hero.when.now } : d,
+  )
 
   const activity: Activity[] = [
-    ...(arrived ? [UPLOAD_EVENT] : []),
-    ...(signed ? [SIGNED_EVENT] : []),
-    ...ACTIVITY,
+    ...(arrived ? [uploadEvent(t)] : []),
+    ...(signed ? [signedEvent(t)] : []),
+    ...baseActivity(t),
   ].slice(0, 4)
 
   return (
-    <div
-      role="img"
-      aria-label="The KDB Doc Vault workspace: folders, recent documents with signature and expiry status, secure sharing and an activity feed."
-      className="relative"
-    >
+    <div role="img" aria-label={t.hero.visualLabel} className="relative">
       {/* The frame's own light. Sits behind the glass so the edges glow rather
           than the surface. */}
       <div
@@ -123,10 +128,10 @@ export function HeroVisual() {
             </span>
             <span className="min-w-0">
               <span className="block truncate text-xs font-medium text-[var(--color-text)]">
-                {INCOMING_DOC.name}
+                {incomingDoc(t).name}
               </span>
               <span className="block text-meta text-[var(--color-text-subtle)]">
-                Added to Contracts · encrypted
+                {t.hero.addedTo}
               </span>
             </span>
           </div>
@@ -139,7 +144,8 @@ export function HeroVisual() {
 /* ---------------------------------------------------------------- top bar */
 
 function TopBar({ enabled }: { enabled: boolean }) {
-  const query = useTypewriter(SEARCH_PHRASES, { enabled })
+  const t = useT()
+  const query = useTypewriter(searchPhrases(t), { enabled })
 
   return (
     <div className="flex h-14 items-center gap-3 border-b border-[var(--color-hairline)] px-3 sm:px-4">
@@ -149,7 +155,9 @@ function TopBar({ enabled }: { enabled: boolean }) {
         </span>
         <span className="hidden leading-tight sm:block">
           <span className="block text-xs font-medium text-[var(--color-text)]">KDB Holding</span>
-          <span className="block text-micro text-[var(--color-text-subtle)]">Workspace</span>
+          <span className="block text-micro text-[var(--color-text-subtle)]">
+            {t.hero.workspace}
+          </span>
         </span>
       </div>
 
@@ -173,7 +181,7 @@ function TopBar({ enabled }: { enabled: boolean }) {
           <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[var(--color-accent-400)]" />
         </span>
         <ShieldCheck size={12} aria-hidden="true" />
-        Encrypted
+        {t.hero.encrypted}
       </span>
 
       <Bell size={16} className="hidden shrink-0 text-[var(--color-text-subtle)] sm:block" aria-hidden="true" />
@@ -200,20 +208,22 @@ function AvatarStack() {
 /* ------------------------------------------------------------ folder rail */
 
 function FolderRail({ incoming }: { incoming: boolean }) {
+  const t = useT()
+
   return (
     <div className="hidden flex-col justify-between border-r border-[var(--color-hairline)] p-3 md:flex">
       <div>
         <p className="px-2 pb-2 font-mono text-micro tracking-[0.12em] text-[var(--color-text-subtle)] uppercase">
-          Folders
+          {t.hero.folders}
         </p>
         <ul className="space-y-0.5">
-          {FOLDERS.map((f) => {
+          {folders(t).map((f) => {
             // The count on Contracts ticks up when the new document lands —
             // the small consequence that makes the arrival feel real.
-            const count = f.name === 'Contracts' && incoming ? f.count + 1 : f.count
+            const count = f.id === 'contracts' && incoming ? f.count + 1 : f.count
             return (
               <li
-                key={f.name}
+                key={f.id}
                 className={cn(
                   'flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs',
                   f.active
@@ -241,7 +251,7 @@ function FolderRail({ incoming }: { incoming: boolean }) {
 
       <div className="mt-6 px-2">
         <div className="flex items-baseline justify-between text-micro text-[var(--color-text-subtle)]">
-          <span>Storage</span>
+          <span>{t.hero.storage}</span>
           <span className="font-mono">4.2 / 20 GB</span>
         </div>
         <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-white/[0.06]">
@@ -255,21 +265,23 @@ function FolderRail({ incoming }: { incoming: boolean }) {
 /* --------------------------------------------------------- document pane */
 
 function DocumentPane({ docs, signed }: { docs: Doc[]; signed: boolean }) {
+  const t = useT()
+
   return (
     <div className="min-w-0 p-3 sm:p-4">
       <div className="flex items-center gap-2">
-        <p className="text-xs font-medium text-[var(--color-text)]">Recent documents</p>
+        <p className="text-xs font-medium text-[var(--color-text)]">{t.hero.recent}</p>
         <span className="rounded-full bg-white/[0.05] px-1.5 py-0.5 font-mono text-micro text-[var(--color-text-subtle)]">
           1 248
         </span>
         <span className="ml-auto flex items-center gap-1.5">
           <span className="hidden items-center gap-1 rounded-lg border border-[var(--color-hairline)] px-2 py-1 text-micro text-[var(--color-text-muted)] sm:flex">
             <Filter size={12} aria-hidden="true" />
-            All
+            {t.hero.filterAll}
           </span>
           <span className="flex items-center gap-1 rounded-lg bg-[var(--color-accent-600)] px-2 py-1 text-micro font-medium text-white">
             <Plus size={12} aria-hidden="true" />
-            Upload
+            {t.hero.upload}
           </span>
         </span>
       </div>
@@ -332,6 +344,7 @@ function DocRow({ doc, index }: { doc: Doc; index: number }) {
 }
 
 function StatusPill({ doc }: { doc: Doc }) {
+  const t = useT()
   const meta = STATUS_META[doc.status]
   return (
     <span
@@ -344,7 +357,7 @@ function StatusPill({ doc }: { doc: Doc }) {
       )}
     >
       <span className={cn('h-1.5 w-1.5 rounded-full', meta.dot)} />
-      {doc.expiresIn ?? meta.label}
+      {doc.expiresIn ?? statusLabels(t)[doc.status]}
     </span>
   )
 }
@@ -354,17 +367,19 @@ function StatusPill({ doc }: { doc: Doc }) {
  * the signature lands — the point of the whole animation.
  */
 function LifecycleBar({ signed }: { signed: boolean }) {
+  const t = useT()
+  const steps = lifecycle(t)
   const active = signed ? 2 : 1
-  const progress = ((active + 0.5) / LIFECYCLE.length) * 100
+  const progress = ((active + 0.5) / steps.length) * 100
 
   return (
     <div className="mt-4 rounded-xl border border-[var(--color-hairline)] bg-black/25 p-3">
       <div className="flex items-center justify-between">
         <p className="truncate text-meta font-medium text-[var(--color-text-muted)]">
-          Lifecycle · Master services agreement
+          {t.hero.lifecycle} · {t.hero.eventTargets.msa}
         </p>
         <span className="hidden font-mono text-micro text-[var(--color-text-subtle)] sm:block">
-          retain 10 y
+          {t.hero.retain}
         </span>
       </div>
 
@@ -380,7 +395,7 @@ function LifecycleBar({ signed }: { signed: boolean }) {
       </div>
 
       <ol className="mt-2 flex justify-between">
-        {LIFECYCLE.map((step, i) => (
+        {steps.map((step, i) => (
           <li
             key={step}
             className={cn(
@@ -401,10 +416,12 @@ function LifecycleBar({ signed }: { signed: boolean }) {
 /* ---------------------------------------------------------- activity rail */
 
 function ActivityRail({ activity }: { activity: Activity[] }) {
+  const t = useT()
+
   return (
     <div className="hidden flex-col border-l border-[var(--color-hairline)] p-3 xl:flex">
       <p className="px-1 pb-3 font-mono text-micro tracking-[0.12em] text-[var(--color-text-subtle)] uppercase">
-        Activity
+        {t.hero.activity}
       </p>
 
       <ul className="space-y-3">
@@ -426,14 +443,14 @@ function ActivityRail({ activity }: { activity: Activity[] }) {
         <div className="rounded-xl border border-[var(--color-hairline)] bg-black/25 p-3">
           <p className="flex items-center gap-1.5 text-meta font-medium text-[var(--color-text-muted)]">
             <Link2 size={12} aria-hidden="true" />
-            Secure link
+            {t.hero.secureLink}
           </p>
           <p className="mt-2 truncate rounded-md bg-black/30 px-2 py-1 font-mono text-micro text-[var(--color-text-subtle)]">
             kdb.vault/s/9f2c…a41
           </p>
           <p className="mt-2 flex items-center gap-1.5 text-micro text-[var(--color-text-subtle)]">
             <Lock size={10} aria-hidden="true" className="text-[var(--color-accent-400)]" />
-            Password · expires in 7 days · 2 of 5 views
+            {t.hero.linkRules}
           </p>
         </div>
       </div>

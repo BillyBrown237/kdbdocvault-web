@@ -2,14 +2,15 @@ import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { ArrowRight, Check, FileText, Link2, Lock, Minus, Tag } from 'lucide-react'
 import { cn } from '@/lib/cn'
+import { useT } from '@/i18n'
 import {
-  CAPABILITIES,
-  DOC,
-  EVENTS,
-  PRINCIPALS,
-  RULES,
-  VERSIONS,
-  WORKFLOW,
+  capabilities,
+  doc,
+  events,
+  principals,
+  rules,
+  versions,
+  workflow,
   WORKFLOW_CURRENT,
   type Version,
 } from './document'
@@ -19,11 +20,14 @@ const DAY = 86_400_000
 /* --------------------------------------------------------------- overview */
 
 export function OverviewPanel({ version }: { version: Version }) {
+  const t = useT()
+  const d = doc(t)
+
   // Computed rather than written down: a hard-coded "in 361 days" is correct
   // for one day and wrong for the rest of the year.
   const now = Date.now()
-  const start = Date.parse(`${DOC.createdISO}T00:00:00Z`)
-  const end = Date.parse(`${DOC.expiresISO}T00:00:00Z`)
+  const start = Date.parse(`${d.createdISO}T00:00:00Z`)
+  const end = Date.parse(`${d.expiresISO}T00:00:00Z`)
   const daysLeft = Math.max(0, Math.round((end - now) / DAY))
   const elapsed = Math.min(1, Math.max(0, (now - start) / (end - start)))
 
@@ -50,35 +54,34 @@ export function OverviewPanel({ version }: { version: Version }) {
           </div>
         </div>
         <p className="mt-2 text-center font-mono text-micro text-[var(--color-text-subtle)] sm:text-left">
-          {DOC.pages} pages · {version.label}
+          {d.pages} {t.showcase.doc.pages} · {version.label}
         </p>
       </div>
 
       <div className="min-w-0">
         <dl className="space-y-3">
-          <Field label="Description">
-            Framework agreement covering logistics services for the 2026–2027 term,
-            signed by both parties.
+          <Field label={t.showcase.overview.fields.description}>
+            {t.showcase.overview.description}
           </Field>
-          <Field label="Reference">
-            <span className="font-mono">{DOC.reference}</span>
+          <Field label={t.showcase.overview.fields.reference}>
+            <span className="font-mono">{d.reference}</span>
           </Field>
-          <Field label="Tags">
+          <Field label={t.showcase.overview.fields.tags}>
             <span className="flex flex-wrap gap-1.5">
-              {['contract', 'logistics', 'signed'].map((t) => (
+              {t.showcase.overview.tags.map((tag) => (
                 <span
-                  key={t}
+                  key={tag}
                   className="inline-flex items-center gap-1 rounded bg-white/[0.05] px-1.5 py-0.5 font-mono text-micro text-[var(--color-text-subtle)]"
                 >
                   <Tag size={10} aria-hidden="true" />
-                  {t}
+                  {tag}
                 </span>
               ))}
             </span>
           </Field>
-          <Field label="Linked">
+          <Field label={t.showcase.overview.fields.linked}>
             <span className="flex flex-wrap gap-x-3 gap-y-1">
-              {['Amendment no. 1', 'Purchase order 4412'].map((l) => (
+              {t.showcase.overview.linked.map((l) => (
                 <span key={l} className="inline-flex items-center gap-1.5">
                   <Link2 size={12} aria-hidden="true" className="text-[var(--color-text-subtle)]" />
                   {l}
@@ -94,9 +97,11 @@ export function OverviewPanel({ version }: { version: Version }) {
           className="mt-5 rounded-xl border border-[var(--color-hairline)] bg-black/25 p-3"
         >
           <div className="flex items-baseline justify-between gap-3">
-            <span className="text-meta text-[var(--color-text-muted)]">Term</span>
+            <span className="text-meta text-[var(--color-text-muted)]">
+              {t.showcase.overview.term}
+            </span>
             <span className="font-mono text-micro text-[var(--color-status-amber)] tabular-nums">
-              {daysLeft} days left
+              {daysLeft} {t.showcase.overview.daysLeft}
             </span>
           </div>
           <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/[0.06]">
@@ -106,8 +111,8 @@ export function OverviewPanel({ version }: { version: Version }) {
             />
           </div>
           <div className="mt-1.5 flex justify-between font-mono text-nano text-[var(--color-text-subtle)]">
-            <span>{DOC.created}</span>
-            <span>{DOC.expires}</span>
+            <span>{d.created}</span>
+            <span>{d.expires}</span>
           </div>
         </div>
       </div>
@@ -135,10 +140,13 @@ export function VersionsPanel({
   version: Version
   onSelect: (v: Version) => void
 }) {
+  const t = useT()
+  const list = versions(t)
+
   return (
     <div>
       <ul className="space-y-1.5">
-        {VERSIONS.map((v) => {
+        {list.map((v) => {
           const selected = v.id === version.id
           return (
             <li key={v.id}>
@@ -170,9 +178,9 @@ export function VersionsPanel({
                     <span className="font-mono text-micro text-[var(--color-text-subtle)]">
                       {v.date}
                     </span>
-                    {v.id === VERSIONS[0]?.id && (
+                    {v.id === list[0]?.id && (
                       <span className="rounded-full bg-[rgb(16_185_129/0.10)] px-1.5 py-0.5 text-nano text-[var(--color-accent-400)] ring-1 ring-[rgb(16_185_129/0.22)]">
-                        current
+                        {t.showcase.versions.current}
                       </span>
                     )}
                   </span>
@@ -191,8 +199,7 @@ export function VersionsPanel({
       </ul>
 
       <p className="mt-4 text-meta text-[var(--color-text-subtle)]">
-        Every version is kept. Nothing is overwritten, and any version can be restored or
-        compared.
+        {t.showcase.versions.note}
       </p>
     </div>
   )
@@ -207,6 +214,8 @@ const TONE_DOT = {
 } as const
 
 export function ActivityPanel() {
+  const t = useT()
+
   return (
     <div>
       <ol className="relative">
@@ -214,7 +223,7 @@ export function ActivityPanel() {
           aria-hidden="true"
           className="absolute top-3 bottom-3 left-[0.3125rem] w-px bg-[var(--color-hairline)]"
         />
-        {EVENTS.map((e) => (
+        {events(t).map((e) => (
           <li key={e.id} className="relative pl-7">
             <span
               aria-hidden="true"
@@ -241,7 +250,7 @@ export function ActivityPanel() {
 
       <p className="mt-4 flex items-center gap-1.5 text-meta text-[var(--color-text-subtle)]">
         <Lock size={12} aria-hidden="true" className="text-[var(--color-accent-400)]" />
-        Append-only. Nothing can be edited out, and the trail exports as PDF or CSV.
+        {t.showcase.activity.note}
       </p>
     </div>
   )
@@ -250,21 +259,28 @@ export function ActivityPanel() {
 /* ------------------------------------------------------------ permissions */
 
 export function PermissionsPanel() {
-  const [previewId, setPreviewId] = useState(PRINCIPALS[0]?.id ?? '')
-  const preview = PRINCIPALS.find((p) => p.id === previewId) ?? PRINCIPALS[0]
+  const t = useT()
+  // The ids are internal keys and stay English; only the names are translated.
+  const people = principals(t)
+  const [previewId, setPreviewId] = useState(people[0]?.id ?? '')
+  const preview = people.find((p) => p.id === previewId) ?? people[0]
   if (!preview) return null
 
   return (
     <div>
       <p className="text-micro tracking-[0.1em] text-[var(--color-text-subtle)] uppercase">
-        Preview access as
+        {t.showcase.permissions.previewAs}
       </p>
 
       {/* Not a tablist: these buttons don't reveal a panel each, they change
           one shared readout. `aria-pressed` says "this is the state I picked"
           without promising tab semantics the markup doesn't have. */}
-      <div role="group" aria-label="Preview access as" className="mt-2 flex flex-wrap gap-1.5">
-        {PRINCIPALS.map((p) => {
+      <div
+        role="group"
+        aria-label={t.showcase.permissions.previewAs}
+        className="mt-2 flex flex-wrap gap-1.5"
+      >
+        {people.map((p) => {
           const on = p.id === preview.id
           return (
             <button
@@ -299,7 +315,7 @@ export function PermissionsPanel() {
         </div>
 
         <ul key={preview.id} className="motion-safe:animate-fade mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {CAPABILITIES.map((cap, i) => {
+          {capabilities(t).map((cap, i) => {
             const granted = preview.grants[i] ?? false
             return (
               <li
@@ -333,12 +349,15 @@ export function PermissionsPanel() {
 /* ---------------------------------------------------------------- workflow */
 
 export function WorkflowPanel() {
+  const t = useT()
+  const steps = workflow(t)
+
   return (
     <div>
       {/* Horizontal on a wide screen, vertical on a narrow one — the same
           five steps, laid out the way each shape can actually hold them. */}
       <ol className="flex flex-col gap-0 sm:flex-row sm:items-start sm:gap-0">
-        {WORKFLOW.map((step, i) => {
+        {steps.map((step, i) => {
           const done = i < WORKFLOW_CURRENT
           const current = i === WORKFLOW_CURRENT
           return (
@@ -357,7 +376,7 @@ export function WorkflowPanel() {
                 >
                   {done ? <Check size={12} aria-hidden="true" /> : i + 1}
                 </span>
-                {i < WORKFLOW.length - 1 && (
+                {i < steps.length - 1 && (
                   // `flex-1` in both orientations: it fills the remaining
                   // height in the stacked layout and the remaining width in
                   // the row one, so the connector never needs a fixed size.
@@ -391,10 +410,10 @@ export function WorkflowPanel() {
 
       <div className="mt-6 rounded-xl border border-[var(--color-hairline)] bg-black/25 p-3">
         <p className="text-micro tracking-[0.1em] text-[var(--color-text-subtle)] uppercase">
-          Rules attached to this document
+          {t.showcase.workflow.rulesTitle}
         </p>
         <ul className="mt-2.5 space-y-2">
-          {RULES.map((r) => (
+          {rules(t).map((r) => (
             <li key={r.when} className="flex flex-wrap items-center gap-2 font-mono text-meta">
               <span className="text-[var(--color-text-muted)]">{r.when}</span>
               <ArrowRight size={12} aria-hidden="true" className="text-[var(--color-text-subtle)]" />
@@ -406,7 +425,7 @@ export function WorkflowPanel() {
 
       <p className="mt-3 flex items-center gap-1.5 text-meta text-[var(--color-text-subtle)]">
         <FileText size={12} aria-hidden="true" />
-        Next: renewal review assigned to Finance, opening 14 May 2027.
+        {t.showcase.workflow.next}
       </p>
     </div>
   )

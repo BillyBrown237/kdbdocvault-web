@@ -15,7 +15,7 @@
  *    but the line between Teams and Business is a guess. Move items freely;
  *    the cards read from this array and nothing else.
  *
- * `ALWAYS` is the deliberate exception: the things that are not sold
+ * `always()` is the deliberate exception: the things that are not sold
  * separately. Isolation between organizations is architectural rather than a
  * feature flag, and an audit trail that only the expensive plan keeps is not
  * an audit trail. Confirm this stays true commercially.
@@ -36,79 +36,59 @@ export type Tier = {
 }
 
 import { mailto, REGISTER_URL } from '@/lib/links'
+import type { Dict } from '@/i18n'
 
-export const TIERS: Tier[] = [
-  {
-    id: 'personal',
-    name: 'Personal',
-    who: 'For one person looking after their own documents.',
-    price: { kind: 'soon' },
-    features: [
-      'Your own vault, reachable from any device',
-      'Version history on every document',
-      'Expiry dates, with reminders before they arrive',
-      'Secure links with an expiry and a password',
-      'Text read on upload, so documents are searchable',
-    ],
-    cta: { label: 'Get started', href: REGISTER_URL },
-    accent: 'none',
-  },
-  {
-    id: 'teams',
-    name: 'Teams',
-    who: 'For a small group working from the same documents.',
-    price: { kind: 'soon' },
-    inherits: 'Personal',
-    features: [
-      'Shared folders, with roles that decide who can do what',
-      'Comments and mentions, kept on the document',
-      'Approval requests',
-      'Signature requests',
-      'Activity everyone on the team can see',
-    ],
-    cta: { label: 'Get started', href: REGISTER_URL },
-    accent: 'none',
-  },
-  {
-    id: 'business',
-    name: 'Business',
-    who: 'For a company with real processes around its documents.',
-    price: { kind: 'soon' },
-    inherits: 'Teams',
-    features: [
-      'Multi-step approval workflows',
-      'Retention rules and legal holds',
-      'Document templates',
-      'Import from Google Drive, OneDrive and Dropbox',
-      'API keys and webhooks for your own systems',
-      'Data rooms for a deal or an audit',
-    ],
-    cta: { label: 'Get started', href: REGISTER_URL },
-    accent: 'none',
-  },
-  {
-    id: 'enterprise',
-    name: 'Enterprise',
-    who: 'For an organization that needs the whole estate governed.',
-    price: { kind: 'contact' },
-    inherits: 'Business',
-    features: [
-      'Organization-wide management, department by department',
-      'Advanced permissions, down to a single document',
-      'Workflows modelled on how your organization already approves things',
-      'Auditability — export the trail for a document, a folder or a period',
-      'Integrations with the systems your documents already come from',
-      'Direct support, and help planning the move',
-    ],
-    cta: { label: 'Talk to us', href: mailto('KDB Doc Vault — Enterprise') },
-    accent: 'violet',
-  },
-]
+/**
+ * `id` and `accent` are untranslated handles: `id` keys the React list and
+ * `accent` picks a colour, so neither may move with the locale. `inherits`
+ * reads the *name* of the tier below out of the same dictionary, so the
+ * "Everything in Teams, plus:" line names the tier as that page calls it.
+ */
+export function tiers(t: Dict): Tier[] {
+  return [
+    {
+      id: 'personal',
+      name: t.pricing.tiers.personal.name,
+      who: t.pricing.tiers.personal.who,
+      price: { kind: 'soon' },
+      features: [...t.pricing.tiers.personal.features],
+      cta: { label: t.common.getStarted, href: REGISTER_URL },
+      accent: 'none',
+    },
+    {
+      id: 'teams',
+      name: t.pricing.tiers.teams.name,
+      who: t.pricing.tiers.teams.who,
+      price: { kind: 'soon' },
+      inherits: t.pricing.tiers.personal.name,
+      features: [...t.pricing.tiers.teams.features],
+      cta: { label: t.common.getStarted, href: REGISTER_URL },
+      accent: 'none',
+    },
+    {
+      id: 'business',
+      name: t.pricing.tiers.business.name,
+      who: t.pricing.tiers.business.who,
+      price: { kind: 'soon' },
+      inherits: t.pricing.tiers.teams.name,
+      features: [...t.pricing.tiers.business.features],
+      cta: { label: t.common.getStarted, href: REGISTER_URL },
+      accent: 'none',
+    },
+    {
+      id: 'enterprise',
+      name: t.pricing.tiers.enterprise.name,
+      who: t.pricing.tiers.enterprise.who,
+      price: { kind: 'contact' },
+      inherits: t.pricing.tiers.business.name,
+      features: [...t.pricing.tiers.enterprise.features],
+      cta: { label: t.pricing.talkToUs, href: mailto('KDB Doc Vault — Enterprise') },
+      accent: 'violet',
+    },
+  ]
+}
 
 /** Not sold separately, on any plan. */
-export const ALWAYS = [
-  'Encrypted in transit and at rest',
-  'Your organization’s data isolated from every other',
-  'A full audit trail',
-  'Every version kept',
-]
+export function always(t: Dict): string[] {
+  return [...t.pricing.always]
+}

@@ -15,6 +15,7 @@ import { Section } from '@/components/ui/Section'
 import { Reveal } from '@/components/ui/Reveal'
 import { Logo } from './Logo'
 import { cn } from '@/lib/cn'
+import { useT, type Dict } from '@/i18n'
 
 /**
  * The problem, told as a descent.
@@ -33,13 +34,15 @@ import { cn } from '@/lib/cn'
  * risk".
  */
 export function Problem() {
+  const t = useT()
+
   return (
     <Section
       id="problem"
       tone="page"
-      eyebrow="The problem"
-      title="Documents shouldn’t become a problem after you save them."
-      lead="Saving a file is the easy part. What follows — finding it again, knowing which copy is current, remembering it expires, knowing who has seen it — is where the work quietly piles up."
+      eyebrow={t.problem.eyebrow}
+      title={t.problem.title}
+      lead={t.problem.lead}
     >
       {/* The spine lives on this wrapper, not on the list, so it can run past
           the last stage and meet the closing node. Its bottom padding is the
@@ -51,7 +54,7 @@ export function Problem() {
         />
 
         <ol className="space-y-14">
-          {STAGES.map((stage, i) => (
+          {stages(t).map((stage, i) => (
             <li key={stage.name} className="relative pl-9 sm:pl-12">
               {/* Outside <Reveal> on purpose: `animate-rise` uses a transform,
                   and a transformed ancestor becomes the containing block for
@@ -114,9 +117,7 @@ export function Problem() {
         <Reveal>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
             <Logo />
-            <p className="text-sm text-[var(--color-text-muted)]">
-              None of this is a storage problem. It’s a lifecycle problem.
-            </p>
+            <p className="text-sm text-[var(--color-text-muted)]">{t.problem.turn}</p>
             <ArrowDown
               size={16}
               aria-hidden="true"
@@ -166,178 +167,210 @@ function Line({
 }
 
 /** Same document, three devices, three names. */
-const ScatteredCopies = (
-  <div>
-    <Line icon={<Laptop size={12} aria-hidden="true" />} note="Laptop">
-      contrat_final.pdf
-    </Line>
-    <Line icon={<Smartphone size={12} aria-hidden="true" />} note="WhatsApp">
-      contrat_final_v2.pdf
-    </Line>
-    <Line icon={<Mail size={12} aria-hidden="true" />} note="Email">
-      contrat_FINAL_ok.pdf
-    </Line>
-  </div>
-)
+function ScatteredCopies() {
+  const t = useT()
+
+  return (
+    <div>
+      <Line icon={<Laptop size={12} aria-hidden="true" />} note={t.problem.artifacts.laptop}>
+        contrat_final.pdf
+      </Line>
+      <Line icon={<Smartphone size={12} aria-hidden="true" />} note={t.problem.artifacts.whatsapp}>
+        contrat_final_v2.pdf
+      </Line>
+      <Line icon={<Mail size={12} aria-hidden="true" />} note={t.problem.artifacts.email}>
+        contrat_FINAL_ok.pdf
+      </Line>
+    </div>
+  )
+}
 
 /** A path nobody can retrace. The right edge fades because it keeps going. */
-const BuriedPath = (
-  <div>
-    {/* Masked rather than covered with a matching gradient: a mask fades to
-        whatever is behind it, so it cannot drift out of sync with the panel
-        colour the way a hard-coded overlay would. */}
-    <div className="flex items-center gap-1 overflow-hidden font-mono text-meta whitespace-nowrap text-[var(--color-text-subtle)] [mask-image:linear-gradient(90deg,#000_72%,transparent)]">
-      {['Documents', '2024', 'Admin', 'Scans', 'New folder', 'à trier', 'final', 'ok'].map(
-        (part) => (
+function BuriedPath() {
+  const t = useT()
+
+  return (
+    <div>
+      {/* Masked rather than covered with a matching gradient: a mask fades to
+          whatever is behind it, so it cannot drift out of sync with the panel
+          colour the way a hard-coded overlay would. */}
+      <div className="flex items-center gap-1 overflow-hidden font-mono text-meta whitespace-nowrap text-[var(--color-text-subtle)] [mask-image:linear-gradient(90deg,#000_72%,transparent)]">
+        {t.problem.artifacts.pathSegments.map((part) => (
           <span key={part} className="flex items-center gap-1">
             <span className="rounded bg-white/[0.04] px-1.5 py-0.5">{part}</span>
             <span aria-hidden="true">›</span>
           </span>
-        ),
-      )}
+        ))}
+      </div>
+      <p className="mt-2 text-micro text-[var(--color-text-subtle)]">
+        {t.problem.artifacts.pathNote}
+      </p>
     </div>
-    <p className="mt-2 text-micro text-[var(--color-text-subtle)]">
-      Eleven levels deep, three people, three conventions.
-    </p>
-  </div>
-)
+  )
+}
 
 /** Three files, one truth, no way to tell which. */
-const CompetingVersions = (
-  <div>
-    <Line icon={<FileText size={12} aria-hidden="true" />} note="14:02">
-      offre_v3.docx
-    </Line>
-    <Line icon={<FileText size={12} aria-hidden="true" />} note="14:09">
-      offre_v3_final.docx
-    </Line>
-    <Line icon={<FileText size={12} aria-hidden="true" />} note="14:11">
-      offre_v3_final(2).docx
-    </Line>
-    <p className="mt-1.5 border-t border-[var(--color-hairline)] pt-2 text-micro text-[var(--color-text-subtle)]">
-      Which one did the client sign?
-    </p>
-  </div>
-)
+function CompetingVersions() {
+  const t = useT()
+
+  return (
+    <div>
+      <Line icon={<FileText size={12} aria-hidden="true" />} note="14:02">
+        offre_v3.docx
+      </Line>
+      <Line icon={<FileText size={12} aria-hidden="true" />} note="14:09">
+        offre_v3_final.docx
+      </Line>
+      <Line icon={<FileText size={12} aria-hidden="true" />} note="14:11">
+        offre_v3_final(2).docx
+      </Line>
+      <p className="mt-1.5 border-t border-[var(--color-hairline)] pt-2 text-micro text-[var(--color-text-subtle)]">
+        {t.problem.artifacts.whichOne}
+      </p>
+    </div>
+  )
+}
 
 /** A search that returns nothing, in the wrong folder, again. */
-const EmptySearch = (
-  <div>
-    <div className="flex items-center gap-2 rounded-lg border border-[var(--color-hairline)] bg-black/30 px-2.5 py-1.5">
-      <Search size={12} aria-hidden="true" className="shrink-0 text-[var(--color-text-subtle)]" />
-      <span className="truncate font-mono text-meta text-[var(--color-text-muted)]">
-        sofrigaz avenant
-      </span>
+function EmptySearch() {
+  const t = useT()
+
+  return (
+    <div>
+      <div className="flex items-center gap-2 rounded-lg border border-[var(--color-hairline)] bg-black/30 px-2.5 py-1.5">
+        <Search size={12} aria-hidden="true" className="shrink-0 text-[var(--color-text-subtle)]" />
+        <span className="truncate font-mono text-meta text-[var(--color-text-muted)]">
+          {t.problem.artifacts.searchQuery}
+        </span>
+      </div>
+      <p className="mt-2.5 text-micro text-[var(--color-text-subtle)]">
+        {t.problem.artifacts.searchNote}
+      </p>
     </div>
-    <p className="mt-2.5 text-micro text-[var(--color-text-subtle)]">
-      No results — file names don’t contain what’s inside them.
-    </p>
-  </div>
-)
+  )
+}
 
 /** The certificate that told nobody. */
-const ForgottenExpiry = (
-  <div>
-    <Line icon={<FileText size={12} aria-hidden="true" />} note="v1">
-      attestation_fiscale.pdf
-    </Line>
-    <Line icon={<Clock size={12} aria-hidden="true" />} tone="warm">
-      Expired 4 months ago
-    </Line>
-    <p className="mt-1.5 border-t border-[var(--color-hairline)] pt-2 text-micro text-[var(--color-text-subtle)]">
-      Nobody was notified. Nothing was scheduled.
-    </p>
-  </div>
-)
+function ForgottenExpiry() {
+  const t = useT()
+
+  return (
+    <div>
+      <Line icon={<FileText size={12} aria-hidden="true" />} note="v1">
+        attestation_fiscale.pdf
+      </Line>
+      <Line icon={<Clock size={12} aria-hidden="true" />} tone="warm">
+        {t.problem.artifacts.expired}
+      </Line>
+      <p className="mt-1.5 border-t border-[var(--color-hairline)] pt-2 text-micro text-[var(--color-text-subtle)]">
+        {t.problem.artifacts.expiredNote}
+      </p>
+    </div>
+  )
+}
 
 /** A renewal that happened without a decision. */
-const SilentRenewal = (
-  <div>
-    <Line icon={<Repeat size={12} aria-hidden="true" />}>Maintenance contract</Line>
-    <Line icon={<Clock size={12} aria-hidden="true" />} tone="warm">
-      Auto-renewed · 12 months
-    </Line>
-    <p className="mt-1.5 border-t border-[var(--color-hairline)] pt-2 text-micro text-[var(--color-text-subtle)]">
-      Notice period closed two weeks before anyone looked.
-    </p>
-  </div>
-)
+function SilentRenewal() {
+  const t = useT()
+
+  return (
+    <div>
+      <Line icon={<Repeat size={12} aria-hidden="true" />}>{t.problem.artifacts.maintenance}</Line>
+      <Line icon={<Clock size={12} aria-hidden="true" />} tone="warm">
+        {t.problem.artifacts.renewed}
+      </Line>
+      <p className="mt-1.5 border-t border-[var(--color-hairline)] pt-2 text-micro text-[var(--color-text-subtle)]">
+        {t.problem.artifacts.renewedNote}
+      </p>
+    </div>
+  )
+}
 
 /** An attachment with no boundary on it. */
-const UncontrolledShare = (
-  <div>
-    <Line icon={<Paperclip size={12} aria-hidden="true" />} note="2.4 MB">
-      salaires_2026.xlsx
-    </Line>
-    <div className="mt-1.5 flex flex-wrap gap-1.5 border-t border-[var(--color-hairline)] pt-2">
-      {['forwarded ×3', 'no expiry', 'no password'].map((tag) => (
-        <span
-          key={tag}
-          className="rounded bg-[rgb(245_158_11/0.10)] px-1.5 py-0.5 text-micro text-[var(--color-status-amber)] ring-1 ring-[rgb(245_158_11/0.20)]"
-        >
-          {tag}
-        </span>
-      ))}
+function UncontrolledShare() {
+  const t = useT()
+
+  return (
+    <div>
+      <Line icon={<Paperclip size={12} aria-hidden="true" />} note="2.4 MB">
+        salaires_2026.xlsx
+      </Line>
+      <div className="mt-1.5 flex flex-wrap gap-1.5 border-t border-[var(--color-hairline)] pt-2">
+        {t.problem.artifacts.shareTags.map((tag) => (
+          <span
+            key={tag}
+            className="rounded bg-[rgb(245_158_11/0.10)] px-1.5 py-0.5 text-micro text-[var(--color-status-amber)] ring-1 ring-[rgb(245_158_11/0.20)]"
+          >
+            {tag}
+          </span>
+        ))}
+      </div>
     </div>
-  </div>
-)
+  )
+}
 
 /** The access log that was never kept. */
-const NoTrail = (
-  <div>
-    <p className="pb-1.5 text-micro tracking-[0.1em] text-[var(--color-text-subtle)] uppercase">
-      Access history
-    </p>
-    <div className="space-y-1.5 border-t border-[var(--color-hairline)] pt-2">
-      {[0, 1, 2].map((n) => (
-        <div key={n} className="flex items-center gap-2">
-          <span className="h-1.5 w-1.5 rounded-full bg-white/[0.07]" />
-          <span className="h-1.5 flex-1 rounded-full bg-white/[0.05]" />
-        </div>
-      ))}
-    </div>
-    <p className="mt-2.5 flex items-center gap-1.5 text-micro text-[var(--color-text-subtle)]">
-      <EyeOff size={12} aria-hidden="true" />
-      No record kept
-    </p>
-  </div>
-)
+function NoTrail() {
+  const t = useT()
 
-const STAGES = [
-  {
-    name: 'Scattered files',
-    warm: false,
-    note: 'A document is saved wherever it happened to arrive — a laptop, a chat thread, an inbox. Each copy then drifts on its own.',
-    problems: [
-      { caption: 'Important files scattered across devices.', artifact: ScatteredCopies },
-      { caption: 'Documents buried inside folders.', artifact: BuriedPath },
-    ],
-  },
-  {
-    name: 'Lost context',
-    warm: false,
-    note: "Once the copies exist, the file name is all that’s left to go on — and a file name doesn’t know what’s inside it.",
-    problems: [
-      { caption: 'Teams unsure which version is current.', artifact: CompetingVersions },
-      { caption: 'Finding one specific document takes too long.', artifact: EmptySearch },
-    ],
-  },
-  {
-    name: 'Missed deadlines',
-    warm: true,
-    note: 'A document with a date in it is a commitment. Stored as a file, it has no way to remind anyone of that.',
-    problems: [
-      { caption: 'Expiring certificates forgotten.', artifact: ForgottenExpiry },
-      { caption: 'Contracts difficult to track.', artifact: SilentRenewal },
-    ],
-  },
-  {
-    name: 'Security risks',
-    warm: true,
-    note: 'What gets shared to move things along tends to keep moving — and by then there is no way to look back and see where it went.',
-    problems: [
-      { caption: 'Sensitive documents shared without control.', artifact: UncontrolledShare },
-      { caption: 'No clear history of who accessed a document.', artifact: NoTrail },
-    ],
-  },
-] as const
+  return (
+    <div>
+      <p className="pb-1.5 text-micro tracking-[0.1em] text-[var(--color-text-subtle)] uppercase">
+        {t.problem.artifacts.accessHistory}
+      </p>
+      <div className="space-y-1.5 border-t border-[var(--color-hairline)] pt-2">
+        {[0, 1, 2].map((n) => (
+          <div key={n} className="flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-white/[0.07]" />
+            <span className="h-1.5 flex-1 rounded-full bg-white/[0.05]" />
+          </div>
+        ))}
+      </div>
+      <p className="mt-2.5 flex items-center gap-1.5 text-micro text-[var(--color-text-subtle)]">
+        <EyeOff size={12} aria-hidden="true" />
+        {t.problem.artifacts.noRecord}
+      </p>
+    </div>
+  )
+}
+
+function stages(t: Dict) {
+  return [
+    {
+      name: t.problem.stages.scattered.name,
+      warm: false,
+      note: t.problem.stages.scattered.note,
+      problems: [
+        { caption: t.problem.captions.devices, artifact: <ScatteredCopies /> },
+        { caption: t.problem.captions.buried, artifact: <BuriedPath /> },
+      ],
+    },
+    {
+      name: t.problem.stages.context.name,
+      warm: false,
+      note: t.problem.stages.context.note,
+      problems: [
+        { caption: t.problem.captions.versions, artifact: <CompetingVersions /> },
+        { caption: t.problem.captions.search, artifact: <EmptySearch /> },
+      ],
+    },
+    {
+      name: t.problem.stages.deadlines.name,
+      warm: true,
+      note: t.problem.stages.deadlines.note,
+      problems: [
+        { caption: t.problem.captions.expiry, artifact: <ForgottenExpiry /> },
+        { caption: t.problem.captions.renewal, artifact: <SilentRenewal /> },
+      ],
+    },
+    {
+      name: t.problem.stages.security.name,
+      warm: true,
+      note: t.problem.stages.security.note,
+      problems: [
+        { caption: t.problem.captions.sharing, artifact: <UncontrolledShare /> },
+        { caption: t.problem.captions.history, artifact: <NoTrail /> },
+      ],
+    },
+  ]
+}

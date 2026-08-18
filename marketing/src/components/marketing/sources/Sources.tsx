@@ -4,6 +4,7 @@ import { Section } from '@/components/ui/Section'
 import { Reveal } from '@/components/ui/Reveal'
 import { Logo } from '../Logo'
 import { cn } from '@/lib/cn'
+import { useT, type Dict } from '@/i18n'
 
 type Availability = 'live' | 'soon'
 
@@ -16,68 +17,74 @@ type Source = { name: string; note: string; availability: Availability }
  * no grid of logos implying a partnership that doesn't exist. SharePoint is
  * marked because it isn't built; the other three are because they are.
  */
-const DRIVES: Source[] = [
-  {
-    name: 'Google Drive',
-    note: 'Pick a folder. Files arrive with their names and dates intact.',
-    availability: 'live',
-  },
-  {
-    name: 'OneDrive',
-    note: 'Personal or work account.',
-    availability: 'live',
-  },
-  {
-    name: 'Dropbox',
-    note: 'Including the shared folders you already have access to.',
-    availability: 'live',
-  },
-  {
-    name: 'SharePoint',
-    note: 'Document libraries, with their existing structure.',
-    availability: 'soon',
-  },
-]
+function drives(t: Dict): Source[] {
+  return [
+    {
+      name: 'Google Drive',
+      note: t.sources.drives.google,
+      availability: 'live',
+    },
+    {
+      name: 'OneDrive',
+      note: t.sources.drives.onedrive,
+      availability: 'live',
+    },
+    {
+      name: 'Dropbox',
+      note: t.sources.drives.dropbox,
+      availability: 'live',
+    },
+    {
+      name: 'SharePoint',
+      note: t.sources.drives.sharepoint,
+      availability: 'soon',
+    },
+  ]
+}
 
-const ROUTES: (Source & { icon: ReactNode })[] = [
-  {
-    name: 'Upload from this device',
-    note: 'A file, or a folder of them, dragged straight in.',
-    availability: 'live',
-    icon: <Upload size={14} aria-hidden="true" />,
-  },
-  {
-    name: 'Email-in address',
-    note: 'Forward an attachment to a folder’s address and it files itself.',
-    availability: 'live',
-    icon: <Mail size={14} aria-hidden="true" />,
-  },
-  {
-    name: 'Your own systems',
-    note: 'Push documents through the API with a scoped key.',
-    availability: 'live',
-    icon: <KeyRound size={14} aria-hidden="true" />,
-  },
-]
+function routes(t: Dict): (Source & { icon: ReactNode })[] {
+  return [
+    {
+      name: t.sources.routes.device.name,
+      note: t.sources.routes.device.note,
+      availability: 'live',
+      icon: <Upload size={14} aria-hidden="true" />,
+    },
+    {
+      name: t.sources.routes.email.name,
+      note: t.sources.routes.email.note,
+      availability: 'live',
+      icon: <Mail size={14} aria-hidden="true" />,
+    },
+    {
+      name: t.sources.routes.api.name,
+      note: t.sources.routes.api.note,
+      availability: 'live',
+      icon: <KeyRound size={14} aria-hidden="true" />,
+    },
+  ]
+}
 
 /** What happens to a document *because* it arrived — the point of the section. */
-const AFTER = [
-  {
-    icon: <Search size={14} aria-hidden="true" />,
-    title: 'Read on arrival',
-    copy: 'Text is extracted as it lands, so an imported document is searchable by its contents the same day — not just by the file name it happened to have.',
-  },
-  {
-    icon: <Timer size={14} aria-hidden="true" />,
-    title: 'Dated on arrival',
-    copy: 'Expiry and retention rules apply from the moment it enters the vault, so an imported contract starts being watched immediately.',
-  },
-  {
-    icon: <ScrollText size={14} aria-hidden="true" />,
-    title: 'Recorded on arrival',
-    copy: 'The import is an entry in the trail like any other action: which source, who connected it, and what came in.',
-  },
-]
+function after(t: Dict) {
+  return [
+    {
+      icon: <Search size={14} aria-hidden="true" />,
+      title: t.sources.after.read.title,
+      copy: t.sources.after.read.copy,
+    },
+    {
+      icon: <Timer size={14} aria-hidden="true" />,
+      title: t.sources.after.dated.title,
+      copy: t.sources.after.dated.copy,
+    },
+    {
+      icon: <ScrollText size={14} aria-hidden="true" />,
+      title: t.sources.after.recorded.title,
+      copy: t.sources.after.recorded.copy,
+    },
+  ]
+}
 
 /**
  * Connected sources.
@@ -95,13 +102,15 @@ const AFTER = [
  * are wanted later, they drop into the tile in `Row`.
  */
 export function Sources() {
+  const t = useT()
+
   return (
     <Section
       id="sources"
       tone="seam"
-      eyebrow="Connected sources"
-      title="Your documents don't have to start in the Vault."
-      lead="Bring documents from the services you already use and manage them from one secure workspace."
+      eyebrow={t.sources.eyebrow}
+      title={t.sources.title}
+      lead={t.sources.lead}
     >
       {/* Both columns are sources; the vault is beneath them. So they sit side
           by side and the funnel points down from between them — an arrow in a
@@ -111,10 +120,10 @@ export function Sources() {
         <Reveal>
           <div className="rounded-2xl border border-[var(--color-hairline)] bg-[var(--color-card)]/60 p-5">
             <h3 className="text-micro tracking-[0.1em] text-[var(--color-text-subtle)] uppercase">
-              Cloud storage
+              {t.sources.cloudTitle}
             </h3>
             <ul className="mt-4 space-y-3">
-              {DRIVES.map((d) => (
+              {drives(t).map((d) => (
                 <Row key={d.name} source={d} />
               ))}
             </ul>
@@ -125,10 +134,10 @@ export function Sources() {
         <Reveal index={1}>
           <div className="rounded-2xl border border-[var(--color-hairline)] bg-[var(--color-card)]/60 p-5">
             <h3 className="text-micro tracking-[0.1em] text-[var(--color-text-subtle)] uppercase">
-              And the other ways in
+              {t.sources.routesTitle}
             </h3>
             <ul className="mt-4 space-y-3">
-              {ROUTES.map((r) => (
+              {routes(t).map((r) => (
                 <Row key={r.name} source={r} icon={r.icon} />
               ))}
             </ul>
@@ -150,13 +159,11 @@ export function Sources() {
         <div className="rounded-2xl border border-[rgb(16_185_129/0.25)] bg-[rgb(16_185_129/0.04)] p-5 sm:p-6">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <Logo />
-            <p className="text-ui text-[var(--color-text-muted)]">
-              Documents are copied in. The original stays where it is.
-            </p>
+            <p className="text-ui text-[var(--color-text-muted)]">{t.sources.copied}</p>
           </div>
 
           <div className="mt-5 grid gap-5 border-t border-[rgb(16_185_129/0.18)] pt-5 sm:grid-cols-3">
-            {AFTER.map((a) => (
+            {after(t).map((a) => (
               <div key={a.title}>
                 <p className="flex items-center gap-2 text-ui-lg font-medium text-[var(--color-text)]">
                   <span className="text-[var(--color-accent-400)]">{a.icon}</span>
@@ -175,6 +182,7 @@ export function Sources() {
 }
 
 function Row({ source, icon }: { source: Source; icon?: ReactNode }) {
+  const t = useT()
   const soon = source.availability === 'soon'
   return (
     <li className={cn('flex items-start gap-3', soon && 'opacity-70')}>
@@ -189,7 +197,7 @@ function Row({ source, icon }: { source: Source; icon?: ReactNode }) {
           <span className="text-ui-lg font-medium text-[var(--color-text)]">{source.name}</span>
           {soon && (
             <span className="inline-flex items-center rounded-full border border-dashed border-[var(--color-hairline-strong)] px-2 py-0.5 text-micro text-[var(--color-text-subtle)]">
-              Coming soon
+              {t.common.comingSoon}
             </span>
           )}
         </span>

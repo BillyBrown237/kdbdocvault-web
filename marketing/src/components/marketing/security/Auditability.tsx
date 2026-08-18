@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { Section } from '@/components/ui/Section'
 import { cn } from '@/lib/cn'
+import { useT, type Dict } from '@/i18n'
 
 type Entry = {
   id: string
@@ -26,91 +27,76 @@ type Entry = {
   detail: { label: string; value: string }[]
 }
 
-const ENTRIES: Entry[] = [
-  {
-    id: 'upload',
-    time: '10:42 AM',
-    action: 'Document uploaded',
-    actor: 'Marie Ndongo',
-    role: 'Owner',
-    icon: <UploadCloud size={14} aria-hidden="true" />,
-    detail: [
-      { label: 'Version', value: 'v1 · 412 KB · PDF' },
-      { label: 'Folder', value: 'Contracts / Active' },
-      { label: 'Origin', value: 'Web · Douala' },
-    ],
-  },
-  {
-    id: 'review',
-    time: '11:03 AM',
-    action: 'Legal reviewed',
-    actor: 'Aïcha Bello',
-    role: 'Reviewer',
-    icon: <Scale size={14} aria-hidden="true" />,
-    detail: [
-      { label: 'Outcome', value: 'Review completed · 2 comments left' },
-      { label: 'On version', value: 'v1' },
-      { label: 'Requested by', value: 'Marie Ndongo · 10:44 AM' },
-    ],
-  },
-  {
-    id: 'approve',
-    time: '11:17 AM',
-    action: 'Manager approved',
-    actor: 'Paul Ekani',
-    role: 'Approver',
-    icon: <PenLine size={14} aria-hidden="true" />,
-    detail: [
-      { label: 'Step', value: 'Approval 2 of 2 — workflow complete' },
-      { label: 'On version', value: 'v1' },
-      { label: 'Note', value: '“Approved subject to the amended notice period.”' },
-    ],
-  },
-  {
-    id: 'share',
-    time: '11:19 AM',
-    action: 'Document shared',
-    actor: 'Marie Ndongo',
-    role: 'Owner',
-    icon: <Share2 size={14} aria-hidden="true" />,
-    detail: [
-      { label: 'With', value: 'External counsel · secure link' },
-      { label: 'Rules', value: 'View only · expires in 7 days · password required' },
-      { label: 'Used', value: '2 of 5 views' },
-    ],
-  },
-  {
-    id: 'v2',
-    time: '11:25 AM',
-    action: 'Version 2 created',
-    actor: 'Marie Ndongo',
-    role: 'Owner',
-    icon: <Layers size={14} aria-hidden="true" />,
-    detail: [
-      { label: 'Change', value: 'v1 → v2 · notice period raised to 90 days' },
-      { label: 'Previous', value: 'v1 kept and still retrievable' },
-      { label: 'Notified', value: 'Legal, Finance' },
-    ],
-  },
-]
+/** The `id`s are handles for the open/closed state, not copy. */
+function entries(t: Dict): Entry[] {
+  return [
+    {
+      id: 'upload',
+      time: t.audit.entries.upload.time,
+      action: t.audit.entries.upload.action,
+      actor: 'Marie Ndongo',
+      role: t.audit.entries.upload.role,
+      icon: <UploadCloud size={14} aria-hidden="true" />,
+      detail: t.audit.entries.upload.detail,
+    },
+    {
+      id: 'review',
+      time: t.audit.entries.review.time,
+      action: t.audit.entries.review.action,
+      actor: 'Aïcha Bello',
+      role: t.audit.entries.review.role,
+      icon: <Scale size={14} aria-hidden="true" />,
+      detail: t.audit.entries.review.detail,
+    },
+    {
+      id: 'approve',
+      time: t.audit.entries.approve.time,
+      action: t.audit.entries.approve.action,
+      actor: 'Paul Ekani',
+      role: t.audit.entries.approve.role,
+      icon: <PenLine size={14} aria-hidden="true" />,
+      detail: t.audit.entries.approve.detail,
+    },
+    {
+      id: 'share',
+      time: t.audit.entries.share.time,
+      action: t.audit.entries.share.action,
+      actor: 'Marie Ndongo',
+      role: t.audit.entries.share.role,
+      icon: <Share2 size={14} aria-hidden="true" />,
+      detail: t.audit.entries.share.detail,
+    },
+    {
+      id: 'v2',
+      time: t.audit.entries.v2.time,
+      action: t.audit.entries.v2.action,
+      actor: 'Marie Ndongo',
+      role: t.audit.entries.v2.role,
+      icon: <Layers size={14} aria-hidden="true" />,
+      detail: t.audit.entries.v2.detail,
+    },
+  ]
+}
 
-const REASONS = [
-  {
-    icon: <Scale size={14} aria-hidden="true" />,
-    title: 'When there is a disagreement',
-    copy: 'Who approved it, on which version, and at what time stops being someone’s recollection. It is a record with a timestamp next to it.',
-  },
-  {
-    icon: <Download size={14} aria-hidden="true" />,
-    title: 'When you are audited',
-    copy: 'Export the history of a document, a folder, or a date range. Nobody has to reconstruct a year from memory and an inbox.',
-  },
-  {
-    icon: <UserRoundX size={14} aria-hidden="true" />,
-    title: 'When someone leaves',
-    copy: 'The trail belongs to the document, not to the person who handled it. A handover does not depend on what was in one mailbox.',
-  },
-]
+function reasons(t: Dict) {
+  return [
+    {
+      icon: <Scale size={14} aria-hidden="true" />,
+      title: t.audit.reasons.dispute.title,
+      copy: t.audit.reasons.dispute.copy,
+    },
+    {
+      icon: <Download size={14} aria-hidden="true" />,
+      title: t.audit.reasons.audited.title,
+      copy: t.audit.reasons.audited.copy,
+    },
+    {
+      icon: <UserRoundX size={14} aria-hidden="true" />,
+      title: t.audit.reasons.leaver.title,
+      copy: t.audit.reasons.leaver.copy,
+    },
+  ]
+}
 
 /**
  * Auditability.
@@ -126,21 +112,25 @@ const REASONS = [
  * would rather undercut the argument.
  */
 export function Auditability() {
+  const t = useT()
   const [openId, setOpenId] = useState<string>('share')
+
+  const ENTRIES = entries(t)
+  const REASONS = reasons(t)
 
   return (
     <Section
       id="audit"
       tone="seam"
-      eyebrow="Auditability"
-      title="Know what happened. Not just where the file is."
-      lead="Every important document action can become part of a traceable history — attached to the document, kept for as long as the document is."
+      eyebrow={t.audit.eyebrow}
+      title={t.audit.title}
+      lead={t.audit.lead}
     >
       <div className="grid gap-6 lg:grid-cols-[1.65fr_1fr] lg:gap-8">
         <div className="overflow-hidden rounded-2xl border border-[var(--color-hairline-strong)] bg-[var(--color-surface)] product-sheen">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-[var(--color-hairline)] px-4 py-3.5 sm:px-5">
             <h3 className="text-ui-lg font-semibold tracking-[-0.01em] text-[var(--color-text)]">
-              Audit trail
+              {t.audit.panelTitle}
             </h3>
             <span className="font-mono text-meta text-[var(--color-text-subtle)]">
               Contract.pdf
@@ -148,11 +138,11 @@ export function Auditability() {
             <div aria-hidden="true" className="ml-auto flex items-center gap-1.5">
               <span className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-micro text-[var(--color-text-subtle)] ring-1 ring-[var(--color-hairline)]">
                 <Filter size={10} />
-                All actions
+                {t.audit.filter}
               </span>
               <span className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-micro text-[var(--color-text-subtle)] ring-1 ring-[var(--color-hairline)]">
                 <Download size={10} />
-                Export
+                {t.audit.export}
               </span>
             </div>
           </div>
@@ -239,18 +229,18 @@ export function Auditability() {
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-[var(--color-hairline)] px-4 py-3 sm:px-5">
             <p className="flex items-center gap-1.5 text-meta text-[var(--color-text-subtle)]">
               <Lock size={12} aria-hidden="true" className="text-[var(--color-accent-400)]" />
-              Appended, never edited
+              {t.audit.appended}
             </p>
             <p className="flex items-center gap-1.5 text-meta text-[var(--color-text-subtle)]">
               <Link2 size={12} aria-hidden="true" />
-              Kept with the document, for as long as the document
+              {t.audit.kept}
             </p>
           </div>
         </div>
 
         <div>
           <h3 className="text-micro tracking-[0.1em] text-[var(--color-text-subtle)] uppercase">
-            Why organizations ask for this
+            {t.audit.whyTitle}
           </h3>
           <ul className="mt-4 space-y-3">
             {REASONS.map((r) => (

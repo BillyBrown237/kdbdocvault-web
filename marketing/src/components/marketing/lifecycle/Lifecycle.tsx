@@ -5,13 +5,14 @@ import { Section } from '@/components/ui/Section'
 import { cn } from '@/lib/cn'
 import { useInView } from '@/lib/useInView'
 import { REGISTER_URL } from '@/lib/links'
+import { useLocale, useT } from '@/i18n'
 import {
   countdown,
   dateIn,
-  DOCS,
-  LADDER,
+  docs,
+  ladder,
   positionOf,
-  REMINDERS,
+  reminders,
   STOPS,
   urgencyOf,
   type Doc,
@@ -73,24 +74,29 @@ const REMINDER_ICON = {
  * lets it speak.
  */
 export function Lifecycle() {
+  const t = useT()
+  const locale = useLocale()
   const { ref, inView } = useInView<HTMLDivElement>('0px 0px -18% 0px')
+
+  const docList = docs(t)
+  const reminderList = reminders(t, locale)
 
   return (
     <Section
       id="lifecycle"
       tone="page"
-      eyebrow="Lifecycle"
-      title="Never discover an expired document too late."
-      lead="KDB Doc Vault keeps important dates attached to the documents they belong to and helps you act before deadlines become problems."
+      eyebrow={t.lifecycle.eyebrow}
+      title={t.lifecycle.title}
+      lead={t.lifecycle.lead}
     >
       <div ref={ref}>
         <div className="overflow-hidden rounded-2xl border border-[var(--color-hairline-strong)] bg-[var(--color-surface)] product-sheen">
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-[var(--color-hairline)] px-4 py-3.5 sm:px-5">
             <h3 className="text-card font-semibold tracking-[-0.01em] text-[var(--color-text)]">
-              Renewals &amp; expiries
+              {t.lifecycle.boardTitle}
             </h3>
             <p className="font-mono text-meta text-[var(--color-text-subtle)]">
-              4 documents · 1 due tomorrow
+              {t.lifecycle.boardCount}
             </p>
           </div>
 
@@ -110,7 +116,7 @@ export function Lifecycle() {
                     )}
                     style={{ left: i === 0 ? undefined : `${(i / (STOPS.length - 1)) * 100}%` }}
                   >
-                    {stop === 0 ? 'Expired' : `${stop}d`}
+                    {stop === 0 ? t.lifecycle.expired : `${stop}d`}
                   </span>
                 ))}
               </div>
@@ -118,7 +124,7 @@ export function Lifecycle() {
             </div>
 
             <ul className="mt-1 divide-y divide-[var(--color-hairline)]">
-              {DOCS.map((doc, i) => (
+              {docList.map((doc, i) => (
                 <Row key={doc.id} doc={doc} index={i} started={inView} />
               ))}
             </ul>
@@ -129,14 +135,14 @@ export function Lifecycle() {
           <Reveal>
             <div className="h-full rounded-2xl border border-[var(--color-hairline)] bg-[var(--color-card)]/60 p-5">
               <h3 className="text-micro tracking-[0.1em] text-[var(--color-text-subtle)] uppercase">
-                What happens as the date approaches
+                {t.lifecycle.ladderTitle}
               </h3>
               <ol className="relative mt-4">
                 <span
                   aria-hidden="true"
                   className="absolute top-2 bottom-2 left-[0.3125rem] w-px bg-[linear-gradient(180deg,rgb(16_185_129/0.4),rgb(245_158_11/0.4))]"
                 />
-                {LADDER.map((rung, i) => (
+                {ladder(t).map((rung, i) => (
                   <li key={rung.at} className="relative pb-4 pl-7 last:pb-0">
                     <span
                       aria-hidden="true"
@@ -157,15 +163,15 @@ export function Lifecycle() {
 
           <div className="rounded-2xl border border-[var(--color-hairline)] bg-[var(--color-card)]/60 p-5">
             <h3 className="text-micro tracking-[0.1em] text-[var(--color-text-subtle)] uppercase">
-              Reminders sent
+              {t.lifecycle.remindersTitle}
             </h3>
             <ul className="mt-4 space-y-2.5">
-              {REMINDERS.map((r, i) => (
+              {reminderList.map((r, i) => (
                 // The last card is delayed well past the others so it reads as
                 // one that arrived while you were looking, rather than part of
                 // the same batch.
                 <li key={r.id}>
-                  <Reveal index={i < REMINDERS.length - 1 ? i : 14}>
+                  <Reveal index={i < reminderList.length - 1 ? i : 14}>
                     <ReminderCard reminder={r} />
                   </Reveal>
                 </li>
@@ -176,11 +182,9 @@ export function Lifecycle() {
 
         <div className="mt-10 flex flex-col items-center gap-3 text-center">
           <p className="text-h3 font-semibold tracking-[-0.02em] text-[var(--color-text)]">
-            Stay ahead of your documents
+            {t.lifecycle.ctaTitle}
           </p>
-          <p className="max-w-md text-sm text-[var(--color-text-subtle)]">
-            Add a date to any document. KDB Doc Vault carries it from there.
-          </p>
+          <p className="max-w-md text-sm text-[var(--color-text-subtle)]">{t.lifecycle.ctaLead}</p>
           {/* Secondary, not primary: the page has exactly two emerald buttons,
               in the hero and in the closing block. A third mid-page would make
               all three read as ordinary. */}
@@ -191,7 +195,7 @@ export function Lifecycle() {
             className="mt-1"
             trailing={<ArrowRight size={16} aria-hidden="true" />}
           >
-            Get started
+            {t.common.getStarted}
           </Button>
         </div>
       </div>
@@ -200,6 +204,8 @@ export function Lifecycle() {
 }
 
 function Row({ doc, index, started }: { doc: Doc; index: number; started: boolean }) {
+  const t = useT()
+  const locale = useLocale()
   const urgency = urgencyOf(doc.days)
   const tone = URGENCY[urgency]
   const Icon = DOC_ICON[doc.icon]
@@ -272,7 +278,7 @@ function Row({ doc, index, started }: { doc: Doc; index: number; started: boolea
             tone.chip,
           )}
         >
-          {countdown(doc.days)}
+          {countdown(t, doc.days)}
         </span>
         {/* Derived from today's date, so the prerendered value and the one
             the browser computes differ by however long the build has been
@@ -282,7 +288,7 @@ function Row({ doc, index, started }: { doc: Doc; index: number; started: boolea
           suppressHydrationWarning
           className="mt-1 block font-mono text-micro text-[var(--color-text-subtle)]"
         >
-          {dateIn(doc.days)}
+          {dateIn(locale, doc.days)}
         </span>
       </div>
     </li>

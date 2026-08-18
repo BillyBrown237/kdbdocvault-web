@@ -68,10 +68,79 @@ public/
     Home.tsx                 page d'accueil (squelette)
 ```
 
-> **Langue.** Le site public est en anglais (brief produit). L'application
-> reste FR par défaut. Si une version FR du site est nécessaire, l'extraction
-> des chaînes se fera à ce moment-là — rien n'est codé en dur ailleurs que
-> dans les composants.
+## Bilingue — anglais et français
+
+Deux **documents prérendus distincts**, pas un sélecteur :
+
+| | anglais | français |
+|---|---|---|
+| URL | `/` | `/fr/` |
+| fichier | `dist/index.html` | `dist/fr/index.html` |
+| `<html lang>` | `en` | `fr` |
+| `canonical` | `…dev/` | `…dev/fr/` |
+
+C'est la seule disposition qu'un moteur de recherche peut indexer deux fois.
+Un basculement côté client sur une seule URL aurait fait qu'une seule des deux
+langues soit jamais trouvée — ce qui aurait annulé l'essentiel du travail SEO.
+Les deux pages déclarent mutuellement leurs `hreflang`, et le sitemap liste
+les deux.
+
+### Le dictionnaire
+
+`src/i18n/en.ts` et `src/i18n/fr.ts`. Pas de i18next : la locale ne change
+jamais après le service de la page, il n'y a donc rien à détecter, rien à
+charger paresseusement, et aucune raison de poser 15 ko de framework sur une
+page d'accueil.
+
+```ts
+export const fr: typeof en = { … }
+```
+
+**`fr` est typé `typeof en`** : une clé manquante, mal orthographiée ou en trop
+est une erreur de compilation, pas une chaîne qui s'affiche `hero.title` en
+production. Garder les deux fichiers dans le même ordre — relire une
+traduction est bien plus simple quand les diffs s'alignent.
+
+### La règle qui revient le plus souvent
+
+Un composant lit `const t = useT()`. **Les constantes de module ne peuvent pas
+appeler de hook** : toute constante qui portait du texte est devenue une
+fonction du dictionnaire.
+
+```ts
+const STAGES = [{ name: 'Upload', … }]        // avant
+function stages(t: Dict) { return [{ name: t.workflow.stages.upload.name, … }] }  // après
+```
+
+Deux pièges à connaître :
+
+- **Identifiants ≠ libellés.** Les `id`, les clés d'état (`'preview'`,
+  `'48h'`, `'pending'`), les `id` DOM et les cibles `aria-labelledby` restent
+  en anglais. Seuls les libellés viennent du dictionnaire. Traduire un
+  identifiant casse les onglets, les colonnes de pied de page et le
+  `aria-controls`.
+- **Identité des tableaux.** `useTypewriter` compare son argument `phrases`
+  **par référence**. Un tableau littéral recréé à chaque rendu relance la
+  frappe indéfiniment. Passer la référence du dictionnaire, ou un `useMemo`.
+
+### Ce qui n'est volontairement pas traduit
+
+Les noms de produits (KDB Doc Vault, PDF, OCR, API), les noms de fichiers
+fictifs des maquettes, les initiales d'avatar, les tailles, les libellés de
+version et les noms de personnes. Un bureau francophone ne renomme pas ses
+PDF non plus.
+
+### Vérifier après une modification
+
+```bash
+npm run build   # échoue si l'une des deux pages ne contient pas son propre titre
+grep -c '<html lang="fr"' dist/fr/index.html   # doit valoir 1
+```
+
+Le pipeline vérifie la même chose deux fois : sur les fichiers avant envoi, et
+sur `SITE_HOST/fr/` une fois en ligne — parce qu'un nginx qui ne résout pas le
+répertoire sert l'index anglais avec un code 200, ce qui a l'air correct
+jusqu'à ce que quelqu'un lise la page.
 
 ## Échelles fermées
 
@@ -445,11 +514,11 @@ un site part en production avec la moitié de ses boutons pointant vers un
 domaine que personne ne possède.
 
 Les valeurs actuelles sont **déduites** du `canonical` de `index.html`
-(`https://site.kdb.dekoubrown.com/`), pas d'une source fiable :
+(`https://site.kdb.dekoubrown.dev/`), pas d'une source fiable :
 
 ```ts
-APP_URL       = 'https://app.kdb.dekoubrown.com'   // à vérifier
-CONTACT_EMAIL = 'contact@kdb.dekoubrown.com'       // à vérifier
+APP_URL       = 'https://app.kdb.dekoubrown.dev'   // à vérifier
+CONTACT_EMAIL = 'contact@kdb.dekoubrown.dev'       // à vérifier
 ```
 
 Une seule édition ici déplace tous les appels à l'action de la page.
@@ -699,7 +768,7 @@ sur `develop` :
 `marketing/package-lock.json` **doit être versionné** — `npm ci` en dépend.
 
 Une variable GitHub reste à créer pour que le test de fumée du site s'exécute :
-`SITE_HOST` = `site.kdb.dekoubrown.com`
+`SITE_HOST` = `site.kdb.dekoubrown.dev`
 (Settings → Secrets and variables → Actions → Variables). Sans elle, le
 pipeline avertit et continue.
 

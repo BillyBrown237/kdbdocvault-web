@@ -17,11 +17,25 @@
     <link rel="icon" href="/icons/favicon-32x32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="canonical" href="https://site.kdb.dekoubrown.com/" />
+    <link rel="canonical" href="https://site.kdb.dekoubrown.dev/" />
+
+    <!--
+      The two language versions declare each other. Without this a search
+      engine treats them as unrelated pages competing for the same content;
+      with it, each is served to the audience that reads it.
+
+      `x-default` points at English, which is what a visitor with no matching
+      language preference gets. These three lines are identical in both
+      documents — only the canonical above differs, and the prerender rewrites
+      it per locale.
+    -->
+    <link rel="alternate" hreflang="en" href="https://site.kdb.dekoubrown.dev/" />
+    <link rel="alternate" hreflang="fr" href="https://site.kdb.dekoubrown.dev/fr/" />
+    <link rel="alternate" hreflang="x-default" href="https://site.kdb.dekoubrown.dev/" />
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="KDB Doc Vault" />
-    <meta property="og:url" content="https://site.kdb.dekoubrown.com/" />
+    <meta property="og:url" content="https://site.kdb.dekoubrown.dev/" />
     <meta property="og:title" content="KDB Doc Vault — Your documents deserve more than a folder." />
     <meta
       property="og:description"
@@ -29,13 +43,13 @@
     />
     <!-- Absolute, because a share card is fetched by a crawler that has no
          page context to resolve a relative path against. -->
-    <meta property="og:image" content="https://site.kdb.dekoubrown.com/og-image.png" />
+    <meta property="og:image" content="https://site.kdb.dekoubrown.dev/og-image.png" />
     <meta property="og:image:width" content="1731" />
     <meta property="og:image:height" content="909" />
     <meta property="og:image:alt" content="The KDB Doc Vault workspace." />
     <meta property="og:locale" content="en" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="https://site.kdb.dekoubrown.com/og-image.png" />
+    <meta name="twitter:image" content="https://site.kdb.dekoubrown.dev/og-image.png" />
 
     <!-- Fonts are preconnected, not blocking: the page renders in the fallback
          stack and swaps, so a slow font never delays first paint. -->
@@ -62,11 +76,11 @@
         "@graph": [
           {
             "@type": "Organization",
-            "@id": "https://site.kdb.dekoubrown.com/#organization",
+            "@id": "https://site.kdb.dekoubrown.dev/#organization",
             "name": "KDB Doc Vault",
-            "url": "https://site.kdb.dekoubrown.com/",
-            "logo": "https://site.kdb.dekoubrown.com/icons/android-chrome-512x512.png",
-            "email": "contact@kdb.dekoubrown.com",
+            "url": "https://site.kdb.dekoubrown.dev/",
+            "logo": "https://site.kdb.dekoubrown.dev/icons/android-chrome-512x512.png",
+            "email": "contact@kdb.dekoubrown.dev",
             "address": {
               "@type": "PostalAddress",
               "addressLocality": "Douala",
@@ -75,11 +89,11 @@
           },
           {
             "@type": "WebSite",
-            "@id": "https://site.kdb.dekoubrown.com/#website",
-            "url": "https://site.kdb.dekoubrown.com/",
+            "@id": "https://site.kdb.dekoubrown.dev/#website",
+            "url": "https://site.kdb.dekoubrown.dev/",
             "name": "KDB Doc Vault",
             "inLanguage": "en",
-            "publisher": { "@id": "https://site.kdb.dekoubrown.com/#organization" }
+            "publisher": { "@id": "https://site.kdb.dekoubrown.dev/#organization" }
           },
           {
             "@type": "SoftwareApplication",
@@ -87,9 +101,9 @@
             "applicationCategory": "BusinessApplication",
             "applicationSubCategory": "Document management",
             "operatingSystem": "Web",
-            "url": "https://site.kdb.dekoubrown.com/",
+            "url": "https://site.kdb.dekoubrown.dev/",
             "description": "Store, organize, search, share, sign and manage documents across their whole lifecycle, with expiry reminders, controlled access and a full audit trail.",
-            "publisher": { "@id": "https://site.kdb.dekoubrown.com/#organization" }
+            "publisher": { "@id": "https://site.kdb.dekoubrown.dev/#organization" }
           }
         ]
       }

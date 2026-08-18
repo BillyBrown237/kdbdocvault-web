@@ -18,6 +18,7 @@ import { Reveal } from '@/components/ui/Reveal'
 import { cn } from '@/lib/cn'
 import { useInView } from '@/lib/useInView'
 import { useSequence } from '@/lib/useSequence'
+import { useT, type Dict } from '@/i18n'
 
 /**
  * Security, explained rather than asserted.
@@ -43,131 +44,142 @@ type Stage = {
   artifact: ReactNode
 }
 
-const STAGES: Stage[] = [
-  {
-    name: 'User',
-    question: 'Who is asking?',
-    plain: 'A request arrives from a person on a device — nothing is trusted about it yet.',
-    icon: <UserRound size={14} aria-hidden="true" />,
-    artifact: (
-      <Artifact>
-        <Line>GET /documents/019f…c41/content</Line>
-        <Faint>from a browser session · no assumptions made</Faint>
-      </Artifact>
-    ),
-  },
-  {
-    name: 'Authentication',
-    question: 'Are you who you say you are?',
-    plain: 'The sign-in is verified and turned into a session with a limited lifetime.',
-    icon: <KeyRound size={14} aria-hidden="true" />,
-    artifact: (
-      <Artifact>
-        <Line>session · issued 09:14 · expires 21:14</Line>
-        <Faint>expired or revoked sessions stop here</Faint>
-      </Artifact>
-    ),
-  },
-  {
-    name: 'Authorization',
-    question: 'Are you allowed to do this, to this document?',
-    plain: 'The action is checked against the role you hold and the rules on that document.',
-    icon: <SlidersHorizontal size={14} aria-hidden="true" />,
-    artifact: (
-      <Artifact>
-        <Line>
-          requires <Em>documents:read</Em> · role <Em>member</Em>
-        </Line>
-        <Faint>the answer is per action, not per login</Faint>
-      </Artifact>
-    ),
-  },
-  {
-    name: 'Tenant isolation',
-    question: 'Whose data can you even see?',
-    plain:
-      'Your organization’s rows are separated by the database itself, underneath every query the application writes.',
-    icon: <Layers size={14} aria-hidden="true" />,
-    artifact: (
-      <Artifact accent>
-        <Line>
-          tenant = <Em>019f4470-45e0-…</Em> · set by the server
-        </Line>
-        <Faint>a mistake in the application still cannot return another organization&rsquo;s row</Faint>
-      </Artifact>
-    ),
-  },
-  {
-    name: 'Document',
-    question: 'What actually comes back?',
-    plain: 'The file is served from encrypted storage, through a link that expires in minutes.',
-    icon: <FileText size={14} aria-hidden="true" />,
-    artifact: (
-      <Artifact>
-        <Line>object key · opaque · encrypted at rest</Line>
-        <Faint>the storage path reveals nothing about the document</Faint>
-      </Artifact>
-    ),
-  },
-  {
-    name: 'Audit trail',
-    question: 'What was written down?',
-    plain: 'The action becomes an entry: who, what, when. Entries are appended, never edited.',
-    icon: <ScrollText size={14} aria-hidden="true" />,
-    artifact: (
-      <Artifact accent>
-        <Line>+ viewed · marie@… · 09:41 · v4</Line>
-        <Faint>appended — see the trail below</Faint>
-      </Artifact>
-    ),
-  },
-]
+function stages(t: Dict): Stage[] {
+  return [
+    {
+      name: t.security.stages.user.name,
+      question: t.security.stages.user.question,
+      plain: t.security.stages.user.plain,
+      icon: <UserRound size={14} aria-hidden="true" />,
+      artifact: (
+        <Artifact>
+          <Line>{t.security.stages.user.line}</Line>
+          <Faint>{t.security.stages.user.faint}</Faint>
+        </Artifact>
+      ),
+    },
+    {
+      name: t.security.stages.auth.name,
+      question: t.security.stages.auth.question,
+      plain: t.security.stages.auth.plain,
+      icon: <KeyRound size={14} aria-hidden="true" />,
+      artifact: (
+        <Artifact>
+          <Line>{t.security.stages.auth.line}</Line>
+          <Faint>{t.security.stages.auth.faint}</Faint>
+        </Artifact>
+      ),
+    },
+    {
+      name: t.security.stages.authz.name,
+      question: t.security.stages.authz.question,
+      plain: t.security.stages.authz.plain,
+      icon: <SlidersHorizontal size={14} aria-hidden="true" />,
+      artifact: (
+        <Artifact>
+          <Line>
+            {t.security.stages.authz.lineBefore}
+            <Em>documents:read</Em>
+            {t.security.stages.authz.lineMiddle}
+            <Em>member</Em>
+          </Line>
+          <Faint>{t.security.stages.authz.faint}</Faint>
+        </Artifact>
+      ),
+    },
+    {
+      name: t.security.stages.tenant.name,
+      question: t.security.stages.tenant.question,
+      plain: t.security.stages.tenant.plain,
+      icon: <Layers size={14} aria-hidden="true" />,
+      artifact: (
+        <Artifact accent>
+          <Line>
+            {t.security.stages.tenant.lineBefore}
+            <Em>019f4470-45e0-…</Em>
+            {t.security.stages.tenant.lineAfter}
+          </Line>
+          <Faint>{t.security.stages.tenant.faint}</Faint>
+        </Artifact>
+      ),
+    },
+    {
+      name: t.security.stages.document.name,
+      question: t.security.stages.document.question,
+      plain: t.security.stages.document.plain,
+      icon: <FileText size={14} aria-hidden="true" />,
+      artifact: (
+        <Artifact>
+          <Line>{t.security.stages.document.line}</Line>
+          <Faint>{t.security.stages.document.faint}</Faint>
+        </Artifact>
+      ),
+    },
+    {
+      name: t.security.stages.audit.name,
+      question: t.security.stages.audit.question,
+      plain: t.security.stages.audit.plain,
+      icon: <ScrollText size={14} aria-hidden="true" />,
+      artifact: (
+        <Artifact accent>
+          <Line>{t.security.stages.audit.line}</Line>
+          <Faint>{t.security.stages.audit.faint}</Faint>
+        </Artifact>
+      ),
+    },
+  ]
+}
 
-const CONCEPTS = [
-  {
-    name: 'Tenant isolation',
-    icon: <Layers size={14} aria-hidden="true" />,
-    copy: 'Every row belongs to one organization, and the database enforces that on every query. Another tenant’s data is not hidden from you — it is unreachable.',
-  },
-  {
-    name: 'Role-based access',
-    icon: <Users size={14} aria-hidden="true" />,
-    copy: 'Owner, admin, member. What a person can do follows the role they hold, not the link somebody forwarded them.',
-  },
-  {
-    name: 'Encryption',
-    icon: <Lock size={14} aria-hidden="true" />,
-    copy: 'Documents are encrypted in transit and at rest. Object keys are opaque, so a storage path gives nothing away about what it holds.',
-  },
-  {
-    name: 'Audit trails',
-    icon: <ScrollText size={14} aria-hidden="true" />,
-    copy: 'Every action that changes a document adds an entry. Entries are appended — the application offers no way to edit or remove one.',
-  },
-  {
-    name: 'Secure sharing',
-    icon: <Link2 size={14} aria-hidden="true" />,
-    copy: 'A link carries its own rules: an expiry date, a view limit, an optional password. It can be revoked, and revoking it is immediate.',
-  },
-  {
-    name: 'Version integrity',
-    icon: <Database size={14} aria-hidden="true" />,
-    copy: 'A new version never overwrites the old one. Each is stored separately and stays retrievable, so “the current one” is a fact rather than a convention.',
-  },
-  {
-    name: 'Access controls',
-    icon: <SlidersHorizontal size={14} aria-hidden="true" />,
-    copy: 'View, download, share and delete are granted separately, per document and per folder — not bundled into one permission called “access”.',
-  },
-  {
-    name: 'Document retention',
-    icon: <Timer size={14} aria-hidden="true" />,
-    copy: 'A retention rule blocks deletion until it lapses. A legal hold blocks it regardless of the rule, and both are recorded.',
-  },
-]
+function concepts(t: Dict) {
+  return [
+    {
+      name: t.security.concepts.tenant.name,
+      icon: <Layers size={14} aria-hidden="true" />,
+      copy: t.security.concepts.tenant.copy,
+    },
+    {
+      name: t.security.concepts.roles.name,
+      icon: <Users size={14} aria-hidden="true" />,
+      copy: t.security.concepts.roles.copy,
+    },
+    {
+      name: t.security.concepts.encryption.name,
+      icon: <Lock size={14} aria-hidden="true" />,
+      copy: t.security.concepts.encryption.copy,
+    },
+    {
+      name: t.security.concepts.audit.name,
+      icon: <ScrollText size={14} aria-hidden="true" />,
+      copy: t.security.concepts.audit.copy,
+    },
+    {
+      name: t.security.concepts.sharing.name,
+      icon: <Link2 size={14} aria-hidden="true" />,
+      copy: t.security.concepts.sharing.copy,
+    },
+    {
+      name: t.security.concepts.versions.name,
+      icon: <Database size={14} aria-hidden="true" />,
+      copy: t.security.concepts.versions.copy,
+    },
+    {
+      name: t.security.concepts.access.name,
+      icon: <SlidersHorizontal size={14} aria-hidden="true" />,
+      copy: t.security.concepts.access.copy,
+    },
+    {
+      name: t.security.concepts.retention.name,
+      icon: <Timer size={14} aria-hidden="true" />,
+      copy: t.security.concepts.retention.copy,
+    },
+  ]
+}
 
 export function Security() {
+  const t = useT()
   const { ref, inView } = useInView<HTMLDivElement>('0px 0px -20% 0px')
+  const STAGES = stages(t)
+  const CONCEPTS = concepts(t)
   const reached = useSequence(inView, STAGES.length, 380)
 
   return (
@@ -176,17 +188,19 @@ export function Security() {
       // `page`, because Sharing above it is `raised` — see the tone note in
       // Home.tsx. Two raised sections in a row lose the seam between them.
       tone="page"
-      eyebrow="Security"
-      title="Built for documents you wouldn't want in the wrong hands."
-      lead="Every request for a document passes the same six checkpoints, in the same order, every time. Here is what each one actually does."
+      eyebrow={t.security.eyebrow}
+      title={t.security.title}
+      lead={t.security.lead}
     >
       {/* Said plainly and early, because a reader who has met those phrases
           before discounts everything that follows them. */}
       <p className="-mt-8 mb-12 max-w-2xl border-l-2 border-[var(--color-hairline-strong)] pl-4 text-ui leading-relaxed text-[var(--color-text-subtle)]">
-        You won&rsquo;t find <em className="not-italic text-[var(--color-text-muted)]">military-grade</em>,{' '}
-        <em className="not-italic text-[var(--color-text-muted)]">bank-level</em> or{' '}
-        <em className="not-italic text-[var(--color-text-muted)]">unbreakable</em> anywhere on this
-        page. None of those are standards. What follows are mechanisms you can check.
+        {t.security.disclaimerBefore}
+        <em className="not-italic text-[var(--color-text-muted)]">{t.security.disclaimerWords[0]}</em>,{' '}
+        <em className="not-italic text-[var(--color-text-muted)]">{t.security.disclaimerWords[1]}</em>
+        {t.security.disclaimerOr}
+        <em className="not-italic text-[var(--color-text-muted)]">{t.security.disclaimerWords[2]}</em>
+        {t.security.disclaimerAfter}
       </p>
 
       <div ref={ref}>
@@ -256,7 +270,7 @@ export function Security() {
 
       <div className="mt-14">
         <h3 className="text-micro tracking-[0.1em] text-[var(--color-text-subtle)] uppercase">
-          The rest of it, in plain words
+          {t.security.restTitle}
         </h3>
         <dl className="mt-5 grid gap-x-10 gap-y-6 sm:grid-cols-2">
           {CONCEPTS.map((c, i) => (

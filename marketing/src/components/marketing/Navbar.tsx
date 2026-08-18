@@ -4,24 +4,29 @@ import { ArrowRight, Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Container } from '@/components/ui/Container'
 import { Logo } from './Logo'
+import { LanguageSwitch } from './LanguageSwitch'
 import { cn } from '@/lib/cn'
 import { LOGIN_URL, REGISTER_URL } from '@/lib/links'
+import { useT, type Dict } from '@/i18n'
 
 /**
  * `href` is optional, as in the footer: Resources has no destination yet, and
  * a nav item that scrolls nowhere is worse than one that plainly isn't ready.
  * Give it an href the day the page exists.
  */
-const LINKS: { href?: string; label: string }[] = [
-  { href: '#solution', label: 'Product' },
-  { href: '#solutions', label: 'Solutions' },
-  { href: '#security', label: 'Security' },
-  { href: '#features', label: 'Features' },
-  { href: '#pricing', label: 'Pricing' },
-  { label: 'Resources' },
-]
+function links(t: Dict): { href?: string; label: string }[] {
+  return [
+    { href: '#solution', label: t.nav.links.product },
+    { href: '#solutions', label: t.nav.links.solutions },
+    { href: '#security', label: t.nav.links.security },
+    { href: '#features', label: t.nav.links.features },
+    { href: '#pricing', label: t.nav.links.pricing },
+    { label: t.nav.links.resources },
+  ]
+}
 
 export function Navbar() {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const toggleRef = useRef<HTMLButtonElement>(null)
@@ -105,16 +110,16 @@ export function Navbar() {
         href="#main"
         className="sr-only focusable-sr top-3 left-3 z-60 rounded-lg bg-[var(--color-accent-600)] px-4 py-2 text-sm font-medium text-white"
       >
-        Skip to content
+        {t.nav.skip}
       </a>
 
       <Container as="nav" className="flex h-16 items-center gap-6 lg:h-[4.5rem]">
-        <a href="/" className="shrink-0 rounded-sm" aria-label="KDB Doc Vault — home">
+        <a href="/" className="shrink-0 rounded-sm" aria-label={t.nav.home}>
           <Logo />
         </a>
 
         <ul className="mx-auto hidden items-center gap-0.5 lg:flex">
-          {LINKS.map((l) => (
+          {links(t).map((l) => (
             <li key={l.label}>
               {l.href ? (
                 <a
@@ -133,11 +138,12 @@ export function Navbar() {
         </ul>
 
         <div className="ml-auto flex items-center gap-2 lg:ml-0">
+          <LanguageSwitch />
           <Button href={LOGIN_URL} variant="ghost" size="sm" className="hidden sm:inline-flex">
-            Sign in
+            {t.common.signIn}
           </Button>
           <Button href={REGISTER_URL} size="sm" className="hidden sm:inline-flex">
-            Get started
+            {t.common.getStarted}
           </Button>
 
           <button
@@ -146,7 +152,7 @@ export function Navbar() {
             onClick={() => (open ? close() : setOpen(true))}
             aria-expanded={open}
             aria-controls="mobile-nav"
-            aria-label={open ? 'Close menu' : 'Open menu'}
+            aria-label={open ? t.nav.closeMenu : t.nav.openMenu}
             className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[var(--color-text-muted)] transition-colors hover:bg-white/5 hover:text-[var(--color-text)] lg:hidden"
           >
             {open ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
@@ -177,6 +183,8 @@ function MobileNav({
   ref: Ref<HTMLDivElement>
   onNavigate: () => void
 }) {
+  const t = useT()
+
   return (
     <div
       id={id}
@@ -185,7 +193,7 @@ function MobileNav({
     >
       <Container className="flex min-h-full flex-col py-6">
         <ul className="flex flex-col gap-1">
-          {LINKS.map((l, i) => (
+          {links(t).map((l, i) => (
             <li
               key={l.label}
               className="motion-safe:animate-rise"
@@ -217,14 +225,15 @@ function MobileNav({
           <div className="h-px divider-fade" />
           <div className="mt-6 flex flex-col gap-3">
             <Button href={REGISTER_URL} size="lg" onClick={onNavigate}>
-              Get started
+              {t.common.getStarted}
             </Button>
             <Button href={LOGIN_URL} variant="secondary" size="lg" onClick={onNavigate}>
-              Sign in
+              {t.common.signIn}
             </Button>
+            <LanguageSwitch className="justify-center" />
           </div>
           <p className="mt-6 pb-2 text-center text-sm text-[var(--color-text-subtle)]">
-            Secure document management for individuals, teams, and organizations.
+            {t.nav.tagline}
           </p>
         </div>
       </Container>

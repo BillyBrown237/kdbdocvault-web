@@ -6,16 +6,16 @@
  * here now moves every call to action.
  *
  * ⚠ CONFIRM BEFORE LAUNCH. Derived from the canonical URL in `index.html`
- *   (`https://site.kdb.dekoubrown.com/`), not from anything authoritative:
+ *   (`https://site.kdb.dekoubrown.dev/`), not from anything authoritative:
  *   the application host and the contact address below are both assumptions.
  */
 
-export const APP_URL = 'https://kdb.dekoubrown.com'
+export const APP_URL = 'https://kdb.dekoubrown.dev'
 
 export const LOGIN_URL = `${APP_URL}/login`
 export const REGISTER_URL = `${APP_URL}/register`
 
-export const CONTACT_EMAIL = 'contact@kdb.dekoubrown.com'
+export const CONTACT_EMAIL = 'contact@kdb.dekoubrown.dev'
 
 /** `mailto:` with a subject line, so a reply lands somewhere sortable. */
 export function mailto(subject: string): string {

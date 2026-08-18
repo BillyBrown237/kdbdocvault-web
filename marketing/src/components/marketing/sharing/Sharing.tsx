@@ -14,37 +14,47 @@ import {
 } from 'lucide-react'
 import { Section } from '@/components/ui/Section'
 import { cn } from '@/lib/cn'
+import { useT, type Dict } from '@/i18n'
 
 type Level = 'preview' | 'view' | 'comment'
 type ExpiryKey = '24h' | '48h' | '7d' | 'never'
 
-const LEVELS: { key: Level; label: string; icon: ReactNode; note: string }[] = [
-  {
-    key: 'preview',
-    label: 'Preview only',
-    icon: <Eye size={12} aria-hidden="true" />,
-    note: 'Watermarked, in the browser. Downloading is not available at this level.',
-  },
-  {
-    key: 'view',
-    label: 'View',
-    icon: <Eye size={12} aria-hidden="true" />,
-    note: 'Read the document as it is, nothing more.',
-  },
-  {
-    key: 'comment',
-    label: 'View & comment',
-    icon: <MessageSquare size={12} aria-hidden="true" />,
-    note: 'Read it and leave comments, which stay on the document.',
-  },
-]
+/** The keys are state, not copy — only the labels and notes are translated. */
+function levels(t: Dict): { key: Level; label: string; icon: ReactNode; note: string }[] {
+  return [
+    {
+      key: 'preview',
+      label: t.sharing.levels.preview.label,
+      icon: <Eye size={12} aria-hidden="true" />,
+      note: t.sharing.levels.preview.note,
+    },
+    {
+      key: 'view',
+      label: t.sharing.levels.view.label,
+      icon: <Eye size={12} aria-hidden="true" />,
+      note: t.sharing.levels.view.note,
+    },
+    {
+      key: 'comment',
+      label: t.sharing.levels.comment.label,
+      icon: <MessageSquare size={12} aria-hidden="true" />,
+      note: t.sharing.levels.comment.note,
+    },
+  ]
+}
 
-const EXPIRIES: { key: ExpiryKey; label: string; phrase: string }[] = [
-  { key: '24h', label: '24 hours', phrase: 'in 24 hours' },
-  { key: '48h', label: '48 hours', phrase: 'in 48 hours' },
-  { key: '7d', label: '7 days', phrase: 'in 7 days' },
-  { key: 'never', label: 'No expiry', phrase: 'never' },
-]
+function expiries(t: Dict): { key: ExpiryKey; label: string; phrase: string }[] {
+  return [
+    { key: '24h', label: t.sharing.expiries.h24.label, phrase: t.sharing.expiries.h24.phrase },
+    { key: '48h', label: t.sharing.expiries.h48.label, phrase: t.sharing.expiries.h48.phrase },
+    { key: '7d', label: t.sharing.expiries.d7.label, phrase: t.sharing.expiries.d7.phrase },
+    {
+      key: 'never',
+      label: t.sharing.expiries.never.label,
+      phrase: t.sharing.expiries.never.phrase,
+    },
+  ]
+}
 
 /**
  * Secure sharing.
@@ -61,10 +71,14 @@ const EXPIRIES: { key: ExpiryKey; label: string; phrase: string }[] = [
  * mean something.
  */
 export function Sharing() {
+  const t = useT()
   const [level, setLevel] = useState<Level>('view')
   const [expiry, setExpiry] = useState<ExpiryKey>('48h')
   const [password, setPassword] = useState(true)
   const [download, setDownload] = useState(false)
+
+  const LEVELS = levels(t)
+  const EXPIRIES = expiries(t)
 
   const previewOnly = level === 'preview'
   const canDownload = previewOnly ? false : download
@@ -75,9 +89,9 @@ export function Sharing() {
     <Section
       id="sharing"
       tone="raised"
-      eyebrow="Secure sharing"
-      title="Share a document without losing control of it."
-      lead="Give people access to the document they need without giving away everything around it."
+      eyebrow={t.sharing.eyebrow}
+      title={t.sharing.title}
+      lead={t.sharing.lead}
     >
       <div className="grid gap-6 lg:grid-cols-2 lg:gap-8">
         {/* The dialog. */}
@@ -85,7 +99,7 @@ export function Sharing() {
           <div className="flex items-center gap-2 border-b border-[var(--color-hairline)] px-5 py-3.5">
             <Link2 size={14} aria-hidden="true" className="text-[var(--color-text-subtle)]" />
             <h3 className="text-ui-lg font-semibold tracking-[-0.01em] text-[var(--color-text)]">
-              Share document
+              {t.sharing.dialogTitle}
             </h3>
             <span className="ml-auto font-mono text-meta text-[var(--color-text-subtle)]">
               Contract.pdf
@@ -93,7 +107,7 @@ export function Sharing() {
           </div>
 
           <div className="space-y-5 p-5">
-            <Field label="Recipient">
+            <Field label={t.sharing.fields.recipient}>
               <div className="flex items-center gap-2.5 rounded-lg border border-[var(--color-hairline)] bg-black/25 px-3 py-2">
                 <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[var(--color-ink-700)] text-nano font-medium text-[var(--color-text-muted)]">
                   JD
@@ -107,51 +121,47 @@ export function Sharing() {
                   </span>
                 </span>
                 <span className="ml-auto shrink-0 rounded-full bg-white/[0.05] px-2 py-0.5 text-nano text-[var(--color-text-subtle)]">
-                  external
+                  {t.sharing.external}
                 </span>
               </div>
             </Field>
 
-            <Field label="Access level">
+            <Field label={t.sharing.fields.accessLevel}>
               <Segmented
                 options={LEVELS.map((l) => ({ key: l.key, label: l.label, icon: l.icon }))}
                 value={level}
                 onChange={setLevel}
-                name="Access level"
+                name={t.sharing.fields.accessLevel}
               />
               <p className="mt-2 text-ui-sm leading-snug text-[var(--color-text-subtle)]">
                 {chosenLevel.note}
               </p>
             </Field>
 
-            <Field label="Expiration">
+            <Field label={t.sharing.fields.expiration}>
               <Segmented
                 options={EXPIRIES.map((e) => ({ key: e.key, label: e.label }))}
                 value={expiry}
                 onChange={setExpiry}
-                name="Expiration"
+                name={t.sharing.fields.expiration}
               />
               {expiry === 'never' && (
                 <p className="motion-safe:animate-fade mt-2 text-ui-sm leading-snug text-[var(--color-status-amber)]">
-                  A link with no expiry is the one nobody remembers to revoke.
+                  {t.sharing.neverWarning}
                 </p>
               )}
             </Field>
 
             <Switch
-              label="Password protection"
-              hint="John receives the password separately, not in the same message as the link."
+              label={t.sharing.password.label}
+              hint={t.sharing.password.hint}
               checked={password}
               onChange={setPassword}
             />
 
             <Switch
-              label="Download permission"
-              hint={
-                previewOnly
-                  ? 'Not available at “Preview only” — the document never leaves the browser.'
-                  : 'Every download is recorded in the document’s trail.'
-              }
+              label={t.sharing.download.label}
+              hint={previewOnly ? t.sharing.download.hintPreview : t.sharing.download.hintOn}
               checked={canDownload}
               onChange={setDownload}
               disabled={previewOnly}
@@ -171,7 +181,7 @@ export function Sharing() {
           <div className="rounded-2xl border border-[rgb(16_185_129/0.25)] bg-[rgb(16_185_129/0.04)] p-5">
             <p className="flex items-center gap-2 text-card font-semibold tracking-[-0.01em] text-[var(--color-text)]">
               <Check size={14} aria-hidden="true" className="text-[var(--color-accent-400)]" />
-              Shared with John Doe
+              {t.sharing.sharedWith}
             </p>
 
             <p
@@ -179,39 +189,37 @@ export function Sharing() {
               className="motion-safe:animate-fade mt-2 flex items-center gap-1.5 text-ui text-[var(--color-text-muted)]"
             >
               <Clock size={12} aria-hidden="true" className="text-[var(--color-text-subtle)]" />
-              {expiry === 'never' ? 'No expiry set' : `Expires ${chosenExpiry.phrase}`}
+              {expiry === 'never'
+                ? t.sharing.noExpirySet
+                : `${t.sharing.expiresPrefix}${chosenExpiry.phrase}`}
             </p>
 
             <div className="mt-4 flex flex-wrap gap-1.5">
               <Chip on>{chosenLevel.label}</Chip>
               <Chip on={password} icon={<Lock size={10} aria-hidden="true" />}>
-                {password ? 'Password required' : 'No password'}
+                {password ? t.sharing.chips.passwordOn : t.sharing.chips.passwordOff}
               </Chip>
               <Chip on={canDownload} icon={<Download size={10} aria-hidden="true" />}>
-                {canDownload ? 'Download allowed' : 'Download blocked'}
+                {canDownload ? t.sharing.chips.downloadOn : t.sharing.chips.downloadOff}
               </Chip>
             </div>
           </div>
 
           <div className="rounded-2xl border border-[var(--color-hairline)] bg-[var(--color-card)]/60 p-5">
             <h3 className="text-micro tracking-[0.1em] text-[var(--color-text-subtle)] uppercase">
-              What John still cannot do
+              {t.sharing.cannotTitle}
             </h3>
             {/* The list answers the settings above it. That is the whole
                 point of the section: the limits are consequences of choices,
                 not a paragraph of reassurance. */}
             <ul className="mt-3 space-y-2.5">
-              <Cannot>Browse the folder this document sits in.</Cannot>
-              <Cannot>See any other document in your vault.</Cannot>
+              <Cannot>{t.sharing.cannot.browse}</Cannot>
+              <Cannot>{t.sharing.cannot.others}</Cannot>
               <Cannot>
-                {expiry === 'never'
-                  ? 'Keep access once you revoke the link.'
-                  : 'Open the link after it expires.'}
+                {expiry === 'never' ? t.sharing.cannot.afterRevoke : t.sharing.cannot.afterExpiry}
               </Cannot>
               <Cannot>
-                {canDownload
-                  ? 'Download it without that appearing in the trail.'
-                  : 'Save a copy — the document never leaves the browser.'}
+                {canDownload ? t.sharing.cannot.downloadTracked : t.sharing.cannot.save}
               </Cannot>
             </ul>
 
@@ -221,8 +229,7 @@ export function Sharing() {
                 aria-hidden="true"
                 className="mt-0.5 shrink-0 text-[var(--color-accent-400)]"
               />
-              Revoke the link at any time and it stops working — you don’t have to wait for the
-              expiry you set.
+              {t.sharing.revoke}
             </p>
           </div>
         </div>

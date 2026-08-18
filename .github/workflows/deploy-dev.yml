@@ -119,9 +119,20 @@ jobs:
 
           # The prerender must actually have happened. An empty root here is
           # a page no crawler can read, and it is invisible in a screenshot.
-          if ! grep -q 'id="root"><div' marketing/dist/index.html; then
-            echo "FATAL: marketing/dist/index.html has an empty #root."
-            echo "The prerender step did not run or produced nothing."
+          # One prerendered document per language. An empty root is a page no
+          # crawler can read, and it is invisible in a screenshot.
+          for page in index.html fr/index.html; do
+            if ! grep -q 'id="root"><div' "marketing/dist/$page"; then
+              echo "FATAL: marketing/dist/$page has an empty #root."
+              echo "The prerender step did not run or produced nothing."
+              exit 1
+            fi
+          done
+
+          # The two must actually differ, or the French build silently shipped
+          # English — which typechecks, renders and looks fine in review.
+          if ! grep -q '<html lang="fr"' marketing/dist/fr/index.html; then
+            echo "FATAL: marketing/dist/fr/index.html is not marked as French."
             exit 1
           fi
 
@@ -455,7 +466,7 @@ jobs:
           if [ -z "${SITE_HOST:-}" ]; then
             echo "::warning::vars.SITE_HOST is not set — skipping the marketing smoke test."
             echo "Add it under Settings → Secrets and variables → Actions → Variables."
-            echo "Expected value: site.kdb.dekoubrown.com"
+            echo "Expected value: site.kdb.dekoubrown.dev"
             exit 0
           fi
 
@@ -481,6 +492,24 @@ jobs:
             echo "::error::the page was served but contains no prerendered content." >&2
             echo "A crawler would see an empty <div id=\"root\">." >&2
             echo "Check the prerender step in marketing/scripts/prerender.mjs." >&2
+            exit 1
+          fi
+
+          # The French page is a separate document at /fr/. If nginx is not
+          # resolving the directory it will quietly serve the English index
+          # instead, which returns 200 and looks correct until someone reads it.
+          FR=$(curl -fsS --max-time 10 "$SITE/fr/" || true)
+
+          if [ -z "$FR" ]; then
+            echo "::error::${SITE}/fr/ served nothing." >&2
+            echo "nginx needs to resolve the directory — \`try_files \$uri \$uri/ =404\`" >&2
+            echo "with \`index index.html\` is enough." >&2
+            exit 1
+          fi
+
+          if ! printf '%s' "$FR" | grep -q '<html lang="fr"'; then
+            echo "::error::${SITE}/fr/ is not the French document." >&2
+            echo "It is probably falling back to the English index.html." >&2
             exit 1
           fi
 

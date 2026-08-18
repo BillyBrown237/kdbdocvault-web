@@ -1,7 +1,8 @@
 import { Reveal } from '@/components/ui/Reveal'
 import { Section } from '@/components/ui/Section'
 import { cn } from '@/lib/cn'
-import { LOGOS, LOGO_CAPTION, PLACEHOLDER, QUOTES, type LogoSlot, type Quote } from './proof'
+import { LOGOS, logoCaption, PLACEHOLDER, QUOTES, type LogoSlot, type Quote } from './proof'
+import { useT } from '@/i18n'
 
 /**
  * Social proof.
@@ -18,25 +19,29 @@ import { LOGOS, LOGO_CAPTION, PLACEHOLDER, QUOTES, type LogoSlot, type Quote } f
  * at it.
  */
 export function Proof() {
+  const t = useT()
+
   return (
     <Section
       id="proof"
       tone="seam"
-      eyebrow="Proof"
-      title="The people already doing this."
-      lead="Documents that matter, kept by people who would notice if they went missing."
+      eyebrow={t.proof.eyebrow}
+      title={t.proof.title}
+      lead={t.proof.lead}
     >
       {PLACEHOLDER && (
         <div className="mb-10 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-dashed border-[var(--color-hairline-strong)] px-4 py-3">
           <span className="rounded bg-white/[0.06] px-1.5 py-0.5 font-mono text-micro text-[var(--color-text-muted)]">
-            placeholder
+            {t.proof.placeholderTag}
           </span>
           <p className="text-ui-sm text-[var(--color-text-subtle)]">
-            Logos and quotes below are slots, not content. Fill them in{' '}
+            {t.proof.placeholderBefore}
             <code className="font-mono text-[var(--color-text-muted)]">
               proof.ts
-            </code>{' '}
-            and set <code className="font-mono text-[var(--color-text-muted)]">PLACEHOLDER</code> to{' '}
+            </code>
+            {t.proof.placeholderMiddle}
+            <code className="font-mono text-[var(--color-text-muted)]">PLACEHOLDER</code>
+            {t.proof.placeholderAfter}
             <code className="font-mono text-[var(--color-text-muted)]">false</code>.
           </p>
         </div>
@@ -45,7 +50,7 @@ export function Proof() {
       {/* The logo row. */}
       <div>
         <p className="text-center text-micro tracking-[0.14em] text-[var(--color-text-subtle)] uppercase">
-          {LOGO_CAPTION}
+          {logoCaption(t)}
         </p>
         <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {LOGOS.map((logo, i) => (
