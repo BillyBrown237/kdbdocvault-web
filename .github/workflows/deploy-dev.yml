@@ -117,10 +117,9 @@ jobs:
           test -d dist
           test -d marketing/dist
 
-          # The prerender must actually have happened. An empty root here is
-          # a page no crawler can read, and it is invisible in a screenshot.
           # One prerendered document per language. An empty root is a page no
           # crawler can read, and it is invisible in a screenshot.
+          #
           # Test for an EMPTY root, not for a particular first child. React
           # hoists resource hints — a `<link rel="preload">` for the eager
           # header logo is emitted ahead of the markup — so asserting that the
