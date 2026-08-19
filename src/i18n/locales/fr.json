@@ -16,7 +16,11 @@
       "forgot": "Mot de passe oublié ?",
       "error": "Identifiants invalides",
       "mfaRequired": "Code de vérification requis",
-      "noAccount": "Pas encore de compte ?"
+      "noAccount": "Pas encore de compte ?",
+      "subtitle": "Connectez-vous pour accéder à votre coffre.",
+      "signingIn": "Connexion…",
+      "identifierRequired": "Saisissez votre e-mail ou votre numéro de téléphone.",
+      "passwordRequired": "Le mot de passe est requis."
     },
     "register": {
       "title": "Créer un compte",
@@ -47,12 +51,11 @@
       "good": "Solide.",
       "strong": "Très solide."
     },
-    "proof": {
-      "category": "Ils stockent. Nous faisons vivre, prouver et expirer.",
-      "stat": "4 080 000 FCFA d’exposition évitée sur un seul agrément.",
-      "testimonial": "Emplacement réservé — un client qui accepte d’être nommé."
-    },
-    "securityLine": "Chiffré en transit · Journal d’audit inviolable · Vérifiable publiquement"
+    "securityLine": "Chiffré en transit · Journal d’audit inviolable · Vérifiable publiquement",
+    "panel": {
+      "statement": "Vos documents. Protégés. Organisés. Maîtrisés.",
+      "secure": "Votre connexion est sécurisée."
+    }
   },
   "onboarding": {
     "title": "Créez votre organisation",
@@ -178,7 +181,12 @@
     "fieldLabel": "Question à poser",
     "fieldLabelPlaceholder": "Nom complet du salarié",
     "fieldType": "Type",
-    "type": { "text": "Texte", "date": "Date", "number": "Nombre", "choice": "Choix" },
+    "type": {
+      "text": "Texte",
+      "date": "Date",
+      "number": "Nombre",
+      "choice": "Choix"
+    },
     "choices": "Options (séparées par des virgules)",
     "choicesPlaceholder": "CDI, CDD, Stage",
     "required": "Obligatoire",
@@ -261,7 +269,11 @@
       "dismissed": "Vous avez fermé la demande d'autorisation — réessayez quand vous voulez.",
       "failed": "Impossible d'activer les notifications. Réessayez, ou utilisez un autre navigateur."
     },
-    "platform": { "web": "Ce navigateur", "ios": "iPhone ou iPad", "android": "Android" }
+    "platform": {
+      "web": "Ce navigateur",
+      "ios": "iPhone ou iPad",
+      "android": "Android"
+    }
   },
   "emergency": {
     "title": "Accès d'urgence",
@@ -365,10 +377,22 @@
     "findDocument": "Document",
     "searchPlaceholder": "Rechercher par titre…",
     "type": {
-      "amends": { "outgoing": "Modifie", "incoming": "Modifié par" },
-      "fulfills": { "outgoing": "Exécute", "incoming": "Exécuté par" },
-      "supports": { "outgoing": "Appuie", "incoming": "Appuyé par" },
-      "relates_to": { "outgoing": "En lien avec", "incoming": "En lien avec" }
+      "amends": {
+        "outgoing": "Modifie",
+        "incoming": "Modifié par"
+      },
+      "fulfills": {
+        "outgoing": "Exécute",
+        "incoming": "Exécuté par"
+      },
+      "supports": {
+        "outgoing": "Appuie",
+        "incoming": "Appuyé par"
+      },
+      "relates_to": {
+        "outgoing": "En lien avec",
+        "incoming": "En lien avec"
+      }
     }
   },
   "notifPrefs": {

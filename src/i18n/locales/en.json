@@ -16,7 +16,11 @@
       "forgot": "Forgot password?",
       "error": "Invalid credentials",
       "mfaRequired": "Verification code required",
-      "noAccount": "No account yet?"
+      "noAccount": "No account yet?",
+      "subtitle": "Sign in to continue to your document vault.",
+      "signingIn": "Signing in…",
+      "identifierRequired": "Enter your email or phone number.",
+      "passwordRequired": "Password is required."
     },
     "register": {
       "title": "Create an account",
@@ -47,12 +51,11 @@
       "good": "Solid.",
       "strong": "Very solid."
     },
-    "proof": {
-      "category": "They store. We keep alive, prove, and expire.",
-      "stat": "4,080,000 FCFA of exposure avoided on a single licence.",
-      "testimonial": "Reserved slot — a client who agrees to be named."
-    },
-    "securityLine": "Encrypted in transit · Tamper-evident audit log · Publicly verifiable"
+    "securityLine": "Encrypted in transit · Tamper-evident audit log · Publicly verifiable",
+    "panel": {
+      "statement": "Your documents. Protected. Organized. Under control.",
+      "secure": "Your connection is secure."
+    }
   },
   "onboarding": {
     "title": "Create your organization",
@@ -189,7 +192,12 @@
     "fieldLabel": "Question to ask",
     "fieldLabelPlaceholder": "Employee's full name",
     "fieldType": "Type",
-    "type": { "text": "Text", "date": "Date", "number": "Number", "choice": "Choice" },
+    "type": {
+      "text": "Text",
+      "date": "Date",
+      "number": "Number",
+      "choice": "Choice"
+    },
     "choices": "Options (comma-separated)",
     "choicesPlaceholder": "Permanent, Fixed-term, Internship",
     "required": "Required",
@@ -272,7 +280,11 @@
       "dismissed": "You closed the permission request — try again when you're ready.",
       "failed": "Couldn't turn on notifications. Try again, or use a different browser."
     },
-    "platform": { "web": "This browser", "ios": "iPhone or iPad", "android": "Android" }
+    "platform": {
+      "web": "This browser",
+      "ios": "iPhone or iPad",
+      "android": "Android"
+    }
   },
   "emergency": {
     "title": "Emergency access",
@@ -376,10 +388,22 @@
     "findDocument": "Document",
     "searchPlaceholder": "Search by title…",
     "type": {
-      "amends": { "outgoing": "Amends", "incoming": "Amended by" },
-      "fulfills": { "outgoing": "Fulfills", "incoming": "Fulfilled by" },
-      "supports": { "outgoing": "Supports", "incoming": "Supported by" },
-      "relates_to": { "outgoing": "Relates to", "incoming": "Related to" }
+      "amends": {
+        "outgoing": "Amends",
+        "incoming": "Amended by"
+      },
+      "fulfills": {
+        "outgoing": "Fulfills",
+        "incoming": "Fulfilled by"
+      },
+      "supports": {
+        "outgoing": "Supports",
+        "incoming": "Supported by"
+      },
+      "relates_to": {
+        "outgoing": "Relates to",
+        "incoming": "Related to"
+      }
     }
   },
   "notifPrefs": {
