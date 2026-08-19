@@ -84,10 +84,10 @@ function LoginPage() {
 
   return (
     <AuthLayout>
-      <h1 className="text-[1.75rem] leading-tight font-semibold tracking-[-0.02em] text-white">
+      <h1 className="text-[1.75rem] leading-tight font-semibold tracking-[-0.02em]">
         {t('auth.welcome')}
       </h1>
-      <p className="mt-2 text-sm text-slate-400">{t('auth.login.subtitle')}</p>
+      <p className="mt-2 text-sm text-muted-foreground">{t('auth.login.subtitle')}</p>
 
       {search.expired && (
         <Callout variant="info" className="mt-5">
@@ -131,7 +131,7 @@ function LoginPage() {
             action={
               <Link
                 to="/forgot-password"
-                className="rounded-sm text-xs text-slate-400 underline-offset-4 transition-colors hover:text-slate-200 hover:underline"
+                className="rounded-sm text-xs text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
               >
                 {t('auth.login.forgot')}
               </Link>
@@ -156,10 +156,10 @@ function LoginPage() {
             when their flags flip — nothing else moves. */}
         {(flags.authPasskeys || flags.authSso) && (
           <>
-            <div className="flex items-center gap-3 text-xs text-slate-500">
-              <span className="h-px flex-1 bg-white/[0.08]" />
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="h-px flex-1 bg-border" />
               {t('auth.or')}
-              <span className="h-px flex-1 bg-white/[0.08]" />
+              <span className="h-px flex-1 bg-border" />
             </div>
             {flags.authPasskeys && (
               <Button type="button" variant="outline" className="w-full" disabled={busy}>
@@ -176,18 +176,18 @@ function LoginPage() {
         )}
       </form>
 
-      <p className="mt-8 text-center text-sm text-slate-400">
+      <p className="mt-8 text-center text-sm text-muted-foreground">
         {t('auth.login.noAccount')}{' '}
         <Link
           to="/register"
-          className="rounded-sm font-medium text-white underline-offset-4 hover:underline"
+          className="rounded-sm font-medium text-foreground underline-offset-4 hover:underline"
         >
           {t('auth.register.submit')}
         </Link>
       </p>
 
       {/* Stated once, quietly, and only what is true of any HTTPS page. */}
-      <p className="mt-8 flex items-center justify-center gap-1.5 text-xs text-slate-500">
+      <p className="mt-8 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
         <Lock className="h-3 w-3" aria-hidden />
         {t('auth.panel.secure')}
       </p>
@@ -220,14 +220,14 @@ function Field({
   return (
     <div className="space-y-1.5">
       <div className="flex items-baseline justify-between gap-3">
-        <Label htmlFor={id} className="text-slate-300">
+        <Label htmlFor={id}>
           {label}
         </Label>
         {action}
       </div>
       {children}
       {error && (
-        <p id={`${id}-error`} role="alert" className="text-xs text-amber-400">
+        <p id={`${id}-error`} role="alert" className="text-xs text-destructive">
           {/* Zod carries the translation key; the component resolves it, so the
               schema stays free of rendering concerns. */}
           {t(error)}
