@@ -6,12 +6,16 @@ import { ShieldCheck } from 'lucide-react'
  *
  * ── Why the form panel is light ──────────────────────────────────────────
  * An earlier pass made the whole screen navy to echo the marketing site. That
- * broke it. `Input` is `bg-transparent` and inherits `--foreground`, which in
+ * broke it. `Input` was `bg-transparent` and inherited `--foreground`, which in
  * this application's light theme is near-black — so every character typed into
  * a field was black-on-navy and invisible. The same applied to `Label`,
  * `Callout` and `Button` variants, and not only here: SIX routes render this
  * layout — login, register, forgot-password, mfa, onboarding, reset-password —
  * so one background change silently broke five screens nobody had looked at.
+ *
+ * (W34 made the fields opaque, so that exact failure can no longer happen. The
+ * rule below still stands: the next thing to break this way will be something
+ * else that reads a semantic token.)
  *
  * The rule this leaves behind: the panel is ours to brand, the form side
  * belongs to the design system. Anything inside `{children}` must keep working
@@ -68,6 +72,29 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
         </div>
         <div className="w-full max-w-[26rem]">{children}</div>
       </main>
+    </div>
+  )
+}
+
+/**
+ * The heading of an auth screen.
+ *
+ * All six routes wrote their own, and login had already drifted to a different
+ * size from the other five — the same slow divergence PageHeader fixes for the
+ * application shell. One component, so "sign in" and "reset your password"
+ * cannot look like they belong to different products.
+ */
+export function AuthHeading({
+  title,
+  description,
+}: {
+  title: React.ReactNode
+  description?: React.ReactNode
+}) {
+  return (
+    <div className="mb-7">
+      <h1 className="text-[1.75rem] leading-tight font-semibold tracking-[-0.02em]">{title}</h1>
+      {description && <p className="text-muted-foreground mt-2 text-sm">{description}</p>}
     </div>
   )
 }

@@ -6,10 +6,10 @@ import { useTranslation } from 'react-i18next'
 import { Fingerprint, Loader2, Lock } from 'lucide-react'
 import { z } from 'zod'
 
-import { login, setPendingChallenge } from '@/lib/auth'
+import { login, setPendingChallenge, ssoStart } from '@/lib/auth'
 import { NetworkError } from '@/lib/api/http'
 import { flags } from '@/lib/flags'
-import { AuthLayout } from '@/components/auth/auth-layout'
+import { AuthHeading, AuthLayout } from '@/components/auth/auth-layout'
 import { PasswordInput } from '@/components/auth/password-input'
 import { Button } from '@/components/ui/button'
 import { Callout } from '@/components/ui/callout'
@@ -49,6 +49,11 @@ function LoginPage() {
   // Form-level errors render as a calm Callout, not a toast (W23): the
   // message stays put while the user re-reads what they typed.
   const [problem, setProblem] = useState<unknown>(null)
+  // W33: the SSO button's own feedback line. A string key, not a boolean —
+  // "type your work email first" and "no SSO for that domain" are different
+  // answers and deserve different sentences.
+  const [ssoHint, setSsoHint] = useState<string | null>(null)
+  const [ssoBusy, setSsoBusy] = useState(false)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -60,6 +65,35 @@ function LoginPage() {
 
   const busy = form.formState.isSubmitting
   const errors = form.formState.errors
+
+  // W33: SSO starts from the email the user already typed — the domain picks
+  // the IdP. Called on CLICK, not on blur: /start writes a one-shot state row
+  // server-side, and probing per keystroke would mint junk rows.
+  const onSso = async () => {
+    setSsoHint(null)
+    setProblem(null)
+    const identifier = form.getValues('identifier').trim()
+    const at = identifier.indexOf('@')
+    if (at < 1 || at === identifier.length - 1) {
+      setSsoHint('auth.ssoNeedEmail')
+      return
+    }
+    setSsoBusy(true)
+    try {
+      const started = await ssoStart(identifier.slice(at + 1), search.redirect)
+      if (!started) {
+        setSsoHint('auth.ssoNoDomain')
+        return
+      }
+      // Full navigation, not router.push: the authorize URL is the IdP's
+      // origin, and the browser must carry the whole document there.
+      window.location.assign(started.authorizeUrl)
+    } catch (err) {
+      setProblem(err)
+    } finally {
+      setSsoBusy(false)
+    }
+  }
 
   const onSubmit = form.handleSubmit(async (values) => {
     setProblem(null)
@@ -84,13 +118,10 @@ function LoginPage() {
 
   return (
     <AuthLayout>
-      <h1 className="text-[1.75rem] leading-tight font-semibold tracking-[-0.02em]">
-        {t('auth.welcome')}
-      </h1>
-      <p className="mt-2 text-sm text-muted-foreground">{t('auth.login.subtitle')}</p>
+      <AuthHeading title={t('auth.welcome')} description={t('auth.login.subtitle')} />
 
       {search.expired && (
-        <Callout variant="info" className="mt-5">
+        <Callout variant="info" className="-mt-2 mb-5">
           {t('auth.sessionExpired')}
         </Callout>
       )}
@@ -98,7 +129,7 @@ function LoginPage() {
       {/* `noValidate`: the browser's own bubbles cannot be styled, are not
           translated with the rest of the page, and would pre-empt the
           messages below. */}
-      <form className="mt-7 space-y-5" noValidate onSubmit={(e) => void onSubmit(e)}>
+      <form className="space-y-5" noValidate onSubmit={(e) => void onSubmit(e)}>
         {problem !== null &&
           (problem instanceof NetworkError ? (
             <Callout variant="info">{t('errors.network')}</Callout>
@@ -168,9 +199,23 @@ function LoginPage() {
               </Button>
             )}
             {flags.authSso && (
-              <Button type="button" variant="outline" className="w-full" disabled={busy}>
-                {t('auth.sso')}
-              </Button>
+              <div className="space-y-1.5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  disabled={busy || ssoBusy}
+                  onClick={() => void onSso()}
+                >
+                  {ssoBusy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
+                  {t('auth.sso')}
+                </Button>
+                {ssoHint && (
+                  <p role="alert" className="text-xs text-muted-foreground">
+                    {t(ssoHint)}
+                  </p>
+                )}
+              </div>
             )}
           </>
         )}
@@ -220,9 +265,7 @@ function Field({
   return (
     <div className="space-y-1.5">
       <div className="flex items-baseline justify-between gap-3">
-        <Label htmlFor={id}>
-          {label}
-        </Label>
+        <Label htmlFor={id}>{label}</Label>
         {action}
       </div>
       {children}

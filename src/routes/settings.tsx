@@ -3,8 +3,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import QRCode from 'qrcode'
-import { Download, Monitor, ShieldCheck } from 'lucide-react'
+import { Download, Monitor, Settings, ShieldCheck } from 'lucide-react'
 
+import { panelIconClass, panelTitleClass } from '@/components/ui/panel'
+import { PageHeader } from '@/components/ui/page-header'
 import { AppShell } from '@/components/app-shell'
 import { NotificationPreferencesCard } from '@/components/settings/notification-preferences'
 import { DevicesCard, EmergencyContactsCard } from '@/components/settings/emergency-devices'
@@ -38,6 +40,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { SsoSettings } from '@/components/settings/sso-settings'
 import { toast } from '@/components/ui/sonner'
 
 export const Route = createFileRoute('/settings')({
@@ -63,7 +66,7 @@ function SettingsPage() {
 
   return (
     <AppShell>
-      <h1 className="text-2xl font-bold tracking-tight">{t('settings.title')}</h1>
+      <PageHeader icon={Settings} title={t('settings.title')} />
       <Tabs defaultValue="profile" className="mt-4">
         <TabsList>
           <TabsTrigger value="profile">{t('settings.profile')}</TabsTrigger>
@@ -72,16 +75,17 @@ function SettingsPage() {
           <TabsTrigger value="types">{t('docTypes.tab')}</TabsTrigger>
           <TabsTrigger value="notifications">{t('notifPrefs.tab')}</TabsTrigger>
           {isAdmin && <TabsTrigger value="policy">{t('secPolicy.tab')}</TabsTrigger>}
+          {isOwner && <TabsTrigger value="sso">{t('ssoSettings.tab')}</TabsTrigger>}
           {isOwner && <TabsTrigger value="export">{t('settings.exportTab')}</TabsTrigger>}
         </TabsList>
         <TabsContent value="profile">
           <ProfileTab />
         </TabsContent>
-        <TabsContent value="security">
+        <TabsContent value="security" className="space-y-4">
           <PasswordCard />
           <TotpCard />
         </TabsContent>
-        <TabsContent value="sessions">
+        <TabsContent value="sessions" className="space-y-4">
           <SessionsCard />
           {/* Devices and emergency contacts belong with sessions: all three
               answer "what can reach my account, and how do I stop it?" */}
@@ -95,13 +99,19 @@ function SettingsPage() {
           <NotificationPreferencesCard />
         </TabsContent>
         {isAdmin && (
-          <TabsContent value="policy">
+          <TabsContent value="policy" className="space-y-4">
             <SecurityPolicyCard canEdit={isOwner} />
             {/* Retention is a security-and-compliance decision made once for
                 the whole organisation — same audience, same page. */}
             <RetentionPoliciesCard canEdit={isAdmin} />
           </TabsContent>
         )}
+        {isOwner && (
+          <TabsContent value="sso">
+            <SsoSettings />
+          </TabsContent>
+        )}
+
         {isOwner && (
           <TabsContent value="export">
             <TenantExportCard />
@@ -131,8 +141,8 @@ function TenantExportCard() {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Download className="h-4 w-4" />
+        <CardTitle className={panelTitleClass}>
+          <Download className={panelIconClass} />
           {t('settings.exportTitle')}
         </CardTitle>
       </CardHeader>
@@ -151,7 +161,7 @@ function TenantExportCard() {
           </div>
         ) : job?.status === 'failed' ? (
           <div className="space-y-3">
-            <p className="text-sm text-red-600">{job.error ?? t('errors.unknown')}</p>
+            <p className="text-sm text-destructive">{job.error ?? t('errors.unknown')}</p>
             <Button onClick={() => request.mutate()} disabled={request.isPending}>
               {t('settings.exportRetry')}
             </Button>
@@ -183,7 +193,8 @@ function ProfileTab() {
   }, [me.data])
 
   const save = useMutation({
-    mutationFn: () => updateProfile({ name, phone, locale: i18n.language.startsWith('fr') ? 'fr' : 'en' }),
+    mutationFn: () =>
+      updateProfile({ name, phone, locale: i18n.language.startsWith('fr') ? 'fr' : 'en' }),
     onSuccess: async () => {
       toast.success(t('settings.saved'))
       await queryClient.invalidateQueries({ queryKey: ['me'] })
@@ -233,20 +244,30 @@ function PasswordCard() {
   })
 
   return (
-    <Card className="mt-4">
+    <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm text-muted-foreground">{t('settings.changePassword')}</CardTitle>
+        <CardTitle className="text-sm text-muted-foreground">
+          {t('settings.changePassword')}
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-1.5">
           <Label htmlFor="cur">{t('settings.currentPassword')}</Label>
-          <Input id="cur" type="password" value={current} onChange={(e) => setCurrent(e.target.value)} />
+          <Input
+            id="cur"
+            type="password"
+            value={current}
+            onChange={(e) => setCurrent(e.target.value)}
+          />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="new">{t('settings.newPassword')}</Label>
           <Input id="new" type="password" value={next} onChange={(e) => setNext(e.target.value)} />
         </div>
-        <Button onClick={() => change.mutate()} disabled={change.isPending || !current || next.length < 10}>
+        <Button
+          onClick={() => change.mutate()}
+          disabled={change.isPending || !current || next.length < 10}
+        >
           {change.isPending ? t('app.loading') : t('settings.save')}
         </Button>
       </CardContent>
@@ -299,10 +320,10 @@ function TotpCard() {
   const enabled = me.data?.mfa_enabled
 
   return (
-    <Card className="mt-4">
+    <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-          <ShieldCheck className="h-4 w-4" />
+        <CardTitle className={panelTitleClass}>
+          <ShieldCheck className={panelIconClass} />
           {t('settings.twoFactor')}
           {enabled && <Badge variant="success">{t('settings.enabled')}</Badge>}
         </CardTitle>
@@ -313,7 +334,11 @@ function TotpCard() {
             <p className="text-sm text-muted-foreground">{t('settings.totpOn')}</p>
             <div className="space-y-1.5">
               <Label>{t('auth.login.password')}</Label>
-              <Input type="password" value={disablePw} onChange={(e) => setDisablePw(e.target.value)} />
+              <Input
+                type="password"
+                value={disablePw}
+                onChange={(e) => setDisablePw(e.target.value)}
+              />
             </div>
             <div className="space-y-1.5">
               <Label>{t('settings.currentCode')}</Label>
@@ -321,7 +346,7 @@ function TotpCard() {
             </div>
             <Button
               variant="outline"
-              className="text-red-600 hover:text-red-600"
+              className="text-destructive hover:text-destructive"
               disabled={disable.isPending || !disablePw || !code}
               onClick={() => disable.mutate()}
             >
@@ -387,7 +412,9 @@ function SessionsCard() {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm text-muted-foreground">{t('settings.activeSessions')}</CardTitle>
+        <CardTitle className="text-sm text-muted-foreground">
+          {t('settings.activeSessions')}
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
         {sessions.isPending ? (
@@ -417,7 +444,7 @@ function SessionsCard() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-red-600 hover:text-red-600"
+                    className="text-destructive hover:text-destructive"
                     disabled={revoke.isPending}
                     onClick={() => revoke.mutate(s.id)}
                   >
@@ -449,8 +476,7 @@ function DocumentTypesCard() {
   const [renaming, setRenaming] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
 
-  const invalidateTypes = () =>
-    queryClient.invalidateQueries({ queryKey: ['document-types'] })
+  const invalidateTypes = () => queryClient.invalidateQueries({ queryKey: ['document-types'] })
 
   const create = useMutation({
     mutationFn: () => createDocumentType(name.trim()),
@@ -540,7 +566,7 @@ function DocumentTypesCard() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-red-600 hover:text-red-600"
+                        className="text-destructive hover:text-destructive"
                         disabled={remove.isPending}
                         onClick={() => remove.mutate(ty.id)}
                       >

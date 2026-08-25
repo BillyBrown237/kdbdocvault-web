@@ -6,6 +6,8 @@ import { ShieldAlert, ShieldCheck } from 'lucide-react'
 import { verifyDocumentHash } from '@/lib/api/queries'
 import { formatDate } from '@/lib/format'
 import { Card, CardContent } from '@/components/ui/card'
+import { PublicShell } from '@/components/public-shell'
+import { Skeleton } from '@/components/ui/skeleton'
 
 // PUBLIC integrity check — the target of the QR code stamped on sealed PDFs.
 // Unversioned by design (a printed seal must resolve for the document's life).
@@ -26,25 +28,35 @@ function VerifyPage() {
   const valid = result.data?.valid
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
-      <Card className="w-full max-w-md">
+    <PublicShell>
+      <Card>
         <CardContent className="p-8 text-center">
-          <p className="text-sm font-medium text-muted-foreground">{t('app.name')}</p>
-          <h1 className="mt-1 text-lg font-bold">{t('verify.title')}</h1>
+          <h1 className="text-lg font-semibold">{t('verify.title')}</h1>
 
           {result.isPending ? (
-            <p className="mt-6 text-sm text-muted-foreground">{t('app.loading')}</p>
+            <div className="mt-6 space-y-3" role="status" aria-live="polite">
+              <Skeleton className="mx-auto size-14 rounded-full" />
+              <Skeleton className="mx-auto h-4 w-40" />
+              <span className="sr-only">{t('app.loading')}</span>
+            </div>
           ) : result.isError || !valid ? (
+            // The verdict is carried by the icon, the colour AND the sentence.
+            // Someone checking whether a document is genuine should not have
+            // to depend on being able to tell red from green.
             <div className="mt-6 space-y-3">
-              <ShieldAlert className="mx-auto h-12 w-12 text-red-500" />
-              <p className="font-medium text-red-600">{t('verify.invalid')}</p>
-              <p className="text-sm text-muted-foreground">{t('verify.invalidHint')}</p>
+              <span className="mx-auto grid size-14 place-items-center rounded-full bg-red-100 text-destructive">
+                <ShieldAlert className="size-7" />
+              </span>
+              <p className="font-medium text-red-700">{t('verify.invalid')}</p>
+              <p className="text-muted-foreground text-sm">{t('verify.invalidHint')}</p>
             </div>
           ) : (
-            <div className="mt-6 space-y-3">
-              <ShieldCheck className="mx-auto h-12 w-12 text-emerald-500" />
+            <div className="mt-6 space-y-4">
+              <span className="mx-auto grid size-14 place-items-center rounded-full bg-emerald-100 text-emerald-600">
+                <ShieldCheck className="size-7" />
+              </span>
               <p className="font-medium text-emerald-700">{t('verify.valid')}</p>
-              <dl className="space-y-1 text-sm">
+              <dl className="space-y-1.5 border-t pt-4 text-sm">
                 {result.data.issuer && (
                   <div className="flex justify-between gap-4">
                     <dt className="text-muted-foreground">{t('verify.issuer')}</dt>
@@ -63,11 +75,13 @@ function VerifyPage() {
             </div>
           )}
 
-          <p className="mt-6 break-all font-mono text-[10px] text-muted-foreground">
+          {/* The hash the visitor pasted, echoed back so they can confirm this
+              page is answering about the document they actually have. */}
+          <p className="text-muted-foreground bg-muted/50 mt-6 rounded-md px-3 py-2 font-mono text-[10px] break-all">
             {documentHash}
           </p>
         </CardContent>
       </Card>
-    </div>
+    </PublicShell>
   )
 }

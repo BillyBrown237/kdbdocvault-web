@@ -5,10 +5,11 @@ import { Download, FileArchive, ScrollText } from 'lucide-react'
 import { ApiProblem, NetworkError } from '@/lib/api/http'
 import { createEvidenceBundle, documentAuditQuery } from '@/lib/api/queries'
 import { useJob } from '@/lib/use-job'
+import { panelIconClass, panelTitleClass } from '@/components/ui/panel'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
+import { ListSkeleton } from '@/components/ui/skeleton'
 import { toast } from '@/components/ui/sonner'
 
 /**
@@ -38,8 +39,8 @@ export function DocumentTrailPanel({ documentId }: { documentId: string }) {
   return (
     <Card className="md:col-span-2">
       <CardHeader className="flex-row items-center justify-between pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-          <ScrollText className="h-4 w-4" />
+        <CardTitle className={panelTitleClass}>
+          <ScrollText className={panelIconClass} />
           {t('docAudit.title')}
         </CardTitle>
         <div className="flex items-center gap-2">
@@ -65,11 +66,11 @@ export function DocumentTrailPanel({ documentId }: { documentId: string }) {
       </CardHeader>
       <CardContent>
         {job?.status === 'failed' && (
-          <p className="mb-3 text-sm text-red-600">{job.error ?? t('evidence.failed')}</p>
+          <p className="mb-3 text-sm text-destructive">{job.error ?? t('evidence.failed')}</p>
         )}
 
         {trail.isPending ? (
-          <Skeleton className="h-24" />
+          <ListSkeleton rows={3} />
         ) : events.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t('docAudit.empty')}</p>
         ) : (

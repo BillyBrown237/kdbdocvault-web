@@ -15,6 +15,7 @@ import {
 import { ACCESS_LEVELS, PRINCIPAL_TYPES } from '@/lib/api/types'
 import type { AccessLevel, AclEntry, AclEntryInput, PrincipalType } from '@/lib/api/types'
 import { formatDate } from '@/lib/format'
+import { panelIconClass, panelTitleClass } from '@/components/ui/panel'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -132,8 +133,8 @@ export function AclPanel({ documentId }: { documentId: string }) {
   return (
     <Card className="md:col-span-2">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-          <ShieldCheck className="h-4 w-4" />
+        <CardTitle className={panelTitleClass}>
+          <ShieldCheck className={panelIconClass} />
           {t('acl.title')}
         </CardTitle>
       </CardHeader>
@@ -182,7 +183,7 @@ export function AclPanel({ documentId }: { documentId: string }) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 shrink-0 text-red-600 hover:text-red-600"
+                    className="h-8 w-8 shrink-0 text-destructive hover:text-destructive"
                     disabled={save.isPending}
                     onClick={() => removeEntry(e.id)}
                     aria-label={t('acl.remove')}
@@ -303,7 +304,12 @@ function EffectiveAccessChecker({ documentId }: { documentId: string }) {
           </Select>
         </div>
         {memberId && (
-          <Button variant="ghost" size="icon" onClick={() => setMemberId('')} aria-label={t('acl.clear')}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setMemberId('')}
+            aria-label={t('acl.clear')}
+          >
             <X className="h-4 w-4" />
           </Button>
         )}

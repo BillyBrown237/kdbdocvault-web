@@ -2,8 +2,10 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CheckCircle2, ClipboardCheck, Plus, XCircle } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, ClipboardCheck, Plus, XCircle } from 'lucide-react'
 
+import { cn } from '@/lib/utils'
+import { PageHeader } from '@/components/ui/page-header'
 import { AppShell } from '@/components/app-shell'
 import { EmptyState, LoadMoreButton } from '@/components/vault-list'
 import { ApiProblem, NetworkError } from '@/lib/api/http'
@@ -29,7 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Skeleton } from '@/components/ui/skeleton'
+import { ListSkeleton, Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from '@/components/ui/sonner'
 
@@ -51,10 +53,7 @@ function ApprovalsPage() {
 
   return (
     <AppShell>
-      <div className="flex items-center gap-2">
-        <ClipboardCheck className="h-5 w-5 text-muted-foreground" />
-        <h1 className="text-2xl font-bold tracking-tight">{t('approvals.title')}</h1>
-      </div>
+      <PageHeader icon={ClipboardCheck} title={t('approvals.title')} />
       <Tabs defaultValue="inbox" className="mt-4">
         <TabsList>
           <TabsTrigger value="inbox">
@@ -100,61 +99,104 @@ function InboxTab() {
     onError: (e) => fail(e, t),
   })
 
-  if (inbox.isPending) return <Skeleton className="h-32" />
+  if (inbox.isPending) return <InboxSkeleton />
   const steps = inbox.data?.data ?? []
-  if (steps.length === 0) return <EmptyState label={t('approvals.inboxEmpty')} />
+  if (steps.length === 0)
+    return <EmptyState icon={ClipboardCheck} label={t('approvals.inboxEmpty')} />
 
   return (
     <div className="space-y-3">
-      {steps.map((s) => (
-        <Card key={s.id} className="p-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="min-w-0">
-              <div className="truncate text-sm font-medium">
-                {s.document_title ?? t('approvals.step', { n: s.step_no })}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {t('approvals.stepType', { type: s.step_type })}
-                {s.due_at && ` · ${t('approvals.due', { date: formatDate(s.due_at, i18n.language) })}`}
+      {steps.map((s) => {
+        // Past its due date. Worth colouring: this is a to-do list, and the
+        // whole question a person brings to it is "what is late?". The icon
+        // carries it too — the answer must not depend on seeing red.
+        const overdue = s.due_at ? new Date(s.due_at) < new Date() : false
+        return (
+          <Card key={s.id} className="p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="min-w-0">
+                <div className="truncate text-sm font-medium">
+                  {s.document_title ?? t('approvals.step', { n: s.step_no })}
+                </div>
+                <div className="text-muted-foreground flex flex-wrap items-center gap-x-1.5 text-xs">
+                  <span>{t('approvals.stepType', { type: s.step_type })}</span>
+                  {s.due_at && (
+                    <>
+                      <span aria-hidden>·</span>
+                      <span
+                        className={cn(
+                          'inline-flex items-center gap-1',
+                          overdue && 'text-destructive font-medium',
+                        )}
+                      >
+                        {overdue && <AlertTriangle className="size-3 shrink-0" aria-hidden />}
+                        {t('approvals.due', { date: formatDate(s.due_at, i18n.language) })}
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
+            <Input
+              value={comments[s.id] ?? ''}
+              onChange={(e) => setComments((p) => ({ ...p, [s.id]: e.target.value }))}
+              placeholder={t('approvals.commentOptional')}
+              className="mt-3 h-8 text-xs"
+            />
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                disabled={decide.isPending}
+                onClick={() => decide.mutate({ stepId: s.id, decision: 'approve' })}
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                {t('approvals.approve')}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={decide.isPending}
+                onClick={() => decide.mutate({ stepId: s.id, decision: 'request_changes' })}
+              >
+                {t('approvals.requestChanges')}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-destructive hover:text-destructive"
+                disabled={decide.isPending}
+                onClick={() => decide.mutate({ stepId: s.id, decision: 'reject' })}
+              >
+                <XCircle className="h-4 w-4" />
+                {t('approvals.reject')}
+              </Button>
+              <DelegateControl stepId={s.id} reason={comments[s.id]} />
+            </div>
+          </Card>
+        )
+      })}
+    </div>
+  )
+}
+
+/** Cards in the shape of the approvals that are coming, so the list does not
+ *  jump from one grey block to a stack of cards. */
+function InboxSkeleton() {
+  const { t } = useTranslation()
+  return (
+    <div className="space-y-3" role="status" aria-live="polite" aria-busy>
+      <span className="sr-only">{t('app.loading')}</span>
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="bg-card shadow-panel space-y-3 rounded-xl border p-4">
+          <Skeleton className="h-4 w-1/2" />
+          <Skeleton className="h-3 w-32" />
+          <Skeleton className="h-8" />
+          <div className="flex gap-2">
+            <Skeleton className="h-8 w-24 rounded-md" />
+            <Skeleton className="h-8 w-32 rounded-md" />
+            <Skeleton className="h-8 w-20 rounded-md" />
           </div>
-          <Input
-            value={comments[s.id] ?? ''}
-            onChange={(e) => setComments((p) => ({ ...p, [s.id]: e.target.value }))}
-            placeholder={t('approvals.commentOptional')}
-            className="mt-3 h-8 text-xs"
-          />
-          <div className="mt-2 flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              disabled={decide.isPending}
-              onClick={() => decide.mutate({ stepId: s.id, decision: 'approve' })}
-            >
-              <CheckCircle2 className="h-4 w-4" />
-              {t('approvals.approve')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={decide.isPending}
-              onClick={() => decide.mutate({ stepId: s.id, decision: 'request_changes' })}
-            >
-              {t('approvals.requestChanges')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="text-red-600 hover:text-red-600"
-              disabled={decide.isPending}
-              onClick={() => decide.mutate({ stepId: s.id, decision: 'reject' })}
-            >
-              <XCircle className="h-4 w-4" />
-              {t('approvals.reject')}
-            </Button>
-            <DelegateControl stepId={s.id} reason={comments[s.id]} />
-          </div>
-        </Card>
+        </div>
       ))}
     </div>
   )
@@ -171,7 +213,8 @@ function DelegateControl({ stepId, reason }: { stepId: string; reason?: string }
   const members = useQuery(membersQuery)
 
   const delegate = useMutation({
-    mutationFn: (toMemberId: string) => delegateStep(stepId, toMemberId, reason?.trim() || undefined),
+    mutationFn: (toMemberId: string) =>
+      delegateStep(stepId, toMemberId, reason?.trim() || undefined),
     onSuccess: async () => {
       toast.success(t('approvals.delegated'))
       await queryClient.invalidateQueries({ queryKey: ['workflow-inbox'] })
@@ -244,15 +287,17 @@ function TasksTab() {
       </form>
 
       {q.isPending ? (
-        <Skeleton className="h-24" />
+        <ListSkeleton rows={3} />
       ) : items.length === 0 ? (
-        <EmptyState label={t('approvals.noTasks')} />
+        <EmptyState icon={ClipboardCheck} label={t('approvals.noTasks')} />
       ) : (
         <div className="space-y-2">
           {items.map((task) => (
             <Card key={task.id} className="flex items-center gap-3 px-4 py-3">
               <div className="min-w-0 flex-1">
-                <div className={`truncate text-sm ${task.status === 'done' ? 'text-muted-foreground line-through' : 'font-medium'}`}>
+                <div
+                  className={`truncate text-sm ${task.status === 'done' ? 'text-muted-foreground line-through' : 'font-medium'}`}
+                >
                   {task.title}
                 </div>
                 {task.due_at && (

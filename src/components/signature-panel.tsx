@@ -29,6 +29,7 @@ import {
 } from '@/lib/api/queries'
 import { formatDate } from '@/lib/format'
 import type { Envelope, Signer } from '@/lib/api/types'
+import { panelIconClass, panelTitleClass } from '@/components/ui/panel'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/ui/status-badge'
@@ -45,7 +46,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { toast } from '@/components/ui/sonner'
-
 
 export function SignaturePanel({
   documentId,
@@ -92,8 +92,8 @@ export function SignaturePanel({
   return (
     <Card className="md:col-span-2">
       <CardHeader className="flex-row items-center justify-between pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-          <PenLine className="h-4 w-4" />
+        <CardTitle className={panelTitleClass}>
+          <PenLine className={panelIconClass} />
           {t('sign.title')}
         </CardTitle>
         <CreateEnvelopeDialog
@@ -181,7 +181,7 @@ function EnvelopeRow({
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-7 text-red-600 hover:text-red-600"
+                className="h-7 text-destructive hover:text-destructive"
                 onClick={onCancel}
                 disabled={busy}
               >
@@ -367,7 +367,7 @@ function IdReviewDialog({
         </DialogHeader>
 
         {error ? (
-          <p className="text-sm text-red-600">{error}</p>
+          <p className="text-sm text-destructive">{error}</p>
         ) : src ? (
           <div className="select-none" onContextMenu={(e) => e.preventDefault()}>
             <img
@@ -391,7 +391,7 @@ function IdReviewDialog({
         <DialogFooter>
           <Button
             variant="outline"
-            className="text-red-600 hover:text-red-600"
+            className="text-destructive hover:text-destructive"
             disabled={review.isPending}
             onClick={() => review.mutate(false)}
           >
@@ -541,7 +541,11 @@ function CreateEnvelopeDialog({
         <form className="space-y-4" onSubmit={(e) => void onSubmit(e)}>
           <div className="space-y-1.5">
             <Label>{t('sign.message')}</Label>
-            <Input value={message} onChange={(e) => setMessage(e.target.value)} placeholder={t('sign.messagePlaceholder')} />
+            <Input
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder={t('sign.messagePlaceholder')}
+            />
           </div>
 
           <Separator />
@@ -582,7 +586,12 @@ function CreateEnvelopeDialog({
               onClick={() =>
                 setSigners((prev) => [
                   ...prev,
-                  { name: '', email: '', signing_order: prev.length + 1, verify_method: 'email_otp' },
+                  {
+                    name: '',
+                    email: '',
+                    signing_order: prev.length + 1,
+                    verify_method: 'email_otp',
+                  },
                 ])
               }
             >

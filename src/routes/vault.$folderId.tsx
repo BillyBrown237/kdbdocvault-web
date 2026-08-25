@@ -1,8 +1,9 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, FolderClosed } from 'lucide-react'
 
+import { PageHeader, backControlClass } from '@/components/ui/page-header'
 import { AppShell } from '@/components/app-shell'
 import { NewFolderButton } from '@/components/new-folder-button'
 import { UploadButton } from '@/components/upload-button'
@@ -11,6 +12,7 @@ import {
   EmptyState,
   FolderRow,
   LoadMoreButton,
+  RowSkeleton,
 } from '@/components/vault-list'
 import { folderContentsQuery, folderQuery } from '@/lib/api/queries'
 import { isDocument } from '@/lib/api/types'
@@ -34,40 +36,42 @@ function FolderView() {
 
   return (
     <AppShell>
-      <div className="flex items-center gap-2">
-        {parentId ? (
-          <Link
-            to="/vault/$folderId"
-            params={{ folderId: parentId }}
-            className="rounded-md p-1 hover:bg-muted"
-            aria-label={t('common.back')}
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </Link>
-        ) : (
-          <Link
-            to="/vault"
-            className="rounded-md p-1 hover:bg-muted"
-            aria-label={t('common.back')}
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </Link>
-        )}
-        <h1 className="min-w-0 flex-1 truncate text-2xl font-bold">
-          {folder.data?.name ?? t('app.loading')}
-        </h1>
-        <NewFolderButton parentId={folderId} />
-        <UploadButton folderId={folderId} />
-      </div>
-      {folder.data?.path && (
-        <p className="mt-1 truncate text-xs text-muted-foreground">{folder.data.path}</p>
-      )}
+      <PageHeader
+        // A Link, not history.back(): "up one folder" is a place, so it should
+        // be middle-clickable and copyable like any other navigation.
+        back={
+          parentId ? (
+            <Link
+              to="/vault/$folderId"
+              params={{ folderId: parentId }}
+              className={backControlClass}
+              aria-label={t('common.back')}
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Link>
+          ) : (
+            <Link to="/vault" className={backControlClass} aria-label={t('common.back')}>
+              <ChevronLeft className="h-5 w-5" />
+            </Link>
+          )
+        }
+        title={folder.data?.name ?? t('app.loading')}
+        description={folder.data?.path}
+        actions={
+          <>
+            <NewFolderButton parentId={folderId} />
+            <UploadButton folderId={folderId} />
+          </>
+        }
+      />
 
       {contents.isPending ? (
-        <p className="mt-4 text-sm text-muted-foreground">{t('app.loading')}</p>
+        <div className="mt-4">
+          <RowSkeleton />
+        </div>
       ) : items.length === 0 ? (
         <div className="mt-4">
-          <EmptyState label={t('vault.emptyFolder')} />
+          <EmptyState icon={FolderClosed} label={t('vault.emptyFolder')} />
         </div>
       ) : (
         <div className="mt-4 space-y-2">

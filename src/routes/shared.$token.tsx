@@ -1,11 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Download, Eye, FileText, Lock } from 'lucide-react'
 
 import { ApiProblem, NetworkError } from '@/lib/api/http'
 import { resolveShared, sharedContentBlob, unlockShared } from '@/lib/api/queries'
+import { Skeleton } from '@/components/ui/skeleton'
+import { PublicShell } from '@/components/public-shell'
 import { InlinePdfViewer } from '@/components/inline-pdf-viewer'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -39,7 +41,9 @@ function SharedPage() {
   function fail(err: unknown) {
     if (err instanceof NetworkError) setError(t('errors.network'))
     else if (err instanceof ApiProblem)
-      setError(err.status === 404 ? t('shared.notFound') : (err.detail ?? t('shared.wrongPassword')))
+      setError(
+        err.status === 404 ? t('shared.notFound') : (err.detail ?? t('shared.wrongPassword')),
+      )
     else setError(t('errors.unknown'))
   }
 
@@ -92,7 +96,7 @@ function SharedPage() {
 
   if (viewBlob && meta.data) {
     return (
-      <div className="min-h-screen bg-slate-50 p-4">
+      <div className="app-surface min-h-dvh p-4">
         <div className="mx-auto w-full max-w-4xl">
           <Card className="mb-3 flex items-center justify-between px-4 py-2">
             <span className="min-w-0 truncate text-sm font-medium">{meta.data.title}</span>
@@ -105,7 +109,7 @@ function SharedPage() {
           ) : viewKind === 'image' ? (
             <ImageView blob={viewBlob} />
           ) : (
-            <p className="py-8 text-center text-sm text-slate-500">
+            <p className="py-8 text-muted-foreground text-center text-sm">
               {t('shared.previewFailed')}
             </p>
           )}
@@ -115,69 +119,88 @@ function SharedPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
-      <Card className="w-full max-w-md">
+    <PublicShell>
+      <Card>
         <CardContent className="p-8 text-center">
-        <p className="text-sm font-medium text-muted-foreground">{t('app.name')}</p>
+          {meta.isPending ? (
+            <div className="space-y-3" role="status" aria-live="polite">
+              <Skeleton className="mx-auto size-12 rounded-xl" />
+              <Skeleton className="mx-auto h-5 w-52" />
+              <Skeleton className="mx-auto h-9 w-full" />
+              <span className="sr-only">{t('app.loading')}</span>
+            </div>
+          ) : meta.isError ? (
+            <p className="text-sm text-destructive">{t('shared.notFound')}</p>
+          ) : (
+            <>
+              <span className="bg-primary/10 text-primary mx-auto grid size-12 place-items-center rounded-xl">
+                <FileText className="size-6" />
+              </span>
+              <h1 className="mt-4 text-lg font-semibold break-words">{meta.data.title}</h1>
 
-        {meta.isPending ? (
-          <p className="mt-6 text-sm text-muted-foreground">{t('app.loading')}</p>
-        ) : meta.isError ? (
-          <p className="mt-6 text-sm text-red-600">{t('shared.notFound')}</p>
-        ) : (
-          <>
-            <FileText className="mx-auto mt-6 h-10 w-10 text-muted-foreground" />
-            <h1 className="mt-3 text-lg font-bold break-words">{meta.data.title}</h1>
-
-            {!unlocked ? (
-              <form className="mt-6 space-y-3" onSubmit={(e) => void onUnlock(e)}>
-                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                  <Lock className="h-4 w-4" />
-                  {t('shared.passwordRequired')}
-                </div>
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={t('auth.login.password')}
-                />
-                <Button type="submit" className="w-full" disabled={busy || !password}>
-                  {busy ? t('app.loading') : t('shared.unlock')}
+              {!unlocked ? (
+                <form className="mt-6 space-y-3" onSubmit={(e) => void onUnlock(e)}>
+                  <div className="text-muted-foreground flex items-center justify-center gap-2 text-sm">
+                    <Lock className="h-4 w-4" />
+                    {t('shared.passwordRequired')}
+                  </div>
+                  <Input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder={t('auth.login.password')}
+                    // The share password is not an account password: offering
+                    // to save it would pollute the visitor's password manager
+                    // with a credential for one link.
+                    autoComplete="off"
+                    aria-invalid={error ? true : undefined}
+                  />
+                  <Button type="submit" className="w-full" disabled={busy || !password}>
+                    {busy ? t('app.loading') : t('shared.unlock')}
+                  </Button>
+                </form>
+              ) : (
+                <Button className="mx-auto mt-6" disabled={busy} onClick={() => void onOpen()}>
+                  {meta.data.permission === 'download' ? (
+                    <Download className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                  {busy
+                    ? t('app.loading')
+                    : meta.data.permission === 'download'
+                      ? t('shared.downloadAction')
+                      : t('shared.viewAction')}
                 </Button>
-              </form>
-            ) : (
-              <Button className="mx-auto mt-6" disabled={busy} onClick={() => void onOpen()}>
-                {meta.data.permission === 'download' ? (
-                  <Download className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-                {busy
-                  ? t('app.loading')
-                  : meta.data.permission === 'download'
-                    ? t('shared.downloadAction')
-                    : t('shared.viewAction')}
-              </Button>
-            )}
+              )}
 
-            {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
-          </>
-        )}
+              {error && (
+                <p role="alert" className="mt-3 text-sm text-destructive">
+                  {error}
+                </p>
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
-    </div>
+    </PublicShell>
   )
 }
 
 function ImageView({ blob }: { blob: Blob }) {
   const [src] = useState(() => URL.createObjectURL(blob))
+  // The object URL pins the whole blob in memory until it is revoked, and this
+  // one never was — the room portal's identical component did revoke. On a
+  // view-only share of a large scan that is the document sitting in memory for
+  // the life of the tab.
+  useEffect(() => () => URL.revokeObjectURL(src), [src])
   return (
     <div className="select-none" onContextMenu={(e) => e.preventDefault()}>
       <img
         src={src}
         alt=""
         draggable={false}
-        className="mx-auto max-h-[75vh] rounded-md border border-slate-200 shadow-sm"
+        className="mx-auto max-h-[75vh] shadow-panel rounded-lg border"
       />
     </div>
   )

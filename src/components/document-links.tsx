@@ -11,11 +11,18 @@ import {
   documentPickerQuery,
 } from '@/lib/api/queries'
 import { ApiProblem } from '@/lib/api/http'
+import { panelIconClass, panelTitleClass } from '@/components/ui/panel'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { toast } from '@/components/ui/sonner'
@@ -78,8 +85,8 @@ export function DocumentLinks({ documentId }: { documentId: string }) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Link2 className="h-4 w-4" />
+        <CardTitle className={panelTitleClass}>
+          <Link2 className={panelIconClass} />
           {t('links.title')}
         </CardTitle>
       </CardHeader>
@@ -169,7 +176,9 @@ export function DocumentLinks({ documentId }: { documentId: string }) {
                           </button>
                         ))}
                       {results.isFetched && (results.data?.data.length ?? 0) === 0 && (
-                        <p className="px-2 text-xs text-muted-foreground">{t('search.noResults')}</p>
+                        <p className="px-2 text-xs text-muted-foreground">
+                          {t('search.noResults')}
+                        </p>
                       )}
                     </div>
                   )}

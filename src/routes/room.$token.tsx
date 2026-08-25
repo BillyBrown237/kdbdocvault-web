@@ -6,6 +6,8 @@ import { ChevronLeft, Eye, FileText, Lock } from 'lucide-react'
 
 import { ApiProblem, NetworkError } from '@/lib/api/http'
 import { resolveRoom, roomContentBlob, roomHeartbeat } from '@/lib/api/queries'
+import { EmptyState } from '@/components/ui/empty-state'
+import { PublicShell } from '@/components/public-shell'
 import { InlinePdfViewer } from '@/components/inline-pdf-viewer'
 import { formatDate } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
@@ -74,7 +76,7 @@ function RoomPortal() {
   // document tab — rooms are watermarked view-only by design.
   if (blob && open) {
     return (
-      <div className="min-h-screen bg-slate-50 p-4">
+      <div className="app-surface min-h-dvh p-4">
         <div className="mx-auto w-full max-w-4xl">
           <Card className="mb-3 flex flex-row items-center justify-between gap-2 px-3 py-2">
             <Button variant="ghost" size="sm" onClick={closeViewer}>
@@ -91,7 +93,9 @@ function RoomPortal() {
           ) : blob.type.startsWith('image/') ? (
             <RoomImage blob={blob} />
           ) : (
-            <p className="py-8 text-center text-sm text-slate-500">{t('shared.previewFailed')}</p>
+            <p className="py-8 text-muted-foreground text-center text-sm">
+              {t('shared.previewFailed')}
+            </p>
           )}
         </div>
       </div>
@@ -99,14 +103,15 @@ function RoomPortal() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30 p-4">
-      <div className="mx-auto w-full max-w-2xl py-8">
-        <p className="text-center text-sm font-medium text-muted-foreground">{t('app.name')}</p>
-        <h1 className="mt-2 text-center text-2xl font-bold break-words">{room.name}</h1>
+    <PublicShell width="wide" className="max-w-2xl">
+      <div>
+        <h1 className="text-center text-2xl font-semibold break-words">{room.name}</h1>
         {room.description && (
-          <p className="mt-2 text-center text-sm text-muted-foreground">{room.description}</p>
+          <p className="text-muted-foreground mx-auto mt-2 max-w-prose text-center text-sm">
+            {room.description}
+          </p>
         )}
-        <p className="mt-2 text-center text-xs text-muted-foreground">
+        <p className="text-muted-foreground mt-3 text-center text-xs">
           {visitor.name && `${t('room.welcome', { name: visitor.name })} · `}
           {room.expires_at
             ? t(expired ? 'room.expiredOn' : 'room.expiresOn', {
@@ -118,17 +123,19 @@ function RoomPortal() {
         <Card className="mt-6">
           <CardContent className="p-0">
             {documents.length === 0 ? (
-              <p className="p-8 text-center text-sm text-muted-foreground">{t('room.empty')}</p>
+              <EmptyState size="inline" icon={FileText} label={t('room.empty')} />
             ) : (
               <ul className="divide-y">
                 {documents.map((d) => (
                   <li
                     key={d.id}
-                    className="flex items-center justify-between gap-3 px-4 py-3 text-sm"
+                    className="hover:bg-muted/40 flex items-center justify-between gap-3 px-4 py-3 text-sm transition-colors first:rounded-t-xl last:rounded-b-xl"
                   >
-                    <span className="flex min-w-0 items-center gap-2">
-                      <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                      <span className="min-w-0 truncate">{d.title}</span>
+                    <span className="flex min-w-0 items-center gap-3">
+                      <span className="bg-primary/8 text-primary grid size-8 shrink-0 place-items-center rounded-lg">
+                        <FileText className="size-4" />
+                      </span>
+                      <span className="min-w-0 truncate font-medium">{d.title}</span>
                     </span>
                     <Button
                       size="sm"
@@ -147,14 +154,18 @@ function RoomPortal() {
           </CardContent>
         </Card>
 
-        {error && <p className="mt-3 text-center text-sm text-red-600">{error}</p>}
+        {error && (
+          <p role="alert" className="mt-3 text-center text-sm text-destructive">
+            {error}
+          </p>
+        )}
 
-        <p className="mt-6 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+        <p className="text-muted-foreground mt-6 flex items-center justify-center gap-1.5 text-xs">
           <Lock className="h-3 w-3" />
           {t('room.privacyNotice')}
         </p>
       </div>
-    </div>
+    </PublicShell>
   )
 }
 
@@ -188,7 +199,7 @@ function RoomImage({ blob }: { blob: Blob }) {
         src={src}
         alt=""
         draggable={false}
-        className="mx-auto max-h-[75vh] rounded-md border border-slate-200 shadow-sm"
+        className="mx-auto max-h-[75vh] shadow-panel rounded-lg border"
       />
     </div>
   )
@@ -196,14 +207,19 @@ function RoomImage({ blob }: { blob: Blob }) {
 
 function Centered({ children, tone }: { children: React.ReactNode; tone?: 'error' }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
-      <Card className="w-full max-w-md">
+    <PublicShell>
+      <Card>
         <CardContent className="p-8 text-center">
-          <p className={tone === 'error' ? 'text-sm text-red-600' : 'text-sm text-muted-foreground'}>
+          <p
+            role="status"
+            className={
+              tone === 'error' ? 'text-sm text-destructive' : 'text-muted-foreground text-sm'
+            }
+          >
             {children}
           </p>
         </CardContent>
       </Card>
-    </div>
+    </PublicShell>
   )
 }

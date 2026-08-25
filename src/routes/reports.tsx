@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BarChart3, Download } from 'lucide-react'
 
+import { EmptyState } from '@/components/ui/empty-state'
+import { PageHeader } from '@/components/ui/page-header'
 import { AppShell } from '@/components/app-shell'
 import { ApiProblem, NetworkError } from '@/lib/api/http'
 import {
@@ -16,6 +18,7 @@ import {
   reportWorkflowQuery,
 } from '@/lib/api/queries'
 import { formatBytes, formatDate } from '@/lib/format'
+import { cn } from '@/lib/utils'
 import { requireTenant } from '@/lib/route-guards'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -27,7 +30,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
-import { Skeleton } from '@/components/ui/skeleton'
+import { ListSkeleton, Skeleton } from '@/components/ui/skeleton'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from '@/components/ui/sonner'
@@ -43,16 +46,12 @@ function ReportsPage() {
   const { t } = useTranslation()
   return (
     <AppShell>
-      <div className="flex items-center gap-2">
-        <BarChart3 className="h-5 w-5 text-muted-foreground" />
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t('reports.title')}</h1>
-          <p className="text-sm text-muted-foreground">{t('reports.subtitle')}</p>
-        </div>
-      </div>
+      <PageHeader icon={BarChart3} title={t('reports.title')} description={t('reports.subtitle')} />
 
       <Tabs defaultValue="overview" className="mt-4">
-        <TabsList className="flex-wrap">
+        {/* No flex-wrap: TabsList scrolls sideways now, and wrapping would
+            break the shared bottom border into two disconnected lines. */}
+        <TabsList>
           <TabsTrigger value="overview">{t('reports.tabs.overview')}</TabsTrigger>
           <TabsTrigger value="expiring">{t('reports.tabs.expiring')}</TabsTrigger>
           <TabsTrigger value="compliance">{t('reports.tabs.compliance')}</TabsTrigger>
@@ -60,25 +59,58 @@ function ReportsPage() {
           <TabsTrigger value="activity">{t('reports.tabs.activity')}</TabsTrigger>
           <TabsTrigger value="workflow">{t('reports.tabs.workflow')}</TabsTrigger>
         </TabsList>
-        <TabsContent value="overview" className="mt-4"><OverviewTab /></TabsContent>
-        <TabsContent value="expiring" className="mt-4"><ExpiringTab /></TabsContent>
-        <TabsContent value="compliance" className="mt-4"><ComplianceTab /></TabsContent>
-        <TabsContent value="exposure" className="mt-4"><ExposureTab /></TabsContent>
-        <TabsContent value="activity" className="mt-4"><ActivityTab /></TabsContent>
-        <TabsContent value="workflow" className="mt-4"><WorkflowTab /></TabsContent>
+        <TabsContent value="overview">
+          <OverviewTab />
+        </TabsContent>
+        <TabsContent value="expiring">
+          <ExpiringTab />
+        </TabsContent>
+        <TabsContent value="compliance">
+          <ComplianceTab />
+        </TabsContent>
+        <TabsContent value="exposure">
+          <ExposureTab />
+        </TabsContent>
+        <TabsContent value="activity">
+          <ActivityTab />
+        </TabsContent>
+        <TabsContent value="workflow">
+          <WorkflowTab />
+        </TabsContent>
       </Tabs>
     </AppShell>
   )
 }
 
-function Stat({ label, value, gold = false }: { label: string; value: React.ReactNode; gold?: boolean }) {
+/**
+ * One reported number.
+ *
+ * Mono and gold are kept from W22 — mono is the evidence texture, and gold
+ * marks exactly one number per tab. What changed (W34) is only the frame: the
+ * same hover lift the dashboard's metric cards use, and `tabular` so a column
+ * of figures lines up instead of shifting as the digits change.
+ */
+function Stat({
+  label,
+  value,
+  gold = false,
+}: {
+  label: string
+  value: React.ReactNode
+  gold?: boolean
+}) {
   return (
-    <Card>
+    <Card className="transition-shadow hover:shadow-pop">
       <CardContent className="p-4">
-        <div className={`font-mono text-2xl font-semibold ${gold ? 'text-amber-500' : ''}`}>
+        <div
+          className={cn(
+            'tabular font-mono text-2xl leading-none font-semibold',
+            gold && 'text-amber-500',
+          )}
+        >
           {value}
         </div>
-        <div className="mt-1 text-xs text-muted-foreground">{label}</div>
+        <div className="text-muted-foreground mt-1.5 text-xs">{label}</div>
       </CardContent>
     </Card>
   )
@@ -88,10 +120,24 @@ function StatGrid({ children }: { children: React.ReactNode }) {
   return <div className="grid grid-cols-2 gap-3 md:grid-cols-4">{children}</div>
 }
 
+/** Placeholders in the grid the numbers will land in, rather than one tall
+ *  block that gets replaced by eight cards — the page no longer jumps. */
+function StatGridSkeleton({ count = 8 }: { count?: number }) {
+  return (
+    <div role="status" aria-live="polite">
+      <StatGrid>
+        {Array.from({ length: count }).map((_, i) => (
+          <Skeleton key={i} className="h-[5.25rem] rounded-xl" />
+        ))}
+      </StatGrid>
+    </div>
+  )
+}
+
 function OverviewTab() {
   const { t, i18n } = useTranslation()
   const q = useQuery(reportOverviewQuery)
-  if (q.isPending) return <Skeleton className="h-48" />
+  if (q.isPending) return <StatGridSkeleton />
   if (!q.data) return null
   const r = q.data
   return (
@@ -157,12 +203,12 @@ function ExpiringTab() {
         </Button>
       </div>
       {q.isPending ? (
-        <Skeleton className="h-40" />
+        <ListSkeleton rows={4} />
       ) : (
         <Card>
           <CardContent className="p-4">
             {q.data?.data.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t('reports.exp.none')}</p>
+              <EmptyState size="inline" icon={BarChart3} label={t('reports.exp.none')} />
             ) : (
               <div className="space-y-2 text-sm">
                 {q.data?.data.map((row, i) => (
@@ -176,15 +222,17 @@ function ExpiringTab() {
                       >
                         {row.title}
                       </Link>
-                      <span className="text-xs text-muted-foreground">
-                        {row.owner_name ?? '—'}
-                      </span>
+                      <span className="text-xs text-muted-foreground">{row.owner_name ?? '—'}</span>
                       <span className="font-mono text-xs">
                         {formatDate(row.key_date, i18n.language)}
                       </span>
                       <span
                         className={`font-mono text-xs font-semibold ${
-                          row.days_left <= 7 ? 'text-red-600' : row.days_left <= 30 ? 'text-amber-600' : ''
+                          row.days_left <= 7
+                            ? 'text-destructive'
+                            : row.days_left <= 30
+                              ? 'text-amber-600'
+                              : ''
                         }`}
                       >
                         J-{row.days_left}
@@ -204,13 +252,16 @@ function ExpiringTab() {
 function ComplianceTab() {
   const { t } = useTranslation()
   const q = useQuery(reportComplianceQuery)
-  if (q.isPending) return <Skeleton className="h-48" />
+  if (q.isPending) return <StatGridSkeleton count={4} />
   if (!q.data) return null
   const r = q.data
   return (
     <StatGrid>
       <Stat label={t('reports.co.coverage')} value={`${r.retention_coverage_pct}%`} gold />
-      <Stat label={t('reports.co.withRule')} value={`${r.with_lifecycle_rule} / ${r.documents_active}`} />
+      <Stat
+        label={t('reports.co.withRule')}
+        value={`${r.with_lifecycle_rule} / ${r.documents_active}`}
+      />
       <Stat label={t('reports.co.unclassified')} value={r.unclassified} />
       <Stat label={t('reports.co.orphaned')} value={r.orphaned} />
       <Stat label={t('reports.co.held')} value={r.under_legal_hold} />
@@ -224,14 +275,17 @@ function ComplianceTab() {
 function ExposureTab() {
   const { t } = useTranslation()
   const q = useQuery(reportExposureQuery)
-  if (q.isPending) return <Skeleton className="h-48" />
+  if (q.isPending) return <StatGridSkeleton count={4} />
   if (!q.data) return null
   const r = q.data
   return (
     <div className="space-y-3">
       <StatGrid>
         <Stat label={t('reports.ex.active')} value={r.links.active} gold />
-        <Stat label={t('reports.ex.noPassword')} value={r.links.active - r.links.password_protected} />
+        <Stat
+          label={t('reports.ex.noPassword')}
+          value={r.links.active - r.links.password_protected}
+        />
         <Stat label={t('reports.ex.noExpiry')} value={r.links.without_expiry} />
         <Stat label={t('reports.ex.views')} value={r.views_30d} />
         <Stat label={t('reports.ex.viewers')} value={r.unique_viewers_30d} />
@@ -254,7 +308,9 @@ function ExposureTab() {
                 >
                   {d.title}
                 </Link>
-                <span className="font-mono text-xs">{t('reports.ex.viewCount', { count: d.views })}</span>
+                <span className="font-mono text-xs">
+                  {t('reports.ex.viewCount', { count: d.views })}
+                </span>
               </div>
             ))}
           </CardContent>
@@ -267,7 +323,7 @@ function ExposureTab() {
 function ActivityTab() {
   const { t } = useTranslation()
   const q = useQuery(reportActivityQuery())
-  if (q.isPending) return <Skeleton className="h-48" />
+  if (q.isPending) return <Skeleton className="h-48 rounded-xl" />
   if (!q.data) return null
   return (
     <Card>
@@ -276,14 +332,16 @@ function ActivityTab() {
           {t('reports.ac.period', { from: q.data.from, to: q.data.to })}
         </p>
         {q.data.members.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t('reports.ac.none')}</p>
+          <EmptyState size="inline" icon={BarChart3} label={t('reports.ac.none')} />
         ) : (
           q.data.members.map((m, i) => (
             <div key={m.user_id ?? i}>
               {i > 0 && <Separator className="mb-3" />}
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <span className="text-sm font-medium">{m.name ?? m.email ?? '—'}</span>
-                <span className="font-mono text-sm">{t('reports.ac.total', { count: m.total })}</span>
+                <span className="font-mono text-sm">
+                  {t('reports.ac.total', { count: m.total })}
+                </span>
               </div>
               <p className="mt-0.5 text-xs text-muted-foreground">
                 {Object.entries(m.actions)
@@ -302,7 +360,7 @@ function ActivityTab() {
 function WorkflowTab() {
   const { t } = useTranslation()
   const q = useQuery(reportWorkflowQuery)
-  if (q.isPending) return <Skeleton className="h-48" />
+  if (q.isPending) return <StatGridSkeleton count={3} />
   if (!q.data) return null
   const r = q.data
   return (
@@ -325,7 +383,11 @@ function WorkflowTab() {
             {r.by_template.map((tpl) => (
               <div key={tpl.template_id} className="flex items-center justify-between gap-2">
                 <span className="min-w-0 flex-1 truncate">{tpl.name}</span>
-                <StatusBadge domain="workflow" status="completed" className="hidden sm:inline-flex" />
+                <StatusBadge
+                  domain="workflow"
+                  status="completed"
+                  className="hidden sm:inline-flex"
+                />
                 <span className="font-mono text-xs">
                   ×{tpl.completed} · {tpl.avg_hours === null ? '—' : `${tpl.avg_hours} h`}
                 </span>

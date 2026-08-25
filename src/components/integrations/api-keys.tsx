@@ -3,15 +3,13 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { KeyRound, RefreshCw } from 'lucide-react'
 
-import {
-  apiKeysQuery,
-  createApiKey,
-  revokeApiKey,
-  rotateApiKey,
-} from '@/lib/api/queries'
+import { confirmDestructive } from '@/lib/confirm'
+import { apiKeysQuery, createApiKey, revokeApiKey, rotateApiKey } from '@/lib/api/queries'
 import { API_ORIGIN, ApiProblem, NetworkError } from '@/lib/api/http'
 import type { CreatedApiKey } from '@/lib/api/types'
 import { formatDate } from '@/lib/format'
+import { EmptyState } from '@/components/ui/empty-state'
+import { panelIconClass, panelTitleClass } from '@/components/ui/panel'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Callout } from '@/components/ui/callout'
@@ -31,7 +29,12 @@ import { toast } from '@/components/ui/sonner'
 
 /** Filesystem-safe stem for the downloaded file, from the key's own name. */
 function slug(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'key'
+  return (
+    name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') || 'key'
+  )
 }
 
 /**
@@ -121,8 +124,8 @@ export function ApiKeysCard() {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-          <KeyRound className="h-4 w-4" />
+        <CardTitle className={panelTitleClass}>
+          <KeyRound className={panelIconClass} />
           {t('integrations.keys')}
         </CardTitle>
       </CardHeader>
@@ -130,7 +133,7 @@ export function ApiKeysCard() {
         <p className="text-sm text-muted-foreground">{t('integrations.keysExplainer')}</p>
 
         {live.length === 0 && !creating && (
-          <p className="text-sm text-muted-foreground">{t('integrations.noKeys')}</p>
+          <EmptyState size="inline" icon={KeyRound} label={t('integrations.noKeys')} />
         )}
 
         {live.map((k, i) => (
@@ -177,9 +180,11 @@ export function ApiKeysCard() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="text-red-600 hover:text-red-600"
+                  className="text-destructive hover:text-destructive"
                   disabled={revoke.isPending}
-                  onClick={() => revoke.mutate(k.id)}
+                  onClick={() => {
+                    if (confirmDestructive(t('integrations.revokeKeyConfirm'))) revoke.mutate(k.id)
+                  }}
                 >
                   {t('integrations.revoke')}
                 </Button>
@@ -219,9 +224,7 @@ export function ApiKeysCard() {
                       checked={scopes.includes(s.scope)}
                       onChange={(e) =>
                         setScopes((cur) =>
-                          e.target.checked
-                            ? [...cur, s.scope]
-                            : cur.filter((x) => x !== s.scope),
+                          e.target.checked ? [...cur, s.scope] : cur.filter((x) => x !== s.scope),
                         )
                       }
                     />

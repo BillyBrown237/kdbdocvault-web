@@ -14,6 +14,8 @@ import { ApiProblem, NetworkError } from '@/lib/api/http'
 import type { CreatedEmergencyContact } from '@/lib/api/types'
 import { formatDate } from '@/lib/format'
 import { enablePush, pushSubscribed, pushSupported } from '@/lib/push'
+import { EmptyState } from '@/components/ui/empty-state'
+import { panelIconClass, panelTitleClass } from '@/components/ui/panel'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Callout } from '@/components/ui/callout'
@@ -92,10 +94,10 @@ export function EmergencyContactsCard() {
   const pending = list.filter((c) => c.status === 'access_requested')
 
   return (
-    <Card className="mt-4">
+    <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-          <LifeBuoy className="h-4 w-4" />
+        <CardTitle className={panelTitleClass}>
+          <LifeBuoy className={panelIconClass} />
           {t('emergency.title')}
         </CardTitle>
       </CardHeader>
@@ -107,9 +109,7 @@ export function EmergencyContactsCard() {
           <Callout key={c.id} variant="warning">
             {t('emergency.pending', {
               name: c.name,
-              when: c.access_requested_at
-                ? formatDate(c.access_requested_at, i18n.language)
-                : '',
+              when: c.access_requested_at ? formatDate(c.access_requested_at, i18n.language) : '',
               hours: c.veto_window_hours,
             })}
             <div className="mt-2">
@@ -121,7 +121,7 @@ export function EmergencyContactsCard() {
         ))}
 
         {list.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t('emergency.empty')}</p>
+          <EmptyState size="inline" icon={LifeBuoy} label={t('emergency.empty')} />
         ) : (
           <div className="space-y-2">
             {list.map((c, i) => (
@@ -144,7 +144,7 @@ export function EmergencyContactsCard() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="text-red-600 hover:text-red-600"
+                    className="text-destructive hover:text-destructive"
                     disabled={remove.isPending}
                     onClick={() => remove.mutate(c.id)}
                   >
@@ -280,10 +280,10 @@ export function DevicesCard() {
   const delivery = devices.data?.delivery
 
   return (
-    <Card className="mt-4">
+    <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Smartphone className="h-4 w-4" />
+        <CardTitle className={panelTitleClass}>
+          <Smartphone className={panelIconClass} />
           {t('devices.title')}
         </CardTitle>
       </CardHeader>
@@ -316,7 +316,7 @@ export function DevicesCard() {
         )}
 
         {list.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t('devices.empty')}</p>
+          <EmptyState size="inline" icon={Smartphone} label={t('devices.empty')} />
         ) : (
           list.map((d, i) => (
             <div key={d.id}>
@@ -331,7 +331,7 @@ export function DevicesCard() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="text-red-600 hover:text-red-600"
+                  className="text-destructive hover:text-destructive"
                   disabled={remove.isPending}
                   onClick={() => remove.mutate(d.id)}
                 >

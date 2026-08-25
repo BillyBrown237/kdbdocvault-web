@@ -3,6 +3,7 @@ import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-q
 import { useTranslation } from 'react-i18next'
 import { Trash2, Undo2 } from 'lucide-react'
 
+import { PageHeader } from '@/components/ui/page-header'
 import { AppShell } from '@/components/app-shell'
 import { EmptyState, LoadMoreButton } from '@/components/vault-list'
 import { restoreDocument, trashQuery } from '@/lib/api/queries'
@@ -37,10 +38,7 @@ function TrashPage() {
 
   return (
     <AppShell>
-      <div className="flex items-center gap-2">
-        <Trash2 className="h-5 w-5 text-muted-foreground" />
-        <h1 className="text-2xl font-bold tracking-tight">{t('trash.title')}</h1>
-      </div>
+      <PageHeader icon={Trash2} title={t('trash.title')} />
 
       {trash.isPending ? (
         <div className="mt-4 space-y-2">
@@ -50,7 +48,7 @@ function TrashPage() {
         </div>
       ) : items.length === 0 ? (
         <div className="mt-4">
-          <EmptyState label={t('trash.empty')} />
+          <EmptyState icon={Trash2} label={t('trash.empty')} />
         </div>
       ) : (
         <div className="mt-4 space-y-2">

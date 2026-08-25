@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { NetworkError } from '@/lib/api/http'
 import { completeMfa, getPendingChallenge } from '@/lib/auth'
 import { flags } from '@/lib/flags'
-import { AuthLayout } from '@/components/auth/auth-layout'
+import { AuthHeading, AuthLayout } from '@/components/auth/auth-layout'
 import { OtpInput } from '@/components/auth/otp-input'
 import { Button } from '@/components/ui/button'
 import { Callout } from '@/components/ui/callout'
@@ -47,11 +47,10 @@ function MfaPage() {
 
   return (
     <AuthLayout>
-      <h1 className="text-2xl font-semibold tracking-tight">{t('mfa.title')}</h1>
-      <p className="mt-1 text-sm text-muted-foreground">{t('mfa.totpHint')}</p>
+      <AuthHeading title={t('mfa.title')} description={t('mfa.totpHint')} />
 
       <form
-        className="mt-6 space-y-4"
+        className="space-y-4"
         onSubmit={(e) => {
           e.preventDefault()
           void submit(code)

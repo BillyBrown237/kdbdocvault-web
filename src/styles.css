@@ -24,8 +24,25 @@
   --destructive-foreground: oklch(0.984 0.003 247.858);
   --border: oklch(0.929 0.013 255.508);
   --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
+  /* W34: was a pale slate, which made every focus ring in the app a suggestion
+     rather than an indicator. The focus ring is the only thing a keyboard user
+     has to locate themselves with, so it gets the brand blue. */
+  --ring: oklch(0.546 0.245 262.881);
   --radius: 0.625rem;
+
+  /* ---- App chrome (W34) -------------------------------------------------
+     `--background` is the CARD white that shadcn components sit on. The app
+     shell needs a second, cooler surface behind those cards, otherwise white
+     panels on a white page have nothing to be raised above and every screen
+     reads as one flat sheet — which is most of why the app looked plain. */
+  --app-surface: oklch(0.984 0.003 247.858);
+  --app-rail: oklch(0.995 0.002 247.858);
+
+  /* Two shadows, deliberately few. Soft and blue-tinted rather than grey:
+     a neutral shadow over a cool surface looks like dirt. */
+  --shadow-panel: 0 1px 2px -1px oklch(0.129 0.042 264.695 / 0.06),
+    0 4px 12px -6px oklch(0.129 0.042 264.695 / 0.1);
+  --shadow-pop: 0 8px 30px -12px oklch(0.129 0.042 264.695 / 0.22);
 }
 
 .dark {
@@ -48,6 +65,13 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.551 0.027 264.364);
+
+  /* Inverted: in the dark theme the SHELL is the darkest thing and cards lift
+     towards the light, so the rail is darker than the page, not lighter. */
+  --app-surface: oklch(0.168 0.042 264.695);
+  --app-rail: oklch(0.145 0.042 264.695);
+  --shadow-panel: 0 1px 2px -1px oklch(0 0 0 / 0.4), 0 4px 12px -6px oklch(0 0 0 / 0.5);
+  --shadow-pop: 0 8px 30px -12px oklch(0 0 0 / 0.7);
 }
 
 @theme inline {
@@ -75,6 +99,11 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
+  --color-app-surface: var(--app-surface);
+  --color-app-rail: var(--app-rail);
+  --shadow-panel: var(--shadow-panel);
+  --shadow-pop: var(--shadow-pop);
+
   /* ---- Brand tokens (W22, from the brand sheet — exact hex) -------------
      Usage semantics: brand-blue = trust/primary actions · brand-azure =
      highlights/info · brand-teal = organization features · brand-gold =
@@ -88,6 +117,22 @@
   --color-brand-teal: #14b8a6;
   --color-brand-teal-deep: #0d9488;
   --color-brand-gold: #fbbf24;
+}
+
+/* ---- Type (W34) ------------------------------------------------------------
+   Two families, each doing the job it is good at. Poppins is the marketing
+   site's face and carries the brand, but it is geometric and wide: set a table
+   or a 13px label in it and the rows stop being scannable. So Poppins is for
+   headings only, and Inter — designed for exactly this — takes the interface.
+
+   A plain `@theme`, NOT `@theme inline`: inline theme values are substituted at
+   the use site and the variable itself is never emitted, so Tailwind's own
+   `--default-font-family: var(--font-sans)` in preflight would resolve to
+   nothing and the body would silently fall back to the browser default. */
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Poppins', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 /* Brand gradient utilities (primary CTAs and hero surfaces ONLY). */
@@ -106,10 +151,142 @@
   body {
     @apply bg-background text-foreground;
     margin: 0;
+    /* `cv11` gives Inter the single-storey l/1 that stops "l" and "1" and "I"
+       reading as the same glyph — this app shows reference numbers and
+       filenames, where that confusion actually costs someone time. */
+    font-feature-settings: 'cv11';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
   html,
   body,
   #app {
     min-height: 100%;
+  }
+
+  /* Headings carry the brand face; everything else stays in Inter. Poppins is
+     geometric, so it needs negative tracking above ~20px or the words drift
+     apart — the same correction the marketing site makes. */
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  /* Numbers that sit in columns must not jitter as they change. Applies to
+     tables everywhere rather than being remembered per screen. */
+  td,
+  th {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* A quieter scrollbar. The default Windows/Chrome bar is a grey slab that
+   competes with the content it is scrolling. */
+@layer base {
+  @supports (scrollbar-width: thin) {
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+  }
+}
+
+/* ---- App-shell utilities (W34) -------------------------------------------
+   `@utility`, not `@layer utilities`: only @utility registers the name with
+   the variant system, so `hover:` and `dark:` work on these. */
+@utility app-surface {
+  background-color: var(--app-surface);
+}
+@utility app-rail {
+  background-color: var(--app-rail);
+}
+@utility elevate {
+  box-shadow: var(--shadow-panel);
+}
+/* Numbers meant to be compared down a column, outside of a real <table>. */
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Enter/exit animations (W34) -------------------------------------------
+   Dialog and DropdownMenu were already written against `tailwindcss-animate`
+   (`animate-in`, `fade-in-0`, `zoom-in-95`) — but that package is not a
+   dependency of this project, so those classes generated nothing and the
+   overlays simply appeared. Rather than add a package for six class names,
+   here they are, natively.
+
+   The animations move `opacity` and the independent `scale` property, and
+   deliberately NOT `transform`: DialogContent is centred with
+   `-translate-x-1/2 -translate-y-1/2`, and a keyframe that wrote `transform`
+   would stomp that and fling the panel out of the corner. `scale` composes
+   with the existing transform instead of replacing it. */
+@keyframes kdb-enter {
+  from {
+    opacity: var(--kdb-enter-opacity, 1);
+    scale: var(--kdb-enter-scale, 1);
+  }
+}
+@keyframes kdb-exit {
+  to {
+    opacity: var(--kdb-exit-opacity, 1);
+    scale: var(--kdb-exit-scale, 1);
+  }
+}
+
+@utility animate-in {
+  animation: kdb-enter var(--kdb-enter-duration, 180ms) cubic-bezier(0.16, 1, 0.3, 1) both;
+  @media (prefers-reduced-motion: reduce) {
+    animation-duration: 1ms;
+  }
+}
+@utility animate-out {
+  animation: kdb-exit var(--kdb-exit-duration, 140ms) ease-in both;
+  @media (prefers-reduced-motion: reduce) {
+    animation-duration: 1ms;
+  }
+}
+
+/* The modifiers only set the starting/ending value; animate-in / animate-out
+   decide when it runs. Same composition model as the package they replace, so
+   the existing class strings did not have to change. */
+@utility fade-in-0 {
+  --kdb-enter-opacity: 0;
+}
+@utility fade-out-0 {
+  --kdb-exit-opacity: 0;
+}
+@utility zoom-in-95 {
+  --kdb-enter-scale: 0.95;
+}
+@utility zoom-out-95 {
+  --kdb-exit-scale: 0.95;
+}
+
+/* Loading shimmer. A gradient swept across the element rather than an opacity
+   pulse — see skeleton.tsx. Composited on background-position, so it does not
+   trigger layout. */
+@keyframes kdb-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+@utility animate-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    transparent 20%,
+    color-mix(in oklab, var(--card) 70%, transparent) 50%,
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  animation: kdb-shimmer 1.6s linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    background-image: none;
+    animation: none;
   }
 }

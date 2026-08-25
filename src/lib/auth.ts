@@ -6,6 +6,7 @@
  * authenticated but tenant-less: the onboarding state.
  */
 import {
+  ApiProblem,
   apiFetch,
   getAccessToken,
   getCurrentTenantId,
@@ -50,6 +51,46 @@ export async function verifyIdentifier(identifier: string, code: string): Promis
     method: 'POST',
     body: JSON.stringify({ identifier, code }),
   })
+}
+
+/**
+ * B70/W33 — enterprise SSO.
+ *
+ * `ssoStart` is called on CLICK, not on blur: GET /start writes a one-shot
+ * state row server-side, and probing it on every keystroke would mint junk
+ * rows for nothing. 404 means "no SSO for that domain" and is returned as
+ * null rather than thrown — it is an answer, not an error.
+ *
+ * The `{provider}` path segment is the email domain. The callback handler
+ * ignores it (the state row already knows its connection), so the callback
+ * uses the domain remembered from start, falling back to '_'.
+ */
+export async function ssoStart(
+  domain: string,
+  redirect?: string,
+): Promise<{ authorizeUrl: string; displayName: string } | null> {
+  const qs = redirect ? `?redirect=${encodeURIComponent(redirect)}` : ''
+  try {
+    const r = await apiFetch<{ authorize_url: string; display_name: string }>(
+      `/auth/sso/${encodeURIComponent(domain)}/start${qs}`,
+    )
+    sessionStorage.setItem('kdb.sso.domain', domain)
+    return { authorizeUrl: r.authorize_url, displayName: r.display_name }
+  } catch (err) {
+    if (err instanceof ApiProblem && err.status === 404) return null
+    throw err
+  }
+}
+
+export async function ssoComplete(state: string, code: string): Promise<LoginResult> {
+  const domain = sessionStorage.getItem('kdb.sso.domain') ?? '_'
+  sessionStorage.removeItem('kdb.sso.domain')
+  const tokens = await apiFetch<AuthTokens>(`/auth/sso/${encodeURIComponent(domain)}/callback`, {
+    method: 'POST',
+    body: JSON.stringify({ state, code }),
+  })
+  adopt(tokens)
+  return { status: 'ok', tenantId: tokens.tenant_id ?? null }
 }
 
 export async function login(identifier: string, password: string): Promise<LoginResult> {

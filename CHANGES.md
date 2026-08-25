@@ -1,3 +1,28 @@
+# Slice W33 — Enterprise SSO on the web (pairs with B70)
+
+flags.authSso flips true: the reserved button on /login is now real.
+
+## How the flow reads
+
+- The button derives the IdP from the email ALREADY TYPED in the identifier
+  field — no separate "SSO email" input. No email yet → an inline hint, not
+  an error state.
+- `ssoStart` fires on CLICK, never on blur: GET /start writes a one-shot
+  state row server-side, and probing per keystroke would mint junk rows.
+  404 is returned as null ("no SSO there") — it is an answer, not an error.
+- `/sso/callback` is the URL registered at the IdP, so it must stay stable.
+  It posts code+state, adopts the same TokensResponse as a password login,
+  and navigates exactly as login.tsx does (tenant-less → /onboarding).
+  A StrictMode double-mount guard keeps the single-use state token from
+  being burned twice in dev. The IdP's `error` redirect (user cancelled)
+  gets a calm message and a way back, not a red screen.
+- Owner settings tab (Settings → Single sign-on): hand-rolled apiFetch until
+  the spec is regenerated; the client secret is write-only end to end —
+  empty on save means "keep". 409 SSO_DOMAIN_CLAIMED gets its own sentence,
+  because it is the one failure the owner cannot fix by re-reading the form.
+
+---
+
 # Slice W31 — Screens for B62–B65
 
 ## Comments (document page)

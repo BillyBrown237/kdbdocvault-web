@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Bell } from 'lucide-react'
 
 import { notificationPrefsQuery, setNotificationPrefs } from '@/lib/api/queries'
+import { panelIconClass, panelTitleClass } from '@/components/ui/panel'
 import { Button } from '@/components/ui/button'
 import { Callout } from '@/components/ui/callout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -60,8 +61,8 @@ export function NotificationPreferencesCard() {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Bell className="h-4 w-4" />
+        <CardTitle className={panelTitleClass}>
+          <Bell className={panelIconClass} />
           {t('notifPrefs.title')}
         </CardTitle>
       </CardHeader>

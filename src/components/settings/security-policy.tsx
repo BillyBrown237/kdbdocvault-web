@@ -6,6 +6,7 @@ import { ShieldAlert } from 'lucide-react'
 import { securityPolicyQuery, setSecurityPolicy } from '@/lib/api/queries'
 import { ApiProblem } from '@/lib/api/http'
 import type { SecurityPolicy } from '@/lib/api/types'
+import { panelIconClass, panelTitleClass } from '@/components/ui/panel'
 import { Button } from '@/components/ui/button'
 import { Callout } from '@/components/ui/callout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -72,8 +73,8 @@ export function SecurityPolicyCard({ canEdit }: { canEdit: boolean }) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-          <ShieldAlert className="h-4 w-4" />
+        <CardTitle className={panelTitleClass}>
+          <ShieldAlert className={panelIconClass} />
           {t('secPolicy.title')}
         </CardTitle>
       </CardHeader>

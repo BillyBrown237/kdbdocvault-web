@@ -48,7 +48,9 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      'h-10 px-3 text-left align-middle text-xs font-medium text-muted-foreground',
+      // Uppercase with open tracking at 11px: the header stops competing with
+      // the data underneath it and starts reading as a label for it.
+      'text-muted-foreground h-9 px-3 text-left align-middle text-[0.6875rem] font-semibold tracking-[0.06em] uppercase',
       className,
     )}
     {...props}

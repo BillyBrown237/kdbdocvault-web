@@ -11,11 +11,19 @@ import {
 } from '@/lib/api/queries'
 import { ApiProblem, NetworkError } from '@/lib/api/http'
 import type { Department } from '@/lib/api/types'
+import { EmptyState } from '@/components/ui/empty-state'
+import { panelIconClass, panelTitleClass } from '@/components/ui/panel'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { toast } from '@/components/ui/sonner'
 
@@ -114,8 +122,8 @@ export function DepartmentsCard() {
   return (
     <Card className="mt-4">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Building2 className="h-4 w-4" />
+        <CardTitle className={panelTitleClass}>
+          <Building2 className={panelIconClass} />
           {t('departments.title')}
         </CardTitle>
       </CardHeader>
@@ -123,7 +131,7 @@ export function DepartmentsCard() {
         <p className="text-sm text-muted-foreground">{t('departments.explainer')}</p>
 
         {sorted.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t('departments.empty')}</p>
+          <EmptyState size="inline" icon={Building2} label={t('departments.empty')} />
         ) : (
           <div className="space-y-2">
             {sorted.map((d) =>
@@ -180,7 +188,7 @@ export function DepartmentsCard() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="text-red-600 hover:text-red-600"
+                      className="text-destructive hover:text-destructive"
                       disabled={remove.isPending}
                       onClick={() => remove.mutate(d.id)}
                     >

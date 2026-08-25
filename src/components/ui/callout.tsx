@@ -40,7 +40,10 @@ export function Callout({
   const trace = rawField('trace_id')
 
   return (
-    <div role="alert" className={cn('rounded-md border px-3.5 py-3 text-sm', variantClass, className)}>
+    <div
+      role="alert"
+      className={cn('rounded-lg border px-3.5 py-3 text-sm', variantClass, className)}
+    >
       <div className="flex gap-2">
         <Icon className="mt-0.5 h-4 w-4 shrink-0" />
         <div className="min-w-0 flex-1">

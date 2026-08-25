@@ -4,15 +4,11 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Gavel } from 'lucide-react'
 
+import { PageHeader } from '@/components/ui/page-header'
 import { AppShell } from '@/components/app-shell'
 import { EmptyState } from '@/components/vault-list'
 import { ApiProblem, NetworkError } from '@/lib/api/http'
-import {
-  createLegalHold,
-  legalHoldsQuery,
-  meQuery,
-  releaseLegalHold,
-} from '@/lib/api/queries'
+import { createLegalHold, legalHoldsQuery, meQuery, releaseLegalHold } from '@/lib/api/queries'
 import type { LegalHold } from '@/lib/api/types'
 import { formatDate } from '@/lib/format'
 import { requireTenant } from '@/lib/route-guards'
@@ -28,7 +24,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { Skeleton } from '@/components/ui/skeleton'
+import { ListSkeleton } from '@/components/ui/skeleton'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/sonner'
@@ -80,9 +76,7 @@ function LegalHoldsPage() {
   const release = useMutation({
     mutationFn: (holdId: string) => releaseLegalHold(holdId, reason.trim()),
     onSuccess: async (r) => {
-      toast.success(
-        r.status === 'released' ? t('holds.released') : t('holds.releasePending'),
-      )
+      toast.success(r.status === 'released' ? t('holds.released') : t('holds.releasePending'))
       setReleaseFor(null)
       setReason('')
       await queryClient.invalidateQueries({ queryKey: ['legal-holds'] })
@@ -94,22 +88,22 @@ function LegalHoldsPage() {
 
   return (
     <AppShell>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Gavel className="h-5 w-5 text-muted-foreground" />
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">{t('holds.title')}</h1>
-            <p className="text-sm text-muted-foreground">{t('holds.subtitle')}</p>
-          </div>
-        </div>
-        <Button onClick={() => setCreateOpen(true)}>{t('holds.create')}</Button>
-      </div>
+      <PageHeader
+        icon={Gavel}
+        title={t('holds.title')}
+        description={t('holds.subtitle')}
+        actions={
+          <>
+            <Button onClick={() => setCreateOpen(true)}>{t('holds.create')}</Button>
+          </>
+        }
+      />
 
       <div className="mt-4">
         {holds.isPending ? (
-          <Skeleton className="h-40" />
+          <ListSkeleton rows={4} />
         ) : list.length === 0 ? (
-          <EmptyState label={t('holds.empty')} />
+          <EmptyState icon={Gavel} label={t('holds.empty')} />
         ) : (
           <Card>
             <CardContent className="space-y-3 p-4">
@@ -239,8 +233,7 @@ function HoldRow({
           <StatusBadge domain="hold" status={hold.status} />
         </div>
         <p className="text-xs text-muted-foreground">
-          {t('holds.itemCount', { count: hold.item_count })} ·{' '}
-          {formatDate(hold.created_at, locale)}
+          {t('holds.itemCount', { count: hold.item_count })} · {formatDate(hold.created_at, locale)}
           {hold.description ? ` · ${hold.description}` : ''}
         </p>
         {hold.pending_release && (

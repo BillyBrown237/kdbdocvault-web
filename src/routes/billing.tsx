@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CreditCard, Download, FileText } from 'lucide-react'
 
+import { PageHeader, SectionHeader } from '@/components/ui/page-header'
 import { AppShell } from '@/components/app-shell'
 import { MobileMoneyDialog } from '@/components/mobile-money-dialog'
 import { EmptyState, LoadMoreButton } from '@/components/vault-list'
@@ -21,13 +22,12 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
+import { ListSkeleton, Skeleton } from '@/components/ui/skeleton'
 
 export const Route = createFileRoute('/billing')({
   beforeLoad: ({ location }) => requireTenant(location),
   component: BillingPage,
 })
-
 
 function BillingPage() {
   const { t, i18n } = useTranslation()
@@ -52,13 +52,10 @@ function BillingPage() {
 
   return (
     <AppShell>
-      <div className="flex items-center gap-2">
-        <CreditCard className="h-5 w-5 text-muted-foreground" />
-        <h1 className="text-2xl font-bold tracking-tight">{t('billing.title')}</h1>
-      </div>
+      <PageHeader icon={CreditCard} title={t('billing.title')} />
 
       {/* Current subscription */}
-      <Card className="mt-4">
+      <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm text-muted-foreground">{t('billing.current')}</CardTitle>
         </CardHeader>
@@ -91,7 +88,9 @@ function BillingPage() {
       </Card>
 
       {/* Plans */}
-      <h2 className="mt-8 mb-3 text-sm font-semibold text-muted-foreground">{t('billing.plans')}</h2>
+      <div className="mt-8">
+        <SectionHeader title={t('billing.plans')} />
+      </div>
       {plans.isPending ? (
         <div className="grid gap-3 md:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
@@ -137,11 +136,13 @@ function BillingPage() {
       )}
 
       {/* Invoices */}
-      <h2 className="mt-8 mb-3 text-sm font-semibold text-muted-foreground">{t('billing.invoices')}</h2>
+      <div className="mt-8">
+        <SectionHeader title={t('billing.invoices')} />
+      </div>
       {invoices.isPending ? (
-        <Skeleton className="h-24" />
+        <ListSkeleton rows={3} />
       ) : invoiceItems.length === 0 ? (
-        <EmptyState label={t('billing.noInvoices')} />
+        <EmptyState icon={CreditCard} label={t('billing.noInvoices')} />
       ) : (
         <div className="space-y-2">
           {invoiceItems.map((inv) => (
@@ -151,7 +152,8 @@ function BillingPage() {
                 <div className="truncate text-sm font-medium">{inv.number}</div>
                 <div className="text-xs text-muted-foreground">
                   {formatDate(inv.issued_at, i18n.language)} ·{' '}
-                  {new Intl.NumberFormat(i18n.language).format(inv.amount_minor_units)} {inv.currency}
+                  {new Intl.NumberFormat(i18n.language).format(inv.amount_minor_units)}{' '}
+                  {inv.currency}
                 </div>
               </div>
               <StatusBadge domain="invoice" status={inv.status} />

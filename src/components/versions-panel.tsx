@@ -4,13 +4,10 @@ import { useTranslation } from 'react-i18next'
 import { Download, History, RotateCcw, Upload } from 'lucide-react'
 
 import { ApiProblem, NetworkError } from '@/lib/api/http'
-import {
-  documentVersionsQuery,
-  downloadVersionBlob,
-  restoreVersion,
-} from '@/lib/api/queries'
+import { documentVersionsQuery, downloadVersionBlob, restoreVersion } from '@/lib/api/queries'
 import { UploadTask } from '@/lib/api/upload'
 import { formatBytes, formatDate } from '@/lib/format'
+import { panelIconClass, panelTitleClass } from '@/components/ui/panel'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -109,8 +106,8 @@ export function VersionsPanel({ documentId }: { documentId: string }) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-          <History className="h-4 w-4" />
+        <CardTitle className={panelTitleClass}>
+          <History className={panelIconClass} />
           {t('document.versions')}
         </CardTitle>
       </CardHeader>
@@ -179,7 +176,7 @@ export function VersionsPanel({ documentId }: { documentId: string }) {
         {pending ? (
           pending.error ? (
             <div className="space-y-2">
-              <p className="text-xs text-red-600">{pending.error}</p>
+              <p className="text-xs text-destructive">{pending.error}</p>
               <div className="flex gap-2">
                 <Button size="sm" onClick={() => void upload(pending.task, note.trim())}>
                   <RotateCcw className="h-3.5 w-3.5" />

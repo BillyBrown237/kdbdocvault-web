@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DoorOpen, Plus, Users } from 'lucide-react'
 
+import { PageHeader } from '@/components/ui/page-header'
 import { AppShell } from '@/components/app-shell'
 import { ApiProblem, NetworkError } from '@/lib/api/http'
 import { createDataRoom, dataRoomsQuery } from '@/lib/api/queries'
@@ -37,13 +38,16 @@ function RoomsPage() {
 
   return (
     <AppShell>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t('rooms.title')}</h1>
-          <p className="text-sm text-muted-foreground">{t('rooms.subtitle')}</p>
-        </div>
-        <CreateRoomDialog />
-      </div>
+      <PageHeader
+        icon={DoorOpen}
+        title={t('rooms.title')}
+        description={t('rooms.subtitle')}
+        actions={
+          <>
+            <CreateRoomDialog />
+          </>
+        }
+      />
 
       {rooms.isPending ? (
         <div className="mt-6 space-y-3">

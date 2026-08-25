@@ -24,7 +24,13 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   Dialog,
   DialogContent,
@@ -90,9 +96,11 @@ export function DocumentActions({ document }: { document: Document }) {
       await queryClient.invalidateQueries({ queryKey: ['documents'] })
     },
     onError: (err) =>
-      toast.error(err instanceof Error && 'status' in err && (err as { status: number }).status === 409
-        ? t('document.editConflict')
-        : t('errors.unknown')),
+      toast.error(
+        err instanceof Error && 'status' in err && (err as { status: number }).status === 409
+          ? t('document.editConflict')
+          : t('errors.unknown'),
+      ),
   })
 
   // W24 (B50): place under legal hold — admin only.
@@ -178,7 +186,12 @@ export function DocumentActions({ document }: { document: Document }) {
           {allTags.data?.data.map((tag) => {
             const active = currentTagIds.has(tag.id)
             return (
-              <button key={tag.id} type="button" disabled={tagMutation.isPending} onClick={() => toggleTag(tag.id)}>
+              <button
+                key={tag.id}
+                type="button"
+                disabled={tagMutation.isPending}
+                onClick={() => toggleTag(tag.id)}
+              >
                 <Badge variant={active ? 'default' : 'outline'} className="cursor-pointer">
                   {tag.name}
                 </Badge>
@@ -244,7 +257,7 @@ export function DocumentActions({ document }: { document: Document }) {
           )}
           <Button
             variant="outline"
-            className="text-red-600 hover:text-red-600"
+            className="text-destructive hover:text-destructive"
             disabled={trashMutation.isPending}
             onClick={() => trashMutation.mutate()}
           >

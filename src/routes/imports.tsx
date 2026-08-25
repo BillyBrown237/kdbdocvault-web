@@ -1,14 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronRight, Cloud, Download, FileArchive, Folder, Plug, Upload } from 'lucide-react'
 
+import { panelIconClass, panelTitleClass } from '@/components/ui/panel'
+import { PageHeader } from '@/components/ui/page-header'
 import { AppShell } from '@/components/app-shell'
 import { EmptyState, LoadMoreButton } from '@/components/vault-list'
 import { ApiProblem, NetworkError } from '@/lib/api/http'
@@ -48,7 +45,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
-import { Skeleton } from '@/components/ui/skeleton'
+import { ListSkeleton, Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from '@/components/ui/sonner'
 
@@ -69,13 +66,11 @@ function ImportsPage() {
   const { t } = useTranslation()
   return (
     <AppShell>
-      <div className="flex items-center gap-2">
-        <FileArchive className="h-5 w-5 text-muted-foreground" />
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t('imports.title')}</h1>
-          <p className="text-sm text-muted-foreground">{t('imports.subtitle')}</p>
-        </div>
-      </div>
+      <PageHeader
+        icon={FileArchive}
+        title={t('imports.title')}
+        description={t('imports.subtitle')}
+      />
 
       <Tabs defaultValue="new" className="mt-4">
         <TabsList>
@@ -83,13 +78,13 @@ function ImportsPage() {
           <TabsTrigger value="history">{t('imports.history')}</TabsTrigger>
           <TabsTrigger value="sources">{t('imports.sources')}</TabsTrigger>
         </TabsList>
-        <TabsContent value="new" className="mt-4">
+        <TabsContent value="new">
           <NewImportCard />
         </TabsContent>
-        <TabsContent value="history" className="mt-4">
+        <TabsContent value="history">
           <HistoryTab />
         </TabsContent>
-        <TabsContent value="sources" className="mt-4">
+        <TabsContent value="sources">
           <SourcesTab />
         </TabsContent>
       </Tabs>
@@ -400,7 +395,7 @@ function DriveFolderPicker({
 
         <div className="max-h-64 space-y-1 overflow-y-auto">
           {listing === null || (loading && listing === null) ? (
-            <Skeleton className="h-24" />
+            <ListSkeleton rows={3} />
           ) : (
             <>
               {listing.folders.map((f) => (
@@ -502,7 +497,7 @@ function ActiveImportCard({ importId }: { importId: string }) {
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
+        <CardTitle className={panelTitleClass}>
           {t('imports.progress')}
           <StatusBadge domain="job" status={j.status} />
         </CardTitle>
@@ -510,7 +505,7 @@ function ActiveImportCard({ importId }: { importId: string }) {
           <Button
             size="sm"
             variant="outline"
-            className="text-red-600 hover:text-red-600"
+            className="text-destructive hover:text-destructive"
             disabled={cancel.isPending}
             onClick={() => cancel.mutate()}
           >
@@ -553,8 +548,8 @@ function HistoryTab() {
   const q = useInfiniteQuery(importsQuery)
   const jobs = q.data?.pages.flatMap((p) => p.data) ?? []
 
-  if (q.isPending) return <Skeleton className="h-40" />
-  if (jobs.length === 0) return <EmptyState label={t('imports.noHistory')} />
+  if (q.isPending) return <ListSkeleton rows={4} />
+  if (jobs.length === 0) return <EmptyState icon={FileArchive} label={t('imports.noHistory')} />
 
   return (
     <>
@@ -654,8 +649,8 @@ function SourcesTab() {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Plug className="h-4 w-4" />
+        <CardTitle className={panelTitleClass}>
+          <Plug className={panelIconClass} />
           {t('imports.sources')}
         </CardTitle>
       </CardHeader>
@@ -687,7 +682,7 @@ function SourcesTab() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="text-red-600 hover:text-red-600"
+                      className="text-destructive hover:text-destructive"
                       disabled={revoke.isPending}
                       onClick={() => revoke.mutate(c.id)}
                     >

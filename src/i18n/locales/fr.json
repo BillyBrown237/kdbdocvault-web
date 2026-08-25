@@ -5,7 +5,8 @@
     "loading": "Chargement…",
     "offline": "Vous êtes hors ligne — données en cache affichées",
     "install": "Installer l’application",
-    "installed": "Application installée"
+    "installed": "Application installée",
+    "save": "Enregistrer"
   },
   "auth": {
     "login": {
@@ -55,6 +56,15 @@
     "panel": {
       "statement": "Vos documents. Protégés. Organisés. Maîtrisés.",
       "secure": "Votre connexion est sécurisée."
+    },
+    "ssoNeedEmail": "Saisissez d'abord votre e-mail professionnel ci-dessus — son domaine détermine votre organisation.",
+    "ssoNoDomain": "Aucune authentification unique n'est configurée pour ce domaine.",
+    "ssoCallback": {
+      "title": "Connexion en cours",
+      "working": "Finalisation de la connexion avec votre organisation…",
+      "denied": "La connexion a été annulée chez votre fournisseur d'identité.",
+      "back": "Retour à la connexion",
+      "retry": "Réessayer"
     }
   },
   "onboarding": {
@@ -88,7 +98,16 @@
     "holds": "Gels juridiques",
     "reports": "Rapports",
     "templates": "Modèles",
-    "integrations": "Intégrations"
+    "integrations": "Intégrations",
+    "group": {
+      "workspace": "Espace de travail",
+      "work": "Travail",
+      "admin": "Administration"
+    },
+    "collapse": "Réduire",
+    "expand": "Déployer le menu",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu"
   },
   "mfa": {
     "title": "Vérification en deux étapes",
@@ -249,7 +268,8 @@
     "created": "Règle de conservation créée",
     "deleted": "Règle de conservation supprimée",
     "destroyWarning": "Les documents seront mis à la corbeille automatiquement puis supprimés 30 jours plus tard. Personne n'est consulté — choisissez « demander à un administrateur » si vous voulez une décision humaine à chaque fois.",
-    "holdNote": "Les documents sous gel juridique ne sont jamais touchés par les règles de conservation."
+    "holdNote": "Les documents sous gel juridique ne sont jamais touchés par les règles de conservation.",
+    "deleteConfirm": "Supprimer cette politique de conservation ? Les documents concernés ne seront plus conservés ni éliminés automatiquement."
   },
   "devices": {
     "title": "Appareils",
@@ -353,7 +373,9 @@
     "replayQueued": "{{count}} évènement programmé",
     "replayQueued_other": "{{count}} évènements programmés",
     "from": "Du",
-    "to": "Au"
+    "to": "Au",
+    "revokeKeyConfirm": "Révoquer cette clé API ? Toute intégration qui l'utilise cessera immédiatement de fonctionner, et la clé ne peut pas être restaurée.",
+    "deleteHookConfirm": "Supprimer ce webhook ? Les événements cesseront immédiatement de lui être transmis."
   },
   "departments": {
     "title": "Services",
@@ -498,7 +520,8 @@
     "recent": "Documents récents",
     "favorites": "Favoris",
     "noRecent": "Aucun document consulté récemment",
-    "noFavorites": "Aucun favori pour l'instant"
+    "noFavorites": "Aucun favori pour l'instant",
+    "subtitle": "Ce qui vous attend, et ce que vous avez consulté en dernier."
   },
   "usage": {
     "storage": "Stockage",
@@ -668,7 +691,6 @@
     "cancelledByOwner": "Annulée par le propriétaire",
     "download": "Document signé",
     "noVersion": "Le document n'a pas encore de contenu",
-    "noVersion2": "",
     "status": {
       "draft": "Brouillon",
       "sent": "Envoyée",
@@ -753,7 +775,8 @@
     "protected": "protégé",
     "until": "jusqu'au {{date}}",
     "views": "{{count}} vue(s)",
-    "revoke": "Révoquer"
+    "revoke": "Révoquer",
+    "revokeConfirm": "Révoquer ce lien ? Toute personne qui le détient déjà perd l'accès immédiatement."
   },
   "verify": {
     "title": "Vérification de document",
@@ -792,7 +815,8 @@
     "transferTo": "Choisir le bénéficiaire…",
     "transferConfirm": "Transférer",
     "transferred": "{{count}} document transféré",
-    "transferred_other": "{{count}} documents transférés"
+    "transferred_other": "{{count}} documents transférés",
+    "removeConfirm": "Retirer {{name}} de cette organisation ? L'accès à tous les documents est révoqué immédiatement. Cette action est irréversible."
   },
   "invite": {
     "title": "Rejoindre l'organisation",
@@ -1228,5 +1252,36 @@
       "overdue": "Étapes en retard",
       "byTemplate": "Par modèle"
     }
+  },
+  "ssoSettings": {
+    "tab": "Authentification unique",
+    "intro": "Laissez votre équipe se connecter via votre fournisseur d'identité (OIDC). Les personnes dont le domaine e-mail correspond obtiennent automatiquement un compte à la première connexion.",
+    "name": "Nom affiché",
+    "issuer": "URL de l'émetteur",
+    "issuerHint": "L'émetteur OIDC — vérifié contre son propre document de découverte à l'enregistrement.",
+    "clientId": "Identifiant client",
+    "clientSecret": "Secret client",
+    "secretRequired": "Requis la première fois. Stocké chiffré ; jamais réaffiché.",
+    "secretKept": "Un secret est enregistré. Laissez vide pour le conserver, ou collez-en un nouveau.",
+    "domains": "Domaines e-mail",
+    "domainsHint": "Séparés par des virgules. Les connexions depuis ces domaines passent par votre fournisseur.",
+    "defaultRole": "Rôle des nouveaux utilisateurs",
+    "roleHint": "Attribué à la première connexion. La propriété n'est jamais accordée automatiquement.",
+    "enabled": "Activé",
+    "saved": "Configuration SSO enregistrée",
+    "delete": "Supprimer",
+    "deleted": "Configuration SSO supprimée",
+    "deleteConfirm": "Supprimer le SSO ? La connexion repassera par e-mail + mot de passe.",
+    "domainClaimed": "L'un de ces domaines est déjà revendiqué par une autre organisation.",
+    "jitNote": "Chaque première connexion est vérifiée contre les sièges de votre offre, et chaque utilisateur provisionné est consigné dans le journal d'audit.",
+    "nameRequired": "Le nom affiché est requis.",
+    "issuerHttps": "L'émetteur doit être une URL https://.",
+    "clientIdRequired": "L'identifiant client est requis.",
+    "domainsRequired": "Au moins un domaine e-mail est requis."
+  },
+  "roles": {
+    "owner": "Propriétaire",
+    "admin": "Administrateur",
+    "member": "Membre"
   }
 }

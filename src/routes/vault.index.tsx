@@ -1,7 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { FolderClosed } from 'lucide-react'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 
+import { PageHeader } from '@/components/ui/page-header'
 import { AppShell } from '@/components/app-shell'
 import { NewFolderButton } from '@/components/new-folder-button'
 import { UploadButton } from '@/components/upload-button'
@@ -10,6 +12,7 @@ import {
   EmptyState,
   FolderRow,
   LoadMoreButton,
+  RowSkeleton,
 } from '@/components/vault-list'
 import { documentsQuery, rootFoldersQuery } from '@/lib/api/queries'
 import { requireTenant } from '@/lib/route-guards'
@@ -31,18 +34,27 @@ function VaultRoot() {
 
   return (
     <AppShell>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-2xl font-bold">{t('vault.title')}</h1>
-        <div className="flex items-center gap-2">
-          <NewFolderButton />
-          <UploadButton />
-        </div>
-      </div>
+      <PageHeader
+        icon={FolderClosed}
+        title={t('vault.title')}
+        actions={
+          <>
+            {/* No wrapper div: PageHeader's actions slot is already a flex row
+                with the same gap. */}
+            <NewFolderButton />
+            <UploadButton />
+          </>
+        }
+      />
 
-      {isPending && <p className="mt-4 text-sm text-muted-foreground">{t('app.loading')}</p>}
+      {isPending && (
+        <div className="mt-4">
+          <RowSkeleton />
+        </div>
+      )}
       {isEmpty && (
         <div className="mt-4">
-          <EmptyState label={t('vault.empty')} />
+          <EmptyState icon={FolderClosed} label={t('vault.empty')} />
         </div>
       )}
 

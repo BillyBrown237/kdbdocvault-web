@@ -1,6 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { Plug } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
+import { PageHeader } from '@/components/ui/page-header'
 import { AppShell } from '@/components/app-shell'
 import { ApiKeysCard } from '@/components/integrations/api-keys'
 import { WebhooksCard } from '@/components/integrations/webhooks'
@@ -21,9 +23,12 @@ function IntegrationsPage() {
   const { t } = useTranslation()
   return (
     <AppShell>
-      <h1 className="text-2xl font-bold tracking-tight">{t('integrations.title')}</h1>
-      <p className="mt-1 text-sm text-muted-foreground">{t('integrations.subtitle')}</p>
-      <div className="mt-4">
+      <PageHeader
+        icon={Plug}
+        title={t('integrations.title')}
+        description={t('integrations.subtitle')}
+      />
+      <div>
         <ApiKeysCard />
         <WebhooksCard />
       </div>

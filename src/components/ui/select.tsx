@@ -15,7 +15,12 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      'flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1',
+      // Matches Input and Textarea exactly — see input.tsx.
+      'border-input bg-background flex h-9 w-full items-center justify-between rounded-md border px-3 py-2 text-sm transition-[color,box-shadow,border-color]',
+      'hover:border-ring/50',
+      'focus:border-ring focus:ring-ring/35 focus:ring-[3px] focus:outline-none',
+      'aria-invalid:border-destructive aria-invalid:focus:ring-destructive/30',
+      'disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1',
       className,
     )}
     {...props}
@@ -44,7 +49,10 @@ const SelectContent = React.forwardRef<
       {...props}
     >
       <SelectPrimitive.Viewport
-        className={cn('p-1', position === 'popper' && 'w-full min-w-[var(--radix-select-trigger-width)]')}
+        className={cn(
+          'p-1',
+          position === 'popper' && 'w-full min-w-[var(--radix-select-trigger-width)]',
+        )}
       >
         {children}
       </SelectPrimitive.Viewport>

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronLeft, Download, Pin, Star } from 'lucide-react'
 
+import { PageHeader, backControlClass } from '@/components/ui/page-header'
 import { AclPanel } from '@/components/acl-panel'
 import { AppShell } from '@/components/app-shell'
 import { DocumentActions } from '@/components/document-actions'
@@ -90,45 +91,56 @@ function DocumentDetail() {
 
   return (
     <AppShell>
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" onClick={() => router.history.back()}>
-          <ChevronLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="min-w-0 flex-1 truncate text-2xl font-bold tracking-tight">
-          {d?.title ?? t('app.loading')}
-        </h1>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => favoriteMutation.mutate()}
-          disabled={favoriteMutation.isPending}
-          aria-label={t('document.favorite')}
-        >
-          <Star
-            className={isFavorite ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground'}
-          />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => pinMutation.mutate()}
-          disabled={pinMutation.isPending}
-          aria-label={t('pins.toggle')}
-          title={t('pins.toggle')}
-        >
-          <Pin className={isPinned ? 'fill-primary text-primary' : 'text-muted-foreground'} />
-        </Button>
-        <Button onClick={() => void onDownload()} disabled={downloading || !d}>
-          <Download className="h-4 w-4" />
-          {downloading ? t('app.loading') : t('document.download')}
-        </Button>
-      </div>
+      <PageHeader
+        back={
+          <button
+            type="button"
+            className={backControlClass}
+            onClick={() => router.history.back()}
+            aria-label={t('common.back')}
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+        }
+        title={d?.title ?? t('app.loading')}
+        actions={
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => favoriteMutation.mutate()}
+              disabled={favoriteMutation.isPending}
+              aria-label={t('document.favorite')}
+            >
+              <Star
+                className={isFavorite ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground'}
+              />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => pinMutation.mutate()}
+              disabled={pinMutation.isPending}
+              aria-label={t('pins.toggle')}
+              title={t('pins.toggle')}
+            >
+              <Pin className={isPinned ? 'fill-primary text-primary' : 'text-muted-foreground'} />
+            </Button>
+            <Button onClick={() => void onDownload()} disabled={downloading || !d}>
+              <Download className="h-4 w-4" />
+              {downloading ? t('app.loading') : t('document.download')}
+            </Button>
+          </>
+        }
+      />
 
       {d && (
         <div className="mt-6 grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-muted-foreground">{t('document.details')}</CardTitle>
+              <CardTitle className="text-sm text-muted-foreground">
+                {t('document.details')}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <dl className="space-y-2 text-sm">
@@ -140,12 +152,21 @@ function DocumentDetail() {
                 </div>
                 {version && (
                   <>
-                    <Row label={t('document.size')} value={formatBytes(version.size_bytes, i18n.language)} />
+                    <Row
+                      label={t('document.size')}
+                      value={formatBytes(version.size_bytes, i18n.language)}
+                    />
                     <Row label={t('document.mime')} value={version.mime_type} />
                   </>
                 )}
-                <Row label={t('document.updated')} value={formatDate(d.updated_at, i18n.language)} />
-                <Row label={t('document.created')} value={formatDate(d.created_at, i18n.language)} />
+                <Row
+                  label={t('document.updated')}
+                  value={formatDate(d.updated_at, i18n.language)}
+                />
+                <Row
+                  label={t('document.created')}
+                  value={formatDate(d.created_at, i18n.language)}
+                />
               </dl>
             </CardContent>
           </Card>

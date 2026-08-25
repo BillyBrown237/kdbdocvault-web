@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Bookmark, BookmarkPlus, Search as SearchIcon, X } from 'lucide-react'
 
+import { PageHeader } from '@/components/ui/page-header'
 import { AppShell } from '@/components/app-shell'
 import { DocumentRow, EmptyState, LoadMoreButton } from '@/components/vault-list'
 import { ApiProblem, NetworkError } from '@/lib/api/http'
@@ -105,7 +106,7 @@ function SearchPage() {
 
   return (
     <AppShell>
-      <h1 className="text-2xl font-bold tracking-tight">{t('search.title')}</h1>
+      <PageHeader icon={SearchIcon} title={t('search.title')} />
 
       <div className="relative mt-4">
         <SearchIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -236,7 +237,10 @@ function SearchPage() {
             ))}
           </div>
         ) : hits.length === 0 ? (
-          <EmptyState label={t('search.noResults', { q: activeSaved?.query.q ?? q })} />
+          <EmptyState
+            icon={SearchIcon}
+            label={t('search.noResults', { q: activeSaved?.query.q ?? q })}
+          />
         ) : (
           <div className="space-y-2">
             {hits.map((hit) => (

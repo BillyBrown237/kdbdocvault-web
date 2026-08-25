@@ -40,50 +40,89 @@ const S = (tone: Tone, pulse?: boolean): Spec => ({ tone, pulse })
 
 export const STATUS_DOMAINS = {
   document: {
-    draft: S('slate'), active: S('emerald'), expiring: S('amber'),
-    expired: S('red'), renewed: S('azure'), archived: S('slate'),
+    draft: S('slate'),
+    active: S('emerald'),
+    expiring: S('amber'),
+    expired: S('red'),
+    renewed: S('azure'),
+    archived: S('slate'),
   },
   processing: {
-    queued: S('slate'), processing: S('azure', true), done: S('emerald'), failed: S('red'),
+    queued: S('slate'),
+    processing: S('azure', true),
+    done: S('emerald'),
+    failed: S('red'),
   },
   job: {
-    queued: S('slate'), running: S('azure', true), done: S('emerald'),
-    failed: S('red'), cancelled: S('slate'),
+    queued: S('slate'),
+    running: S('azure', true),
+    done: S('emerald'),
+    failed: S('red'),
+    cancelled: S('slate'),
   },
   envelope: {
-    draft: S('slate'), sent: S('azure'), completed: S('emerald'),
-    declined: S('red'), cancelled: S('slate'), expired: S('amber'),
+    draft: S('slate'),
+    sent: S('azure'),
+    completed: S('emerald'),
+    declined: S('red'),
+    cancelled: S('slate'),
+    expired: S('amber'),
   },
   signer: {
-    pending: S('slate'), verified: S('azure'), signed: S('emerald'), declined: S('red'),
+    pending: S('slate'),
+    verified: S('azure'),
+    signed: S('emerald'),
+    declined: S('red'),
   },
   connection: {
-    pending_auth: S('amber'), connected: S('emerald'), revoked: S('slate'),
+    pending_auth: S('amber'),
+    connected: S('emerald'),
+    revoked: S('slate'),
   },
   payment: {
-    pending: S('slate'), awaiting_confirmation: S('amber', true),
-    succeeded: S('emerald'), failed: S('red'), refunded: S('azure'),
+    pending: S('slate'),
+    awaiting_confirmation: S('amber', true),
+    succeeded: S('emerald'),
+    failed: S('red'),
+    refunded: S('azure'),
   },
   subscription: {
-    trial: S('azure'), active: S('emerald'), past_due: S('amber'), cancelled: S('red'),
+    trial: S('azure'),
+    active: S('emerald'),
+    past_due: S('amber'),
+    cancelled: S('red'),
   },
   invoice: {
-    paid: S('emerald'), open: S('amber'), void: S('slate'),
+    paid: S('emerald'),
+    open: S('amber'),
+    void: S('slate'),
   },
   workflow: {
-    running: S('azure'), completed: S('emerald'), cancelled: S('slate'), overdue: S('red'),
+    running: S('azure'),
+    completed: S('emerald'),
+    cancelled: S('slate'),
+    overdue: S('red'),
   },
   obligation: {
-    open: S('slate'), done: S('emerald'), overdue: S('red'),
+    open: S('slate'),
+    done: S('emerald'),
+    overdue: S('red'),
   },
   reminder: {
-    scheduled: S('slate'), sent: S('azure'), acknowledged: S('emerald'), escalated: S('amber'),
+    scheduled: S('slate'),
+    sent: S('azure'),
+    acknowledged: S('emerald'),
+    escalated: S('amber'),
   },
   hold: {
-    active: S('red'), pending_release: S('amber'), released: S('slate'),
+    active: S('red'),
+    pending_release: S('amber'),
+    released: S('slate'),
   },
   membership: {
-    active: S('emerald'), suspended: S('amber'), pending: S('slate'),
+    active: S('emerald'),
+    suspended: S('amber'),
+    pending: S('slate'),
   },
 } satisfies Record<string, Record<string, Spec>>
 
@@ -105,17 +144,24 @@ export function StatusBadge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium',
+        'inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ring-1 ring-current/10',
         TONES[spec.tone],
         className,
       )}
     >
-      {spec.pulse && (
-        <span
-          aria-hidden
-          className={cn('h-1.5 w-1.5 shrink-0 rounded-full motion-safe:animate-pulse', DOT[spec.tone])}
-        />
-      )}
+      {/* W34: the dot is now on EVERY status, not only the waiting ones. Down
+          a column of rows the eye finds a coloured dot before it reads a word,
+          and it gives the badge a second channel besides hue — which is the
+          one channel a colour-blind reader does not have. `pulse` still marks
+          the states the user is actively waiting on. */}
+      <span
+        aria-hidden
+        className={cn(
+          'size-1.5 shrink-0 rounded-full',
+          DOT[spec.tone],
+          spec.pulse && 'motion-safe:animate-pulse',
+        )}
+      />
       {label}
     </span>
   )

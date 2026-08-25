@@ -90,7 +90,7 @@ export function UploadButton({ folderId }: { folderId?: string }) {
               </div>
               {it.status === 'error' ? (
                 <div className="mt-1 flex items-center justify-between gap-2">
-                  <p className="min-w-0 flex-1 truncate text-xs text-red-600">{it.error}</p>
+                  <p className="min-w-0 flex-1 truncate text-xs text-destructive">{it.error}</p>
                   <Button
                     variant="outline"
                     size="sm"

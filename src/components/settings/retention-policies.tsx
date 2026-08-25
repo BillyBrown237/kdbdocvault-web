@@ -9,13 +9,22 @@ import {
   documentTypesQuery,
   retentionPoliciesQuery,
 } from '@/lib/api/queries'
+import { confirmDestructive } from '@/lib/confirm'
 import { ApiProblem, NetworkError } from '@/lib/api/http'
+import { EmptyState } from '@/components/ui/empty-state'
+import { panelIconClass, panelTitleClass } from '@/components/ui/panel'
 import { Button } from '@/components/ui/button'
 import { Callout } from '@/components/ui/callout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { toast } from '@/components/ui/sonner'
 
@@ -73,10 +82,10 @@ export function RetentionPoliciesCard({ canEdit }: { canEdit: boolean }) {
   const list = policies.data?.data ?? []
 
   return (
-    <Card className="mt-4">
+    <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Timer className="h-4 w-4" />
+        <CardTitle className={panelTitleClass}>
+          <Timer className={panelIconClass} />
           {t('retention.title')}
         </CardTitle>
       </CardHeader>
@@ -84,7 +93,7 @@ export function RetentionPoliciesCard({ canEdit }: { canEdit: boolean }) {
         <p className="text-sm text-muted-foreground">{t('retention.explainer')}</p>
 
         {list.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t('retention.empty')}</p>
+          <EmptyState size="inline" icon={Timer} label={t('retention.empty')} />
         ) : (
           <div className="space-y-2">
             {list.map((p, i) => (
@@ -105,9 +114,11 @@ export function RetentionPoliciesCard({ canEdit }: { canEdit: boolean }) {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="text-red-600 hover:text-red-600"
+                      className="text-destructive hover:text-destructive"
                       disabled={remove.isPending}
-                      onClick={() => remove.mutate(p.id)}
+                      onClick={() => {
+                        if (confirmDestructive(t('retention.deleteConfirm'))) remove.mutate(p.id)
+                      }}
                     >
                       {t('common.delete')}
                     </Button>

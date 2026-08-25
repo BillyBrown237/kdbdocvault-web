@@ -35,6 +35,7 @@ import { Route as RoomsIndexRouteImport } from './routes/rooms.index'
 import { Route as RoomsRoomIdRouteImport } from './routes/rooms.$roomId'
 import { Route as SharedTokenRouteImport } from './routes/shared.$token'
 import { Route as SignSignTokenRouteImport } from './routes/sign.$signToken'
+import { Route as SsoCallbackRouteImport } from './routes/sso.callback'
 import { Route as VaultIndexRouteImport } from './routes/vault.index'
 import { Route as VaultFolderIdRouteImport } from './routes/vault.$folderId'
 import { Route as VerifyDocumentHashRouteImport } from './routes/verify.$documentHash'
@@ -170,6 +171,11 @@ const SignSignTokenRoute = SignSignTokenRouteImport.update({
   path: '/sign/$signToken',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SsoCallbackRoute = SsoCallbackRouteImport.update({
+  id: '/sso/callback',
+  path: '/sso/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const VaultIndexRoute = VaultIndexRouteImport.update({
   id: '/vault/',
   path: '/vault/',
@@ -217,6 +223,7 @@ export interface FileRoutesByFullPath {
   '/rooms/$roomId': typeof RoomsRoomIdRoute
   '/shared/$token': typeof SharedTokenRoute
   '/sign/$signToken': typeof SignSignTokenRoute
+  '/sso/callback': typeof SsoCallbackRoute
   '/vault/$folderId': typeof VaultFolderIdRoute
   '/verify/$documentHash': typeof VerifyDocumentHashRoute
   '/rooms/': typeof RoomsIndexRoute
@@ -249,6 +256,7 @@ export interface FileRoutesByTo {
   '/rooms/$roomId': typeof RoomsRoomIdRoute
   '/shared/$token': typeof SharedTokenRoute
   '/sign/$signToken': typeof SignSignTokenRoute
+  '/sso/callback': typeof SsoCallbackRoute
   '/vault/$folderId': typeof VaultFolderIdRoute
   '/verify/$documentHash': typeof VerifyDocumentHashRoute
   '/rooms': typeof RoomsIndexRoute
@@ -282,6 +290,7 @@ export interface FileRoutesById {
   '/rooms/$roomId': typeof RoomsRoomIdRoute
   '/shared/$token': typeof SharedTokenRoute
   '/sign/$signToken': typeof SignSignTokenRoute
+  '/sso/callback': typeof SsoCallbackRoute
   '/vault/$folderId': typeof VaultFolderIdRoute
   '/verify/$documentHash': typeof VerifyDocumentHashRoute
   '/rooms/': typeof RoomsIndexRoute
@@ -316,6 +325,7 @@ export interface FileRouteTypes {
     | '/rooms/$roomId'
     | '/shared/$token'
     | '/sign/$signToken'
+    | '/sso/callback'
     | '/vault/$folderId'
     | '/verify/$documentHash'
     | '/rooms/'
@@ -348,6 +358,7 @@ export interface FileRouteTypes {
     | '/rooms/$roomId'
     | '/shared/$token'
     | '/sign/$signToken'
+    | '/sso/callback'
     | '/vault/$folderId'
     | '/verify/$documentHash'
     | '/rooms'
@@ -380,6 +391,7 @@ export interface FileRouteTypes {
     | '/rooms/$roomId'
     | '/shared/$token'
     | '/sign/$signToken'
+    | '/sso/callback'
     | '/vault/$folderId'
     | '/verify/$documentHash'
     | '/rooms/'
@@ -413,6 +425,7 @@ export interface RootRouteChildren {
   RoomsRoomIdRoute: typeof RoomsRoomIdRoute
   SharedTokenRoute: typeof SharedTokenRoute
   SignSignTokenRoute: typeof SignSignTokenRoute
+  SsoCallbackRoute: typeof SsoCallbackRoute
   VaultFolderIdRoute: typeof VaultFolderIdRoute
   VerifyDocumentHashRoute: typeof VerifyDocumentHashRoute
   RoomsIndexRoute: typeof RoomsIndexRoute
@@ -604,6 +617,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignSignTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sso/callback': {
+      id: '/sso/callback'
+      path: '/sso/callback'
+      fullPath: '/sso/callback'
+      preLoaderRoute: typeof SsoCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/vault/': {
       id: '/vault/'
       path: '/vault'
@@ -661,6 +681,7 @@ const rootRouteChildren: RootRouteChildren = {
   RoomsRoomIdRoute: RoomsRoomIdRoute,
   SharedTokenRoute: SharedTokenRoute,
   SignSignTokenRoute: SignSignTokenRoute,
+  SsoCallbackRoute: SsoCallbackRoute,
   VaultFolderIdRoute: VaultFolderIdRoute,
   VerifyDocumentHashRoute: VerifyDocumentHashRoute,
   RoomsIndexRoute: RoomsIndexRoute,

@@ -5,7 +5,8 @@
     "loading": "Loading…",
     "offline": "You are offline — showing cached data",
     "install": "Install app",
-    "installed": "App installed"
+    "installed": "App installed",
+    "save": "Save"
   },
   "auth": {
     "login": {
@@ -55,6 +56,15 @@
     "panel": {
       "statement": "Your documents. Protected. Organized. Under control.",
       "secure": "Your connection is secure."
+    },
+    "ssoNeedEmail": "Type your work email above first — its domain picks your organization.",
+    "ssoNoDomain": "No single sign-on is configured for that email domain.",
+    "ssoCallback": {
+      "title": "Signing you in",
+      "working": "Completing sign-in with your organization…",
+      "denied": "Sign-in was cancelled at your identity provider.",
+      "back": "Back to sign in",
+      "retry": "Try again"
     }
   },
   "onboarding": {
@@ -88,7 +98,16 @@
     "holds": "Legal holds",
     "reports": "Reports",
     "templates": "Templates",
-    "integrations": "Integrations"
+    "integrations": "Integrations",
+    "group": {
+      "workspace": "Workspace",
+      "work": "Work",
+      "admin": "Administration"
+    },
+    "collapse": "Collapse",
+    "expand": "Expand sidebar",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "mfa": {
     "title": "Two-step verification",
@@ -260,7 +279,8 @@
     "created": "Retention rule created",
     "deleted": "Retention rule deleted",
     "destroyWarning": "Documents will be moved to the bin automatically and deleted 30 days later. Nobody is asked first — use \"ask an administrator\" if you want a human decision each time.",
-    "holdNote": "Documents under a legal hold are never touched by retention rules."
+    "holdNote": "Documents under a legal hold are never touched by retention rules.",
+    "deleteConfirm": "Delete this retention policy? Documents it governs will no longer be retained or disposed of automatically."
   },
   "devices": {
     "title": "Devices",
@@ -364,7 +384,9 @@
     "replayQueued": "{{count}} event queued",
     "replayQueued_other": "{{count}} events queued",
     "from": "From",
-    "to": "To"
+    "to": "To",
+    "revokeKeyConfirm": "Revoke this API key? Any integration using it stops working immediately, and the key cannot be restored.",
+    "deleteHookConfirm": "Delete this webhook? Events will stop being delivered to it immediately."
   },
   "departments": {
     "title": "Departments",
@@ -498,7 +520,8 @@
     "recent": "Recent documents",
     "favorites": "Favorites",
     "noRecent": "No recently viewed documents",
-    "noFavorites": "No favorites yet"
+    "noFavorites": "No favorites yet",
+    "subtitle": "Everything waiting on you, and everything you touched last."
   },
   "usage": {
     "storage": "Storage",
@@ -752,7 +775,8 @@
     "protected": "protected",
     "until": "until {{date}}",
     "views": "{{count}} view(s)",
-    "revoke": "Revoke"
+    "revoke": "Revoke",
+    "revokeConfirm": "Revoke this link? Anyone who already has it loses access immediately."
   },
   "verify": {
     "title": "Document verification",
@@ -791,7 +815,8 @@
     "transferTo": "Choose recipient…",
     "transferConfirm": "Transfer",
     "transferred": "{{count}} document transferred",
-    "transferred_other": "{{count}} documents transferred"
+    "transferred_other": "{{count}} documents transferred",
+    "removeConfirm": "Remove {{name}} from this organisation? They lose access to every document immediately. This cannot be undone."
   },
   "invite": {
     "title": "Join the organization",
@@ -1227,5 +1252,36 @@
       "overdue": "Overdue steps",
       "byTemplate": "By template"
     }
+  },
+  "ssoSettings": {
+    "tab": "Single sign-on",
+    "intro": "Let your team sign in through your identity provider (OIDC). People with a matching email domain get an account here automatically on first sign-in.",
+    "name": "Display name",
+    "issuer": "Issuer URL",
+    "issuerHint": "The OIDC issuer — we verify it against its own discovery document when you save.",
+    "clientId": "Client ID",
+    "clientSecret": "Client secret",
+    "secretRequired": "Required the first time. Stored encrypted; never shown again.",
+    "secretKept": "A secret is stored. Leave empty to keep it, or paste a new one to replace it.",
+    "domains": "Email domains",
+    "domainsHint": "Comma-separated. Sign-ins from these domains route to your provider.",
+    "defaultRole": "Role for new users",
+    "roleHint": "Granted on first sign-in. Ownership is never granted automatically.",
+    "enabled": "Enabled",
+    "saved": "SSO configuration saved",
+    "delete": "Remove",
+    "deleted": "SSO configuration removed",
+    "deleteConfirm": "Remove SSO? People will need email + password to sign in.",
+    "domainClaimed": "One of these domains is already claimed by another organization.",
+    "jitNote": "New sign-ins are checked against your plan's seats, and each provisioned user is recorded in the audit trail.",
+    "nameRequired": "A display name is required.",
+    "issuerHttps": "The issuer must be an https:// URL.",
+    "clientIdRequired": "The client ID is required.",
+    "domainsRequired": "At least one email domain is required."
+  },
+  "roles": {
+    "owner": "Owner",
+    "admin": "Admin",
+    "member": "Member"
   }
 }

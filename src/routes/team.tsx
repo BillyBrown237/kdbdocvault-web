@@ -4,6 +4,10 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Mail, UserPlus, Users } from 'lucide-react'
 
+import { confirmDestructive } from '@/lib/confirm'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { EmptyState } from '@/components/ui/empty-state'
+import { PageHeader } from '@/components/ui/page-header'
 import { AppShell } from '@/components/app-shell'
 import { DepartmentsCard } from '@/components/settings/departments'
 import { SecretReveal } from '@/components/ui/secret-reveal'
@@ -63,10 +67,7 @@ function TeamPage() {
   const { t } = useTranslation()
   return (
     <AppShell>
-      <div className="flex items-center gap-2">
-        <Users className="h-5 w-5 text-muted-foreground" />
-        <h1 className="text-2xl font-bold tracking-tight">{t('team.title')}</h1>
-      </div>
+      <PageHeader icon={Users} title={t('team.title')} />
       <Tabs defaultValue="members" className="mt-4">
         <TabsList>
           <TabsTrigger value="members">{t('team.members')}</TabsTrigger>
@@ -112,7 +113,17 @@ function MembersTab() {
     onError: (e) => fail(e, t),
   })
 
-  if (members.isPending) return <Skeleton className="h-32" />
+  // Removing a member revokes their access to every document in the tenant and
+  // there is no undo. It was a single click with no confirmation — the same
+  // weight as changing their role. `window.confirm` matches the one other
+  // destructive confirmation in the app (SSO deletion); a nicer dialog would be
+  // an improvement, but shipping SOME friction here matters more than which.
+  const onRemove = (m: { id: string; name?: string | null; email: string }) => {
+    if (!confirmDestructive(t('team.removeConfirm', { name: m.name ?? m.email }))) return
+    remove.mutate(m.id)
+  }
+
+  if (members.isPending) return <MembersSkeleton />
 
   return (
     <Card>
@@ -121,10 +132,20 @@ function MembersTab() {
           <div key={m.id}>
             {i > 0 && <Separator className="mb-2" />}
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="min-w-0">
-                <div className="truncate text-sm font-medium">{m.name ?? m.email}</div>
-                <div className="text-xs text-muted-foreground">
-                  {m.email} · {t('team.joined', { date: formatDate(m.joined_at, i18n.language) })}
+              <div className="flex min-w-0 items-center gap-3">
+                {/* Initials, not a bare list of strings: a roster is scanned by
+                    person, and the avatar gives each row a fixed left anchor
+                    for the eye — the same job the icon tile does in the vault. */}
+                <Avatar className="size-9 shrink-0">
+                  <AvatarFallback className="text-xs">
+                    {(m.name ?? m.email).charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-medium">{m.name ?? m.email}</div>
+                  <div className="text-muted-foreground truncate text-xs">
+                    {m.email} · {t('team.joined', { date: formatDate(m.joined_at, i18n.language) })}
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -150,14 +171,37 @@ function MembersTab() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="text-red-600 hover:text-red-600"
-                  onClick={() => remove.mutate(m.id)}
+                  className="text-destructive hover:text-destructive"
+                  onClick={() => onRemove(m)}
                   disabled={remove.isPending}
                 >
                   {t('team.remove')}
                 </Button>
               </div>
             </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  )
+}
+
+/** Rows in the shape of the roster that is coming, rather than one grey slab
+ *  that is replaced by a list of people. */
+function MembersSkeleton() {
+  const { t } = useTranslation()
+  return (
+    <Card>
+      <CardContent className="space-y-4 p-4" role="status" aria-live="polite" aria-busy>
+        <span className="sr-only">{t('app.loading')}</span>
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-3">
+            <Skeleton className="size-9 shrink-0 rounded-full" />
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <Skeleton className="h-3.5 w-40" />
+              <Skeleton className="h-2.5 w-56" />
+            </div>
+            <Skeleton className="h-8 w-32 shrink-0 rounded-md" />
           </div>
         ))}
       </CardContent>
@@ -200,7 +244,9 @@ function TransferOwnershipDialog({ member, others }: { member: Member; others: M
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t('team.transferTitle', { name: member.name ?? member.email })}</DialogTitle>
+          <DialogTitle>
+            {t('team.transferTitle', { name: member.name ?? member.email })}
+          </DialogTitle>
         </DialogHeader>
         <p className="text-sm text-muted-foreground">{t('team.transferExplainer')}</p>
         <Select value={toId} onValueChange={setToId}>
@@ -338,7 +384,7 @@ function InvitationsTab() {
           {invitations.isPending ? (
             <Skeleton className="h-16" />
           ) : pending.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t('team.noInvitations')}</p>
+            <EmptyState size="inline" icon={Mail} label={t('team.noInvitations')} />
           ) : (
             pending.map((inv, i) => (
               <div key={inv.id}>
@@ -356,7 +402,7 @@ function InvitationsTab() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="text-red-600 hover:text-red-600"
+                    className="text-destructive hover:text-destructive"
                     onClick={() => revoke.mutate(inv.id)}
                   >
                     {t('team.revokeInvite')}
@@ -401,8 +447,12 @@ function OrgTab() {
           <Input id="org" value={name} onChange={(e) => setName(e.target.value)} />
         </div>
         <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-          <span>{t('team.plan')}: {tenant.data?.plan}</span>
-          <span>{t('team.region')}: {tenant.data?.region}</span>
+          <span>
+            {t('team.plan')}: {tenant.data?.plan}
+          </span>
+          <span>
+            {t('team.region')}: {tenant.data?.region}
+          </span>
           <Badge variant="outline">{tenant.data?.isolation_tier}</Badge>
         </div>
         <Button onClick={() => save.mutate()} disabled={save.isPending || !name.trim()}>

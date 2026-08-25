@@ -3,9 +3,11 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link2 } from 'lucide-react'
 
+import { confirmDestructive } from '@/lib/confirm'
 import { ApiProblem, NetworkError } from '@/lib/api/http'
 import { createShareLink, revokeShareLink, shareLinksQuery } from '@/lib/api/queries'
 import { formatDate } from '@/lib/format'
+import { panelIconClass, panelTitleClass } from '@/components/ui/panel'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -62,8 +64,8 @@ export function SharePanel({ documentId }: { documentId: string }) {
   return (
     <Card className="md:col-span-2">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Link2 className="h-4 w-4" />
+        <CardTitle className={panelTitleClass}>
+          <Link2 className={panelIconClass} />
           {t('share.title')}
         </CardTitle>
       </CardHeader>
@@ -77,7 +79,10 @@ export function SharePanel({ documentId }: { documentId: string }) {
         >
           <div className="space-y-1.5">
             <Label className="text-xs">{t('share.permission')}</Label>
-            <Select value={permission} onValueChange={(v) => setPermission(v as 'view' | 'download')}>
+            <Select
+              value={permission}
+              onValueChange={(v) => setPermission(v as 'view' | 'download')}
+            >
               <SelectTrigger className="w-36">
                 <SelectValue />
               </SelectTrigger>
@@ -134,16 +139,19 @@ export function SharePanel({ documentId }: { documentId: string }) {
                     <Badge variant="secondary">{t(`share.${l.permission}`)}</Badge>
                     {l.has_password && <Badge variant="outline">{t('share.protected')}</Badge>}
                     <span className="text-xs text-muted-foreground">
-                      {l.expires_at && `${t('share.until', { date: formatDate(l.expires_at, i18n.language) })} · `}
+                      {l.expires_at &&
+                        `${t('share.until', { date: formatDate(l.expires_at, i18n.language) })} · `}
                       {t('share.views', { count: l.view_count })}
                     </span>
                   </span>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-7 shrink-0 text-red-600 hover:text-red-600"
+                    className="h-7 shrink-0 text-destructive hover:text-destructive"
                     disabled={revoke.isPending}
-                    onClick={() => revoke.mutate(l.id)}
+                    onClick={() => {
+                      if (confirmDestructive(t('share.revokeConfirm'))) revoke.mutate(l.id)
+                    }}
                   >
                     {t('share.revoke')}
                   </Button>

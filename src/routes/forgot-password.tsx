@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { forgotPassword } from '@/lib/api/queries'
-import { AuthLayout } from '@/components/auth/auth-layout'
+import { AuthHeading, AuthLayout } from '@/components/auth/auth-layout'
 import { Button } from '@/components/ui/button'
 import { Callout } from '@/components/ui/callout'
 import { Input } from '@/components/ui/input'
@@ -31,11 +31,10 @@ function ForgotPasswordPage() {
 
   return (
     <AuthLayout>
-      <h1 className="text-2xl font-semibold tracking-tight">{t('forgot.title')}</h1>
-      <p className="mt-1 text-sm text-muted-foreground">{t('forgot.subtitle')}</p>
+      <AuthHeading title={t('forgot.title')} description={t('forgot.subtitle')} />
 
       {sent ? (
-        <div className="mt-6 space-y-4">
+        <div className="space-y-4">
           <Callout variant="success">{t('forgot.sent')}</Callout>
           <Button asChild className="w-full">
             <Link to="/reset-password" search={{ token: undefined }}>

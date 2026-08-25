@@ -7,7 +7,7 @@ import { z } from 'zod'
 
 import { NetworkError } from '@/lib/api/http'
 import { login, register, verifyIdentifier } from '@/lib/auth'
-import { AuthLayout } from '@/components/auth/auth-layout'
+import { AuthHeading, AuthLayout } from '@/components/auth/auth-layout'
 import { OtpInput } from '@/components/auth/otp-input'
 import { PasswordInput, StrengthMeter } from '@/components/auth/password-input'
 import { Button } from '@/components/ui/button'
@@ -63,17 +63,17 @@ function RegisterPage() {
 
   return (
     <AuthLayout>
-      <h1 className="text-2xl font-semibold tracking-tight">
-        {step === 'form' ? t('auth.register.title') : t('auth.register.verifyTitle')}
-      </h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {step === 'form'
-          ? t('auth.register.subtitle')
-          : t('auth.register.codeSent', { email: credentials?.email ?? '' })}
-      </p>
+      <AuthHeading
+        title={step === 'form' ? t('auth.register.title') : t('auth.register.verifyTitle')}
+        description={
+          step === 'form'
+            ? t('auth.register.subtitle')
+            : t('auth.register.codeSent', { email: credentials?.email ?? '' })
+        }
+      />
 
       {step === 'form' ? (
-        <form className="mt-6 space-y-4" onSubmit={(e) => void onRegister(e)}>
+        <form className="space-y-4" onSubmit={(e) => void onRegister(e)}>
           {problem !== null &&
             (problem instanceof NetworkError ? (
               <Callout variant="info">{t('errors.network')}</Callout>

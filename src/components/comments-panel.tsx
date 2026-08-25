@@ -13,6 +13,7 @@ import {
 import { ApiProblem, NetworkError } from '@/lib/api/http'
 import type { Comment } from '@/lib/api/types'
 import { formatDate } from '@/lib/format'
+import { panelIconClass, panelTitleClass } from '@/components/ui/panel'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
@@ -161,7 +162,7 @@ export function CommentsPanel({ documentId }: { documentId: string }) {
             <Button
               size="sm"
               variant="ghost"
-              className="h-6 px-2 text-xs text-red-600 hover:text-red-600"
+              className="h-6 px-2 text-xs text-destructive hover:text-destructive"
               disabled={remove.isPending}
               onClick={() => remove.mutate(c.id)}
             >
@@ -176,8 +177,8 @@ export function CommentsPanel({ documentId }: { documentId: string }) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-          <MessageSquare className="h-4 w-4" />
+        <CardTitle className={panelTitleClass}>
+          <MessageSquare className={panelIconClass} />
           {t('comments.title')}
         </CardTitle>
       </CardHeader>

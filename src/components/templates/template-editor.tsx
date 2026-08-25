@@ -18,7 +18,13 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { toast } from '@/components/ui/sonner'
 
@@ -34,22 +40,29 @@ const TYPES = ['text', 'date', 'number', 'choice'] as const
  */
 function guessField(key: string): TemplateField {
   const k = key.toLowerCase()
-  const type: TemplateField['type'] =
-    /(^|_)(date|deadline|echeance|expiry)($|_)/.test(k) ? 'date'
-    : /(amount|salary|salaire|price|prix|montant|total|number|nombre|count|qty|months?|mois|years?|ans)($|_)/.test(k) ? 'number'
-    : /(^|_)(type|status|statut|categorie|category|mode)($|_)/.test(k) ? 'choice'
-    : 'text'
+  const type: TemplateField['type'] = /(^|_)(date|deadline|echeance|expiry)($|_)/.test(k)
+    ? 'date'
+    : /(amount|salary|salaire|price|prix|montant|total|number|nombre|count|qty|months?|mois|years?|ans)($|_)/.test(
+          k,
+        )
+      ? 'number'
+      : /(^|_)(type|status|statut|categorie|category|mode)($|_)/.test(k)
+        ? 'choice'
+        : 'text'
 
-  const label = key
-    .replace(/_/g, ' ')
-    .replace(/^\w/, (c) => c.toUpperCase())
+  const label = key.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase())
 
   return { key, label, type, required: true, choices: type === 'choice' ? [] : undefined }
 }
 
 /** A file name makes a decent first draft of the template name. */
 function f2name(file: File | null): string {
-  return file ? file.name.replace(/\.docx$/i, '').replace(/[-_]+/g, ' ').trim() : ''
+  return file
+    ? file.name
+        .replace(/\.docx$/i, '')
+        .replace(/[-_]+/g, ' ')
+        .trim()
+    : ''
 }
 
 /**
@@ -296,7 +309,7 @@ export function TemplateEditor({
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="mt-5 text-red-600 hover:text-red-600"
+                  className="mt-5 text-destructive hover:text-destructive"
                   onClick={() => setFields((cur) => cur.filter((_, j) => j !== i))}
                 >
                   <Trash2 className="h-4 w-4" />

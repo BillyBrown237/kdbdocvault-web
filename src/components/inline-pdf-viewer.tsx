@@ -66,7 +66,7 @@ export function InlinePdfViewer({ data }: { data: Blob }) {
         <p className="py-8 text-center text-sm text-slate-500">{t('app.loading')}</p>
       )}
       {state === 'error' && (
-        <p className="py-8 text-center text-sm text-red-600">{t('shared.previewFailed')}</p>
+        <p className="py-8 text-center text-sm text-destructive">{t('shared.previewFailed')}</p>
       )}
       <div ref={containerRef} />
     </div>

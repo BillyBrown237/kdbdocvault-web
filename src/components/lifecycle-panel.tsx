@@ -15,6 +15,7 @@ import {
 } from '@/lib/api/queries'
 import type { LifecycleRule, ReminderChannel, RuleType } from '@/lib/api/types'
 import { formatDate } from '@/lib/format'
+import { panelIconClass, panelTitleClass } from '@/components/ui/panel'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -42,7 +43,8 @@ export function LifecyclePanel({ documentId }: { documentId: string }) {
     else if (err instanceof ApiProblem) toast.error(err.detail ?? err.title)
     else toast.error(t('errors.unknown'))
   }
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['lifecycle-rules', documentId] })
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: ['lifecycle-rules', documentId] })
 
   const add = useMutation({
     mutationFn: () => createLifecycleRule(documentId, { rule_type: ruleType, key_date: keyDate }),
@@ -69,8 +71,8 @@ export function LifecyclePanel({ documentId }: { documentId: string }) {
   return (
     <Card className="md:col-span-2">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-          <CalendarClock className="h-4 w-4" />
+        <CardTitle className={panelTitleClass}>
+          <CalendarClock className={panelIconClass} />
           {t('lifecycle.rules')}
         </CardTitle>
       </CardHeader>
@@ -92,7 +94,12 @@ export function LifecyclePanel({ documentId }: { documentId: string }) {
               <SelectItem value="review">{t('lifecycle.ruleType.review')}</SelectItem>
             </SelectContent>
           </Select>
-          <Input type="date" value={keyDate} onChange={(e) => setKeyDate(e.target.value)} className="w-40" />
+          <Input
+            type="date"
+            value={keyDate}
+            onChange={(e) => setKeyDate(e.target.value)}
+            className="w-40"
+          />
           <Button type="submit" disabled={add.isPending || !keyDate}>
             <Plus className="h-4 w-4" />
             {t('lifecycle.addRule')}
@@ -136,8 +143,7 @@ function RuleRow({
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['reminders', rule.id] })
   const addReminder = useMutation({
-    mutationFn: () =>
-      createReminder(rule.id, { offset_days: Number(offset) || 0, channel }),
+    mutationFn: () => createReminder(rule.id, { offset_days: Number(offset) || 0, channel }),
     onSuccess: () => {
       toast.success(t('lifecycle.reminderAdded'))
       void invalidate()
@@ -170,7 +176,7 @@ function RuleRow({
           <Button
             size="icon"
             variant="ghost"
-            className="h-7 w-7 text-red-600 hover:text-red-600"
+            className="h-7 w-7 text-destructive hover:text-destructive"
             onClick={onDelete}
           >
             <Trash2 className="h-3 w-3" />
@@ -181,9 +187,13 @@ function RuleRow({
       {/* Reminders */}
       <div className="mt-3 space-y-2 pl-1">
         {reminders.data?.data.map((rm) => (
-          <div key={rm.id} className="flex items-center justify-between text-xs text-muted-foreground">
+          <div
+            key={rm.id}
+            className="flex items-center justify-between text-xs text-muted-foreground"
+          >
             <span>
-              {t('lifecycle.reminderLine', { days: rm.offset_days })} · {t(`lifecycle.channel.${rm.channel}`)}
+              {t('lifecycle.reminderLine', { days: rm.offset_days })} ·{' '}
+              {t(`lifecycle.channel.${rm.channel}`)}
             </span>
             <Button
               size="icon"
@@ -222,7 +232,13 @@ function RuleRow({
               ))}
             </SelectContent>
           </Select>
-          <Button type="submit" size="sm" variant="outline" className="h-7" disabled={addReminder.isPending}>
+          <Button
+            type="submit"
+            size="sm"
+            variant="outline"
+            className="h-7"
+            disabled={addReminder.isPending}
+          >
             <BellPlus className="h-3 w-3" />
             {t('lifecycle.addReminder')}
           </Button>

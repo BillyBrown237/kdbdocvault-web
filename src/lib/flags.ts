@@ -4,8 +4,8 @@
 export const flags = {
   /** Passkeys / WebAuthn login + enrollment (API deferred, spec §1). */
   authPasskeys: false,
-  /** Enterprise SSO — email-domain-triggered continue button. */
-  authSso: false,
+  /** Enterprise SSO (B70/W33) — email-domain-triggered continue button. */
+  authSso: true,
   /** SMS as OTP channel (verify + MFA) — awaits an SMS provider. */
   authSms: false,
 } as const

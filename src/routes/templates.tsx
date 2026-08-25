@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Eye, FileText } from 'lucide-react'
 
+import { PageHeader } from '@/components/ui/page-header'
 import { AppShell } from '@/components/app-shell'
 import { GenerateDialog } from '@/components/templates/generate-dialog'
 import { TemplateEditor } from '@/components/templates/template-editor'
@@ -21,7 +22,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { EmptyState } from '@/components/vault-list'
 import { Separator } from '@/components/ui/separator'
-import { Skeleton } from '@/components/ui/skeleton'
+import { ListSkeleton } from '@/components/ui/skeleton'
 import { toast } from '@/components/ui/sonner'
 
 export const Route = createFileRoute('/templates')({
@@ -78,20 +79,18 @@ function TemplatesPage() {
 
   return (
     <AppShell>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <FileText className="h-5 w-5 text-muted-foreground" />
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">{t('templates.title')}</h1>
-            <p className="text-sm text-muted-foreground">{t('templates.subtitle')}</p>
-          </div>
-        </div>
-        {isAdmin && <Button onClick={() => setEditing(true)}>{t('templates.new')}</Button>}
-      </div>
+      <PageHeader
+        icon={FileText}
+        title={t('templates.title')}
+        description={t('templates.subtitle')}
+        actions={
+          <>{isAdmin && <Button onClick={() => setEditing(true)}>{t('templates.new')}</Button>}</>
+        }
+      />
 
       <div className="mt-4">
         {templates.isPending ? (
-          <Skeleton className="h-40" />
+          <ListSkeleton rows={4} />
         ) : list.length === 0 ? (
           <EmptyState
             label={
@@ -144,7 +143,7 @@ function TemplatesPage() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="text-red-600 hover:text-red-600"
+                          className="text-destructive hover:text-destructive"
                           disabled={retire.isPending}
                           onClick={() => retire.mutate(tpl.id)}
                         >

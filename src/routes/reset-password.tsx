@@ -5,7 +5,7 @@ import { z } from 'zod'
 
 import { NetworkError } from '@/lib/api/http'
 import { resetPassword } from '@/lib/api/queries'
-import { AuthLayout } from '@/components/auth/auth-layout'
+import { AuthHeading, AuthLayout } from '@/components/auth/auth-layout'
 import { PasswordInput, StrengthMeter } from '@/components/auth/password-input'
 import { Button } from '@/components/ui/button'
 import { Callout } from '@/components/ui/callout'
@@ -44,10 +44,9 @@ function ResetPasswordPage() {
 
   return (
     <AuthLayout>
-      <h1 className="text-2xl font-semibold tracking-tight">{t('reset.title')}</h1>
-      <p className="mt-1 text-sm text-muted-foreground">{t('reset.subtitle')}</p>
+      <AuthHeading title={t('reset.title')} description={t('reset.subtitle')} />
 
-      <form className="mt-6 space-y-4" onSubmit={(e) => void onSubmit(e)}>
+      <form className="space-y-4" onSubmit={(e) => void onSubmit(e)}>
         {problem !== null &&
           (problem instanceof NetworkError ? (
             <Callout variant="info">{t('errors.network')}</Callout>

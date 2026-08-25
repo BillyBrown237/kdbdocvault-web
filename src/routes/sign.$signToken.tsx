@@ -12,6 +12,8 @@ import {
   guestSignView,
   guestSubmitOtp,
 } from '@/lib/api/queries'
+import { Skeleton } from '@/components/ui/skeleton'
+import { PublicShell } from '@/components/public-shell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -107,37 +109,53 @@ function SignPage() {
   const needsVerify = meta?.verify_required && !verified
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
-      <Card className="w-full max-w-md">
+    <PublicShell>
+      <Card>
         <CardContent className="p-8">
-          <p className="text-center text-sm font-medium text-muted-foreground">{t('app.name')}</p>
-
           {view.isPending ? (
-            <p className="mt-6 text-center text-sm text-muted-foreground">{t('app.loading')}</p>
+            <div className="space-y-3" role="status" aria-live="polite">
+              <Skeleton className="mx-auto size-14 rounded-full" />
+              <Skeleton className="mx-auto h-5 w-56" />
+              <Skeleton className="mx-auto h-4 w-32" />
+              <span className="sr-only">{t('app.loading')}</span>
+            </div>
           ) : view.isError || !meta ? (
-            <p className="mt-6 text-center text-sm text-red-600">{t('shared.notFound')}</p>
+            <p className="text-center text-sm text-destructive">{t('shared.notFound')}</p>
           ) : phase === 'done' ? (
-            <div className="mt-6 text-center">
+            <div className="text-center">
+              {/* Icon, colour AND sentence: this is the screen that tells
+                  someone whether they have signed a document, and it must not
+                  rely on being able to tell green from grey. */}
               {outcome === 'signed' ? (
-                <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-500" />
+                <span className="mx-auto grid size-14 place-items-center rounded-full bg-emerald-100 text-emerald-600">
+                  <CheckCircle2 className="size-7" />
+                </span>
               ) : (
-                <XCircle className="mx-auto h-12 w-12 text-muted-foreground" />
+                <span className="bg-muted text-muted-foreground mx-auto grid size-14 place-items-center rounded-full">
+                  <XCircle className="size-7" />
+                </span>
               )}
-              <p className="mt-3 font-medium">
+              <p className="mt-4 font-medium">
                 {outcome === 'signed' ? t('signGuest.signedThanks') : t('signGuest.declinedDone')}
               </p>
             </div>
           ) : (
             <>
-              <PenLine className="mx-auto mt-6 h-10 w-10 text-muted-foreground" />
-              <h1 className="mt-3 text-center text-lg font-bold break-words">
+              <span className="bg-primary/10 text-primary mx-auto grid size-12 place-items-center rounded-xl">
+                <PenLine className="size-6" />
+              </span>
+              <h1 className="mt-4 text-center text-lg font-semibold break-words">
                 {meta.envelope.document_title}
               </h1>
-              <p className="mt-1 text-center text-sm text-muted-foreground">
+              <p className="text-muted-foreground mt-1 text-center text-sm">
                 {t('signGuest.hello', { name: meta.signer.name })}
               </p>
               {meta.envelope.message && (
-                <p className="mt-3 rounded-md bg-muted p-3 text-sm">{meta.envelope.message}</p>
+                // A quoted note from a person, marked as theirs rather than as
+                // app chrome — the border says "someone wrote this to you".
+                <blockquote className="border-primary/40 bg-muted/60 mt-4 border-l-2 py-2 pl-3 text-sm">
+                  {meta.envelope.message}
+                </blockquote>
               )}
 
               {phase === 'otp' ? (
@@ -172,22 +190,31 @@ function SignPage() {
                 <div className="mt-6 space-y-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="typed">{t('signGuest.typeName')}</Label>
+                    {/* Taller, centred, and on a tinted panel: this is the one
+                        field on the page that stands for the person's name on
+                        a document, and a 36px input treats it like a search
+                        box. */}
                     <Input
                       id="typed"
                       value={typedName}
                       onChange={(e) => setTypedName(e.target.value)}
                       placeholder={meta.signer.name}
-                      className="font-[cursive] text-lg"
+                      autoComplete="off"
+                      className="bg-muted/40 h-16 text-center font-[cursive] text-2xl"
                     />
                   </div>
-                  <label className="flex items-start gap-2 text-sm text-muted-foreground">
+                  {/* The consent text is the legally meaningful part, so it is
+                      foreground-coloured, not muted — and `accent-color` makes
+                      the native checkbox brand blue without replacing it with
+                      a custom control a password manager cannot see. */}
+                  <label className="flex cursor-pointer items-start gap-2.5 text-sm">
                     <input
                       type="checkbox"
                       checked={consent}
                       onChange={(e) => setConsent(e.target.checked)}
-                      className="mt-0.5"
+                      className="accent-primary mt-0.5 size-4 shrink-0 cursor-pointer"
                     />
-                    {t('signGuest.consent')}
+                    <span className="text-muted-foreground">{t('signGuest.consent')}</span>
                   </label>
                   <div className="flex gap-2">
                     <Button
@@ -207,6 +234,6 @@ function SignPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </PublicShell>
   )
 }

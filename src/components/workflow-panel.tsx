@@ -12,6 +12,7 @@ import {
 } from '@/lib/api/queries'
 import type { Workflow } from '@/lib/api/types'
 import { formatDate } from '@/lib/format'
+import { panelIconClass, panelTitleClass } from '@/components/ui/panel'
 import { Badge, type BadgeProps } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -70,8 +71,8 @@ export function WorkflowPanel({ documentId }: { documentId: string }) {
   return (
     <Card className="md:col-span-2">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-          <GitBranch className="h-4 w-4" />
+        <CardTitle className={panelTitleClass}>
+          <GitBranch className={panelIconClass} />
           {t('workflow.title')}
         </CardTitle>
       </CardHeader>
@@ -131,7 +132,7 @@ function WorkflowRow({ workflow, onCancel }: { workflow: Workflow; onCancel: () 
           <Button
             size="icon"
             variant="ghost"
-            className="h-7 w-7 text-red-600 hover:text-red-600"
+            className="h-7 w-7 text-destructive hover:text-destructive"
             onClick={onCancel}
           >
             <X className="h-3 w-3" />

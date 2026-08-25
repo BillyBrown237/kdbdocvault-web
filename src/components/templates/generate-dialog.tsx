@@ -17,7 +17,13 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { toast } from '@/components/ui/sonner'
 
 const NO_FOLDER = '__none__'
@@ -82,9 +88,7 @@ export function GenerateDialog({
     },
   })
 
-  const missing = template.fields.filter(
-    (f) => f.required && !values[f.key]?.trim(),
-  )
+  const missing = template.fields.filter((f) => f.required && !values[f.key]?.trim())
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -102,7 +106,7 @@ export function GenerateDialog({
             <div key={f.key} className="space-y-1.5">
               <Label htmlFor={`f-${f.key}`}>
                 {f.label}
-                {f.required && <span className="ml-1 text-red-600">*</span>}
+                {f.required && <span className="ml-1 text-destructive">*</span>}
               </Label>
               {f.type === 'choice' ? (
                 <Select
@@ -184,7 +188,10 @@ export function GenerateDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t('common.cancel')}
           </Button>
-          <Button disabled={generate.isPending || missing.length > 0} onClick={() => generate.mutate()}>
+          <Button
+            disabled={generate.isPending || missing.length > 0}
+            onClick={() => generate.mutate()}
+          >
             {generate.isPending ? t('app.loading') : t('templates.generate')}
           </Button>
         </DialogFooter>

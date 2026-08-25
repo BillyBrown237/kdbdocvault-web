@@ -12,6 +12,7 @@ import {
 import type { Notification } from '@/lib/api/types'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { EmptyState } from '@/components/ui/empty-state'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -29,7 +30,9 @@ const CHANNEL_ICON: Record<string, LucideIcon> = {
 }
 
 /** Where a notification points, when it points anywhere we can render. */
-function targetOf(n: Notification): { to: '/documents/$documentId'; params: { documentId: string } } | null {
+function targetOf(
+  n: Notification,
+): { to: '/documents/$documentId'; params: { documentId: string } } | null {
   if (n.resource_type === 'document' && n.resource_id) {
     return { to: '/documents/$documentId', params: { documentId: n.resource_id } }
   }
@@ -92,7 +95,12 @@ export function NotificationBell() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative" aria-label={t('notifications.title')}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative"
+          aria-label={t('notifications.title')}
+        >
           <Bell className="h-5 w-5" />
           {unread.length > 0 && (
             <Badge
@@ -127,11 +135,11 @@ export function NotificationBell() {
 
         <div className="max-h-96 overflow-y-auto">
           {feed.isPending ? (
-            <p className="px-3 py-8 text-center text-sm text-muted-foreground">{t('app.loading')}</p>
-          ) : items.length === 0 ? (
             <p className="px-3 py-8 text-center text-sm text-muted-foreground">
-              {t('notifications.empty')}
+              {t('app.loading')}
             </p>
+          ) : items.length === 0 ? (
+            <EmptyState size="inline" icon={Bell} label={t('notifications.empty')} />
           ) : (
             <ul className="divide-y">
               {items.map((n) => (

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Anchor, Download, FileDown, ScrollText } from 'lucide-react'
 
+import { PageHeader } from '@/components/ui/page-header'
 import { AppShell } from '@/components/app-shell'
 import { EmptyState, LoadMoreButton } from '@/components/vault-list'
 import { ApiProblem, NetworkError } from '@/lib/api/http'
@@ -22,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Skeleton } from '@/components/ui/skeleton'
+import { ListSkeleton, TableSkeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Table,
@@ -44,26 +45,26 @@ function AuditPage() {
 
   return (
     <AppShell>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <ScrollText className="h-5 w-5 text-muted-foreground" />
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">{t('audit.title')}</h1>
-            <p className="text-sm text-muted-foreground">{t('audit.subtitle')}</p>
-          </div>
-        </div>
-        <ExportControl />
-      </div>
+      <PageHeader
+        icon={ScrollText}
+        title={t('audit.title')}
+        description={t('audit.subtitle')}
+        actions={
+          <>
+            <ExportControl />
+          </>
+        }
+      />
 
       <Tabs defaultValue="events" className="mt-4">
         <TabsList>
           <TabsTrigger value="events">{t('audit.events')}</TabsTrigger>
           <TabsTrigger value="anchors">{t('anchors.tab')}</TabsTrigger>
         </TabsList>
-        <TabsContent value="events" className="mt-4">
+        <TabsContent value="events">
           <EventsTab />
         </TabsContent>
-        <TabsContent value="anchors" className="mt-4">
+        <TabsContent value="anchors">
           <AnchorsTab />
         </TabsContent>
       </Tabs>
@@ -118,7 +119,7 @@ function ExportControl() {
         </Button>
       )}
       {job.job?.status === 'failed' && (
-        <span className="text-sm text-red-600">{job.job.error ?? t('audit.exportFailed')}</span>
+        <span className="text-sm text-destructive">{job.job.error ?? t('audit.exportFailed')}</span>
       )}
     </div>
   )
@@ -143,9 +144,9 @@ function EventsTab() {
 
       <div className="mt-4">
         {q.isPending ? (
-          <Skeleton className="h-64" />
+          <TableSkeleton rows={8} cols={5} className="p-4" />
         ) : events.length === 0 ? (
-          <EmptyState label={t('audit.noEvents')} />
+          <EmptyState icon={ScrollText} label={t('audit.noEvents')} />
         ) : (
           <Card className="p-0">
             <Table>
@@ -210,9 +211,9 @@ function AnchorsTab() {
         {t('anchors.explainer')}
       </p>
       {q.isPending ? (
-        <Skeleton className="h-48" />
+        <ListSkeleton rows={4} />
       ) : anchors.length === 0 ? (
-        <EmptyState label={t('anchors.empty')} />
+        <EmptyState icon={ScrollText} label={t('anchors.empty')} />
       ) : (
         <Card className="p-0">
           <Table>

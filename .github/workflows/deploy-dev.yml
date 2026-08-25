@@ -84,6 +84,13 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      # i18next renders a missing key AS the key, so a screen can ship with a
+      # button labelled "app.save" and still typecheck, render and pass review.
+      # That is exactly what happened to the SSO settings form. There is no
+      # type checking across the JSON boundary, so it is checked here.
+      - name: Check translations
+        run: npm run check:i18n
+
       - name: Build
         env:
           # Empty on purpose: nginx serves the SPA and proxies /v1 + /pub from

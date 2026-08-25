@@ -12,8 +12,11 @@ import {
   webhookDeliveriesQuery,
   webhooksQuery,
 } from '@/lib/api/queries'
+import { confirmDestructive } from '@/lib/confirm'
 import { ApiProblem, NetworkError } from '@/lib/api/http'
 import { formatDate } from '@/lib/format'
+import { EmptyState } from '@/components/ui/empty-state'
+import { panelIconClass, panelTitleClass } from '@/components/ui/panel'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Callout } from '@/components/ui/callout'
@@ -66,8 +69,7 @@ export function WebhooksCard() {
   })
 
   const toggle = useMutation({
-    mutationFn: ({ id, active }: { id: string; active: boolean }) =>
-      updateWebhook(id, { active }),
+    mutationFn: ({ id, active }: { id: string; active: boolean }) => updateWebhook(id, { active }),
     onSuccess: invalidate,
     onError: fail,
   })
@@ -95,8 +97,8 @@ export function WebhooksCard() {
   return (
     <Card className="mt-4">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-          <WebhookIcon className="h-4 w-4" />
+        <CardTitle className={panelTitleClass}>
+          <WebhookIcon className={panelIconClass} />
           {t('integrations.webhooks')}
         </CardTitle>
       </CardHeader>
@@ -104,7 +106,7 @@ export function WebhooksCard() {
         <p className="text-sm text-muted-foreground">{t('integrations.webhooksExplainer')}</p>
 
         {rows.length === 0 && !creating && (
-          <p className="text-sm text-muted-foreground">{t('integrations.noHooks')}</p>
+          <EmptyState size="inline" icon={WebhookIcon} label={t('integrations.noHooks')} />
         )}
 
         {rows.map((h, i) => (
@@ -141,9 +143,11 @@ export function WebhooksCard() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="text-red-600 hover:text-red-600"
+                  className="text-destructive hover:text-destructive"
                   disabled={remove.isPending}
-                  onClick={() => remove.mutate(h.id)}
+                  onClick={() => {
+                    if (confirmDestructive(t('integrations.deleteHookConfirm'))) remove.mutate(h.id)
+                  }}
                 >
                   {t('common.delete')}
                 </Button>
@@ -302,7 +306,7 @@ function DeliveryLog({ webhookId }: { webhookId: string }) {
       {deliveries.isPending ? (
         <p className="text-sm text-muted-foreground">{t('app.loading')}</p>
       ) : rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t('integrations.noDeliveries')}</p>
+        <EmptyState size="inline" icon={WebhookIcon} label={t('integrations.noDeliveries')} />
       ) : (
         rows.map((d) => (
           <div key={d.id} className="flex items-start justify-between gap-2 text-xs">
@@ -311,7 +315,7 @@ function DeliveryLog({ webhookId }: { webhookId: string }) {
               <span className="ml-2 text-muted-foreground">
                 {formatDate(d.created_at, i18n.language)}
               </span>
-              {d.error && <div className="mt-0.5 text-red-600">{d.error}</div>}
+              {d.error && <div className="mt-0.5 text-destructive">{d.error}</div>}
             </div>
             <div className="flex shrink-0 items-center gap-2">
               {d.response_code && <span className="font-mono">{d.response_code}</span>}
@@ -356,7 +360,11 @@ function DeliveryLog({ webhookId }: { webhookId: string }) {
               className="h-8 w-52"
             />
           </div>
-          <Button size="sm" disabled={replay.isPending || !from || !to} onClick={() => replay.mutate()}>
+          <Button
+            size="sm"
+            disabled={replay.isPending || !from || !to}
+            onClick={() => replay.mutate()}
+          >
             {replay.isPending ? t('app.loading') : t('integrations.replay')}
           </Button>
           <Button size="sm" variant="ghost" onClick={() => setReplaying(false)}>

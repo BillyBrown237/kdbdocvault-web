@@ -10,6 +10,9 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BarChart3, ChevronLeft, FileText, Mail, Plus, Users } from 'lucide-react'
 
+import { panelIconClass, panelTitleClass } from '@/components/ui/panel'
+import { EmptyState } from '@/components/ui/empty-state'
+import { PageHeader, backControlClass } from '@/components/ui/page-header'
 import { AppShell } from '@/components/app-shell'
 import { ApiProblem, NetworkError } from '@/lib/api/http'
 import {
@@ -37,8 +40,15 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Skeleton, TableSkeleton } from '@/components/ui/skeleton'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from '@/components/ui/sonner'
 
@@ -81,29 +91,45 @@ function RoomDetail() {
 
   return (
     <AppShell>
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" onClick={() => router.history.back()}>
-          <ChevronLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="min-w-0 flex-1 truncate text-2xl font-bold tracking-tight">
-          {r?.name ?? t('app.loading')}
-        </h1>
-        {r && (
-          <Badge variant={live ? 'default' : 'secondary'}>
-            {t(expired && r.status === 'open' ? 'rooms.status.expired' : `rooms.status.${r.status}`)}
-          </Badge>
-        )}
-        {r && r.status === 'open' && (
-          <Button
-            variant="outline"
-            className="text-red-600 hover:text-red-600"
-            disabled={close.isPending}
-            onClick={() => close.mutate()}
+      {/* The back control is size-9 with a gap-3 after it — exactly the pl-12
+          the description below uses to line up under the title. */}
+      <PageHeader
+        className="mb-2"
+        back={
+          <button
+            type="button"
+            className={backControlClass}
+            onClick={() => router.history.back()}
+            aria-label={t('common.back')}
           >
-            {t('rooms.close')}
-          </Button>
-        )}
-      </div>
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+        }
+        title={r?.name ?? t('app.loading')}
+        actions={
+          <>
+            {r && (
+              <Badge variant={live ? 'default' : 'secondary'}>
+                {t(
+                  expired && r.status === 'open'
+                    ? 'rooms.status.expired'
+                    : `rooms.status.${r.status}`,
+                )}
+              </Badge>
+            )}
+            {r && r.status === 'open' && (
+              <Button
+                variant="outline"
+                className="text-destructive hover:text-destructive"
+                disabled={close.isPending}
+                onClick={() => close.mutate()}
+              >
+                {t('rooms.close')}
+              </Button>
+            )}
+          </>
+        }
+      />
 
       {r && (
         <>
@@ -128,20 +154,18 @@ function RoomDetail() {
               <TabsTrigger value="settings">{t('rooms.settings')}</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="documents" className="mt-4">
+            <TabsContent value="documents">
               <Card>
                 <CardHeader className="flex-row items-center justify-between pb-3">
-                  <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <FileText className="h-4 w-4" />
+                  <CardTitle className={panelTitleClass}>
+                    <FileText className={panelIconClass} />
                     {t('rooms.documents')}
                   </CardTitle>
                   {live && <AddDocumentsDialog roomId={roomId} existing={r.document_ids} />}
                 </CardHeader>
                 <CardContent>
                   {r.document_ids.length === 0 ? (
-                    <p className="py-6 text-center text-sm text-muted-foreground">
-                      {t('rooms.noDocuments')}
-                    </p>
+                    <EmptyState size="inline" icon={FileText} label={t('rooms.noDocuments')} />
                   ) : (
                     <RoomDocumentList documentIds={r.document_ids} />
                   )}
@@ -149,22 +173,20 @@ function RoomDetail() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="visitors" className="mt-4 space-y-4">
+            <TabsContent value="visitors" className="space-y-4">
               {live && <InviteVisitorCard roomId={roomId} />}
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <BarChart3 className="h-4 w-4" />
+                  <CardTitle className={panelTitleClass}>
+                    <BarChart3 className={panelIconClass} />
                     {t('rooms.analytics')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {analytics.isPending ? (
-                    <Skeleton className="h-24" />
+                    <TableSkeleton rows={4} cols={4} />
                   ) : visitors.length === 0 ? (
-                    <p className="py-6 text-center text-sm text-muted-foreground">
-                      {t('rooms.noVisitors')}
-                    </p>
+                    <EmptyState size="inline" icon={Users} label={t('rooms.noVisitors')} />
                   ) : (
                     <Table>
                       <TableHeader>
@@ -202,7 +224,7 @@ function RoomDetail() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="settings" className="mt-4">
+            <TabsContent value="settings">
               <RoomSettingsCard
                 roomId={roomId}
                 name={r.name}
@@ -305,9 +327,7 @@ function AddDocumentsDialog({ roomId, existing }: { roomId: string; existing: st
               <Skeleton className="h-5" />
             </div>
           ) : candidates.length === 0 ? (
-            <p className="p-6 text-center text-sm text-muted-foreground">
-              {t('rooms.noCandidates')}
-            </p>
+            <EmptyState size="inline" icon={FileText} label={t('rooms.noCandidates')} />
           ) : (
             <ul className="divide-y">
               {candidates.map((d) => (
@@ -343,7 +363,8 @@ function InviteVisitorCard({ roomId }: { roomId: string }) {
   const [name, setName] = useState('')
 
   const invite = useMutation({
-    mutationFn: () => inviteRoomVisitor(roomId, { email: email.trim(), name: name.trim() || undefined }),
+    mutationFn: () =>
+      inviteRoomVisitor(roomId, { email: email.trim(), name: name.trim() || undefined }),
     onSuccess: async () => {
       setEmail('')
       setName('')
@@ -357,8 +378,8 @@ function InviteVisitorCard({ roomId }: { roomId: string }) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Users className="h-4 w-4" />
+        <CardTitle className={panelTitleClass}>
+          <Users className={panelIconClass} />
           {t('rooms.invite')}
         </CardTitle>
       </CardHeader>

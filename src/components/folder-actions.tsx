@@ -119,7 +119,7 @@ export function FolderActions({ folder }: { folder: Folder }) {
             {t('vault.moveFolder')}
           </DropdownMenuItem>
           <DropdownMenuItem
-            className="text-red-600 focus:text-red-600"
+            className="text-destructive focus:text-destructive"
             onClick={() => setDialog('delete')}
           >
             {t('vault.deleteFolder')}

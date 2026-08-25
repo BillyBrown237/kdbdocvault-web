@@ -7,6 +7,7 @@ import { ApiProblem, NetworkError } from '@/lib/api/http'
 import { confirmExtraction, extractionsQuery, reprocessDocument } from '@/lib/api/queries'
 import type { Extraction } from '@/lib/api/types'
 import { cn } from '@/lib/utils'
+import { panelIconClass, panelTitleClass } from '@/components/ui/panel'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -71,8 +72,8 @@ export function ExtractionPanel({ documentId }: { documentId: string }) {
   return (
     <Card className="md:col-span-2">
       <CardHeader className="flex-row items-center justify-between pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Sparkles className="h-4 w-4" />
+        <CardTitle className={panelTitleClass}>
+          <Sparkles className={panelIconClass} />
           {t('extraction.title')}
           {pending.length > 0 && (
             <Badge variant="secondary" className="px-1.5 py-0">
@@ -114,9 +115,7 @@ export function ExtractionPanel({ documentId }: { documentId: string }) {
                         value={draft}
                         onChange={(ev) => setDraft(ev.target.value)}
                         className="h-8 w-44"
-                        placeholder={
-                          e.entity_type === 'expiry_date' ? 'yyyy-mm-dd' : undefined
-                        }
+                        placeholder={e.entity_type === 'expiry_date' ? 'yyyy-mm-dd' : undefined}
                         autoFocus
                       />
                     ) : (
