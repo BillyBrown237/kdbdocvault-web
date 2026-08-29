@@ -726,9 +726,12 @@
     },
     "editSigner": "Edit signer",
     "editSignerHint": "Possible until the person signs — useful for fixing a wrong address.",
-    "signerPhone": "Phone",
+    "signerPhone": "Signer phone (E.164)",
     "saveSigner": "Save",
-    "signerUpdated": "Signer updated"
+    "signerUpdated": "Signer updated",
+    "verifyMethod": "Verification method",
+    "verifyEmail": "Code by email",
+    "verifySms": "Code by SMS"
   },
   "signGuest": {
     "hello": "Hello {{name}}",

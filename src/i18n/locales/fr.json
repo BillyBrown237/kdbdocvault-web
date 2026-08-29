@@ -726,9 +726,12 @@
     },
     "editSigner": "Modifier le signataire",
     "editSignerHint": "Possible tant que la personne n'a pas signé — utile pour corriger une adresse erronée.",
-    "signerPhone": "Téléphone",
+    "signerPhone": "Téléphone du signataire (E.164)",
     "saveSigner": "Enregistrer",
-    "signerUpdated": "Signataire mis à jour"
+    "signerUpdated": "Signataire mis à jour",
+    "verifyMethod": "Méthode de vérification",
+    "verifyEmail": "Code par e-mail",
+    "verifySms": "Code par SMS"
   },
   "signGuest": {
     "hello": "Bonjour {{name}}",

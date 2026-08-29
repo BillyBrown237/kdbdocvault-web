@@ -13,6 +13,7 @@ import {
   X,
 } from 'lucide-react'
 
+import { cn } from '@/lib/utils'
 import { ApiProblem, NetworkError } from '@/lib/api/http'
 import {
   cancelEnvelope,
@@ -42,7 +43,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
+import { Input, fieldClass } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { toast } from '@/components/ui/sonner'
@@ -552,31 +553,69 @@ function CreateEnvelopeDialog({
           <div className="space-y-3">
             <Label>{t('sign.signers')}</Label>
             {signers.map((s, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <Input
-                  placeholder={t('sign.signerName')}
-                  value={s.name}
-                  onChange={(e) => updateSigner(i, { name: e.target.value })}
-                  className="flex-1"
-                />
-                <Input
-                  type="email"
-                  placeholder={t('sign.signerEmail')}
-                  value={s.email}
-                  onChange={(e) => updateSigner(i, { email: e.target.value })}
-                  className="flex-1"
-                />
-                {signers.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 shrink-0"
-                    onClick={() => setSigners((prev) => prev.filter((_, idx) => idx !== i))}
+              <div key={i} className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Input
+                    placeholder={t('sign.signerName')}
+                    value={s.name}
+                    onChange={(e) => updateSigner(i, { name: e.target.value })}
+                    className="flex-1"
+                  />
+                  <Input
+                    type="email"
+                    placeholder={t('sign.signerEmail')}
+                    value={s.email}
+                    onChange={(e) => updateSigner(i, { email: e.target.value })}
+                    className="flex-1"
+                  />
+                  {signers.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 shrink-0"
+                      onClick={() => setSigners((prev) => prev.filter((_, idx) => idx !== i))}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                {/* B71/W35: how this signer proves who they are. The email is
+                    always needed (the signing LINK travels by email); sms_otp
+                    changes only where the CODE goes, which is why the phone
+                    field appears beside the choice rather than replacing the
+                    email. id_check is not offered here — it has its own
+                    review workflow and is not a two-field decision. */}
+                <div className="flex items-center gap-2">
+                  <select
+                    aria-label={t('sign.verifyMethod')}
+                    className={cn(fieldClass, 'h-8 w-40 text-xs')}
+                    value={s.verify_method}
+                    onChange={(e) =>
+                      updateSigner(i, {
+                        verify_method: e.target.value as SignerInput['verify_method'],
+                        // A phone typed for sms then switched back to email is
+                        // stale input, not intent — drop it.
+                        ...(e.target.value !== 'sms_otp' ? { phone: undefined } : null),
+                      })
+                    }
                   >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
+                    <option value="email_otp">{t('sign.verifyEmail')}</option>
+                    <option value="sms_otp">{t('sign.verifySms')}</option>
+                  </select>
+                  {s.verify_method === 'sms_otp' && (
+                    <Input
+                      type="tel"
+                      // The backend validates E.164 and says so in its 422;
+                      // the placeholder teaches the format before the error.
+                      placeholder="+237670123456"
+                      aria-label={t('sign.signerPhone')}
+                      value={s.phone ?? ''}
+                      onChange={(e) => updateSigner(i, { phone: e.target.value })}
+                      className="h-8 flex-1 text-xs"
+                    />
+                  )}
+                </div>
               </div>
             ))}
             <Button
